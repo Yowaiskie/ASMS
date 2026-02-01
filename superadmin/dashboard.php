@@ -6,6 +6,16 @@
     <title>Super Admin Dashboard - Altar Servers System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+    </style>
     <script>
         tailwind.config = {
             theme: {
@@ -90,7 +100,7 @@
     <main class="flex-1 overflow-y-auto">
         <div class="p-8">
             
-            <div class="mb-8">
+            <div class="mb-8 animate-fade-in-up">
                 <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
                     Super Admin Dashboard 
                     <span class="text-2xl">👑</span>
@@ -100,7 +110,7 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 
-                <div class="bg-blue-600 rounded-2xl p-6 text-white shadow-lg shadow-blue-200 hover:scale-[1.02] transition-transform">
+                <div class="bg-blue-600 rounded-2xl p-6 text-white shadow-lg shadow-blue-200 animate-fade-in-up">
                     <div class="flex justify-between items-start mb-4">
                         <h3 class="font-medium opacity-90 text-sm">Total Users</h3>
                         <div class="p-2 bg-white/20 rounded-lg">
@@ -115,7 +125,7 @@
                     </div>
                 </div>
 
-                <div class="bg-purple-600 rounded-2xl p-6 text-white shadow-lg shadow-purple-200 hover:scale-[1.02] transition-transform">
+                <div class="bg-purple-600 rounded-2xl p-6 text-white shadow-lg shadow-purple-200 animate-fade-in-up delay-100">
                     <div class="flex justify-between items-start mb-4">
                         <h3 class="font-medium opacity-90 text-sm">Active Admins</h3>
                         <div class="p-2 bg-white/20 rounded-lg">
@@ -130,7 +140,7 @@
                     </div>
                 </div>
 
-                <div class="bg-emerald-500 rounded-2xl p-6 text-white shadow-lg shadow-emerald-200 hover:scale-[1.02] transition-transform">
+                <div class="bg-emerald-500 rounded-2xl p-6 text-white shadow-lg shadow-emerald-200 animate-fade-in-up delay-200">
                     <div class="flex justify-between items-start mb-4">
                         <h3 class="font-medium opacity-90 text-sm">Activities</h3>
                         <div class="p-2 bg-white/20 rounded-lg">
@@ -145,7 +155,7 @@
                     </div>
                 </div>
 
-                <div class="bg-orange-500 rounded-2xl p-6 text-white shadow-lg shadow-orange-200 hover:scale-[1.02] transition-transform">
+                <div class="bg-orange-500 rounded-2xl p-6 text-white shadow-lg shadow-orange-200 animate-fade-in-up delay-300">
                     <div class="flex justify-between items-start mb-4">
                         <h3 class="font-medium opacity-90 text-sm">Attendance</h3>
                         <div class="p-2 bg-white/20 rounded-lg">
@@ -162,7 +172,7 @@
 
             </div>
 
-            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 mb-8">
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 mb-8 animate-fade-in-up delay-300">
                 <h3 class="font-bold text-slate-700 mb-6">System Usage (Last 7 Days)</h3>
                 <div class="h-80 w-full">
                     <canvas id="systemUsageChart"></canvas>
@@ -234,6 +244,17 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                animation: {
+                    duration: 2500,
+                    easing: 'easeInOutQuart',
+                    delay: (context) => {
+                        let delay = 0;
+                        if (context.type === 'data' && context.mode === 'default') {
+                            delay = context.dataIndex * 150 + context.datasetIndex * 100;
+                        }
+                        return delay;
+                    }
+                },
                 plugins: {
                     legend: { display: false } // Hide legend like in screenshot
                 },
@@ -242,8 +263,8 @@
                         beginAtZero: true,
                         max: 30, // Adjust scale based on data
                         grid: {
-                            borderDash: [2, 2],
-                            color: '#f1f5f9'
+                            color: '#f1f5f9',
+                            drawBorder: false
                         },
                         ticks: { color: '#94a3b8' }
                     },

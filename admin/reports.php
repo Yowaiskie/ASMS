@@ -317,52 +317,65 @@
                     }
                 ]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        grid: { borderDash: [2, 2] }
-                    },
-                    x: {
-                        grid: { display: false }
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: {
+                            duration: 2000,
+                            easing: 'easeOutQuart',
+                            delay: (context) => context.dataIndex * 100
+                        },
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                grid: { 
+                                    color: '#f1f5f9',
+                                    drawBorder: false
+                                }
+                            },
+                            x: {
+                                grid: { display: false }
+                            }
+                        }
                     }
-                }
-            }
-        });
-
-        // Donut Chart Config
-        const ctxPie = document.getElementById('distributionPieChart').getContext('2d');
-        new Chart(ctxPie, {
-            type: 'doughnut',
-            data: {
-                labels: ['Present', 'Late', 'Absent'],
-                datasets: [{
-                    data: [88.8, 6.3, 4.9],
-                    backgroundColor: [
-                        '#10b981', // Emerald 500
-                        '#f59e0b', // Amber 500
-                        '#ef4444'  // Red 500
-                    ],
-                    borderWidth: 0,
-                    hoverOffset: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '75%',
-                plugins: {
-                    legend: { display: false }
-                }
-            }
-        });
-    </script>
+                });
+            
+                // Donut Chart Config
+                const ctxPie = document.getElementById('distributionPieChart').getContext('2d');
+                new Chart(ctxPie, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Present', 'Late', 'Absent'],
+                        datasets: [{
+                            data: [88.8, 6.3, 4.9],
+                            backgroundColor: [
+                                '#10b981', // Emerald 500
+                                '#f59e0b', // Amber 500
+                                '#ef4444'  // Red 500
+                            ],
+                            borderWidth: 0,
+                            hoverOffset: 15
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '75%',
+                        animation: {
+                            animateScale: true,
+                            animateRotate: true,
+                            duration: 2500,
+                            easing: 'easeInOutBack'
+                        },
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });    </script>
 
 </body>
 </html>

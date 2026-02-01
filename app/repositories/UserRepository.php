@@ -24,7 +24,11 @@ class UserRepository implements RepositoryInterface {
         return [];
     }
 
-    public function getById($id) { return null; }
+    public function getById($id) {
+        $this->db->query("SELECT * FROM users WHERE id = :id");
+        $this->db->bind(':id', $id);
+        return $this->db->single();
+    }
 
     public function create(array $data) {
         $this->db->query("INSERT INTO users (username, password, role) VALUES (:username, :password, :role)");
@@ -34,6 +38,15 @@ class UserRepository implements RepositoryInterface {
         return $this->db->execute();
     }
 
-    public function update($id, array $data) { return true; }
+    public function update($id, array $data) {
+        // Simple update for password/profile
+        if(isset($data['password'])) {
+            $this->db->query("UPDATE users SET password = :password WHERE id = :id");
+            $this->db->bind(':password', $data['password']);
+            $this->db->bind(':id', $id);
+            return $this->db->execute();
+        }
+        return false;
+    }
     public function delete($id) { return true; }
 }

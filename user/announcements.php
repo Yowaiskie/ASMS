@@ -12,24 +12,9 @@ try {
     $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME, DB_USER, DB_PASS);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
-    // Fetch User
-    $stmt = $pdo->prepare("SELECT server_id FROM users WHERE id = ?");
-    $stmt->execute([$_SESSION['user_id']]);
-    $user = $stmt->fetch(PDO::FETCH_OBJ);
-
-    $schedules = [];
-    if ($user && $user->server_id) {
-        // Fetch Schedules linked via attendance
-        $stmt = $pdo->prepare("
-            SELECT s.*, a.status as attendance_status 
-            FROM schedules s
-            JOIN attendance a ON s.id = a.schedule_id
-            WHERE a.server_id = ?
-            ORDER BY s.mass_date DESC
-        ");
-        $stmt->execute([$user->server_id]);
-        $schedules = $stmt->fetchAll(PDO::FETCH_OBJ);
-    }
+    // Fetch Announcements
+    $stmt = $pdo->query("SELECT * FROM announcements ORDER BY created_at DESC");
+    $announcements = $stmt->fetchAll(PDO::FETCH_OBJ);
 } catch (PDOException $e) {
     die("Error: " . $e->getMessage());
 }
@@ -39,7 +24,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Schedule - Altar Servers System</title>
+    <title>Announcements - Altar Servers System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -61,6 +46,11 @@ try {
             }
         }
     </script>
+    <style>
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+    </style>
 </head>
 <body class="bg-[#f8fafc] font-sans text-slate-800 flex h-screen overflow-hidden">
 
@@ -85,7 +75,7 @@ try {
             <nav class="px-4 space-y-1">
                 <a href="dashboard.php" class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-50 hover:text-slate-900 rounded-xl transition-all">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                     </svg>
                     <span class="font-medium text-sm">Dashboard</span>
                 </a>
@@ -97,14 +87,14 @@ try {
                     <span class="font-medium text-sm">My Attendance</span>
                 </a>
 
-                <a href="#" class="flex items-center gap-3 px-4 py-3 bg-primary text-white rounded-xl shadow-lg shadow-blue-200 transition-all">
+                <a href="schedule.php" class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-50 hover:text-slate-900 rounded-xl transition-all">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                     <span class="font-medium text-sm">Schedule</span>
                 </a>
 
-                <a href="announcements.php" class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-50 hover:text-slate-900 rounded-xl transition-all">
+                <a href="#" class="flex items-center gap-3 px-4 py-3 bg-primary text-white rounded-xl shadow-lg shadow-blue-200 transition-all">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                     </svg>
@@ -134,55 +124,38 @@ try {
         <div class="p-8">
             
             <div class="mb-8 animate-fade-in-up">
-                <h2 class="text-2xl font-bold text-slate-800">My Mass Schedule</h2>
-                <p class="text-slate-500 text-sm mt-1">Assignments and upcoming activities</p>
+                <h2 class="text-2xl font-bold text-slate-800">Announcements</h2>
+                <p class="text-slate-500 text-sm mt-1">Stay updated with the latest parish news</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="space-y-6">
                 
-                <?php if(!empty($schedules)): ?>
-                    <?php foreach($schedules as $index => $sch): ?>
+                <?php if(!empty($announcements)): ?>
+                    <?php foreach($announcements as $index => $ann): ?>
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 animate-fade-in-up" style="animation-delay: <?= $index * 0.1 ?>s">
                         <div class="flex justify-between items-start mb-4">
-                            <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
+                            <div>
+                                <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-600 mb-2 inline-block">
+                                    <?= h($ann->category) ?>
+                                </span>
+                                <h3 class="text-lg font-bold text-slate-800"><?= h($ann->title) ?></h3>
                             </div>
-                            <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider <?= strtotime($sch->mass_date) < time() ? 'bg-slate-100 text-slate-500' : 'bg-green-100 text-green-600' ?>">
-                                <?= strtotime($sch->mass_date) < time() ? 'Completed' : 'Upcoming' ?>
-                            </span>
+                            <span class="text-xs text-slate-400"><?= date('M d, Y', strtotime($ann->created_at)) ?></span>
                         </div>
-                        
-                        <h3 class="font-bold text-slate-800 text-lg mb-1"><?= h($sch->mass_type) ?></h3>
-                        <p class="text-slate-400 text-sm mb-6">Main Parish Church</p>
-
-                        <div class="space-y-3">
-                            <div class="flex items-center gap-3 text-slate-600">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <span class="text-xs font-medium"><?= date('h:i A', strtotime($sch->mass_time)) ?></span>
+                        <p class="text-slate-600 text-sm leading-relaxed mb-6">
+                            <?= nl2br(h($ann->message)) ?>
+                        </p>
+                        <div class="flex items-center gap-3 pt-4 border-t border-slate-50">
+                            <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 text-xs font-bold">
+                                <?= strtoupper(substr($ann->author, 0, 1)) ?>
                             </div>
-                            <div class="flex items-center gap-3 text-slate-600">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                <span class="text-xs font-medium"><?= date('M d, Y', strtotime($sch->mass_date)) ?></span>
-                            </div>
-                        </div>
-
-                        <div class="mt-6 pt-6 border-t border-slate-50 flex items-center justify-between">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Attendance</span>
-                            <span class="text-xs font-bold <?= $sch->attendance_status == 'Present' ? 'text-green-600' : ($sch->attendance_status == 'Late' ? 'text-yellow-600' : 'text-red-600') ?>">
-                                <?= h($sch->attendance_status) ?>
-                            </span>
+                            <span class="text-xs font-medium text-slate-500">Posted by <?= h($ann->author) ?></span>
                         </div>
                     </div>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <div class="col-span-full bg-white p-12 rounded-2xl shadow-sm border border-slate-100 text-center animate-fade-in-up">
-                        <p class="text-slate-400">No schedules assigned to you yet.</p>
+                    <div class="bg-white p-12 rounded-2xl shadow-sm border border-slate-100 text-center animate-fade-in-up">
+                        <p class="text-slate-400">No announcements yet.</p>
                     </div>
                 <?php endif; ?>
 

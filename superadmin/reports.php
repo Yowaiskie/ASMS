@@ -256,9 +256,19 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                animation: {
+                    duration: 2000,
+                    easing: 'easeOutQuart',
+                    delay: (context) => context.dataIndex * 150
+                },
                 plugins: { legend: { display: false } },
                 scales: {
-                    y: { grid: { borderDash: [4, 4] } },
+                    y: { 
+                        grid: { 
+                            color: '#f1f5f9',
+                            drawBorder: false
+                        } 
+                    },
                     x: { grid: { display: false } }
                 }
             }
@@ -284,6 +294,12 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                animation: {
+                    animateRotate: true,
+                    animateScale: true,
+                    duration: 2500,
+                    easing: 'easeOutElastic'
+                },
                 plugins: {
                     legend: { position: 'bottom' }
                 }

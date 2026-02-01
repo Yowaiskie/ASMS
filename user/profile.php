@@ -1,3 +1,35 @@
+<?php
+session_start();
+require_once '../app/config/config.php';
+require_once '../app/helpers/functions.php';
+
+// Simple check if logged in
+if (!isset($_SESSION['user_id'])) {
+    header('Location: ../login.php');
+    exit;
+}
+
+// In a real app, we'd use the autoloader and Repository, 
+// but for this standalone file we can use a simple PDO fetch
+try {
+    $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME, DB_USER, DB_PASS);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+    $stmt->execute([$_SESSION['user_id']]);
+    $user = $stmt->fetch(PDO::FETCH_OBJ);
+
+    // Fetch Linked Server Profile
+    $server = null;
+    if ($user && $user->server_id) {
+        $stmt = $pdo->prepare("SELECT * FROM servers WHERE id = ?");
+        $stmt->execute([$user->server_id]);
+        $server = $stmt->fetch(PDO::FETCH_OBJ);
+    }
+} catch (PDOException $e) {
+    die("Error: " . $e->getMessage());
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,11 +43,25 @@
                 extend: {
                     colors: {
                         primary: '#1e63d4',
+                    },
+                    animation: {
+                        'fade-in-up': 'fadeInUp 0.6s ease-out forwards',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            'from': { opacity: '0', transform: 'translateY(20px)' },
+                            'to': { opacity: '1', transform: 'translateY(0)' },
+                        }
                     }
                 }
             }
         }
     </script>
+    <style>
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+    </style>
 </head>
 <body class="bg-[#f8fafc] font-sans text-slate-800 flex h-screen overflow-hidden">
 
@@ -34,7 +80,7 @@
             </div>
 
             <div class="px-6 mb-6">
-                <span class="inline-block bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1 rounded-full">User</span>
+                <span class="inline-block bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1 rounded-full"><?= h($user->role) ?></span>
             </div>
 
             <nav class="px-4 space-y-1">
@@ -76,7 +122,7 @@
         </div>
 
         <div class="p-4 border-t border-slate-50">
-            <a href="logout.php" class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all">
+            <a href="../logout.php" class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
@@ -91,17 +137,17 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 
                 <div class="lg:col-span-1">
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 flex flex-col items-center text-center">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 flex flex-col items-center text-center animate-fade-in-up">
                         
-                        <div class="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-blue-200 mb-4">
-                            JDC
+                        <div class="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-blue-200 mb-4 uppercase">
+                            <?= $server ? strtoupper(substr($server->name, 0, 2)) : strtoupper(substr($user->username, 0, 2)) ?>
                         </div>
                         
-                        <h2 class="text-xl font-bold text-slate-800">Juan Dela Cruz</h2>
-                        <p class="text-slate-400 text-sm font-medium mb-3">@user</p>
+                        <h2 class="text-xl font-bold text-slate-800"><?= $server ? h($server->name) : h($user->username) ?></h2>
+                        <p class="text-slate-400 text-sm font-medium mb-3">@<?= h($user->username) ?></p>
                         
                         <span class="px-4 py-1.5 rounded-full text-xs font-bold bg-green-100 text-green-600 mb-8">
-                            Active
+                            <?= $server ? h($server->status) : 'Active' ?>
                         </span>
 
                         <div class="w-full space-y-4 text-left">
@@ -113,19 +159,19 @@
                                 </div>
                                 <div>
                                     <p class="text-xs text-slate-400 font-medium">Role</p>
-                                    <p class="text-sm font-bold text-slate-700">Altar Server</p>
+                                    <p class="text-sm font-bold text-slate-700"><?= $server ? h($server->rank) : h($user->role) ?></p>
                                 </div>
                             </div>
 
                             <div class="flex items-center gap-4 p-3 rounded-xl bg-slate-50 border border-slate-100">
                                 <div class="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                     </svg>
                                 </div>
                                 <div>
-                                    <p class="text-xs text-slate-400 font-medium">Joined</p>
-                                    <p class="text-sm font-bold text-slate-700">January 15, 2025</p>
+                                    <p class="text-xs text-slate-400 font-medium">Team</p>
+                                    <p class="text-sm font-bold text-slate-700"><?= $server ? h($server->team) : 'N/A' ?></p>
                                 </div>
                             </div>
                         </div>
@@ -135,64 +181,39 @@
 
                 <div class="lg:col-span-2 space-y-8">
                     
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
-                        <h3 class="text-lg font-bold text-slate-700 mb-6">Personal Information</h3>
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 animate-fade-in-up delay-100">
+                        <h3 class="text-lg font-bold text-slate-700 mb-6">Account Information</h3>
                         
-                        <form class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             
                             <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Full Name</label>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Username</label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                         </svg>
                                     </div>
-                                    <input type="text" value="Juan Dela Cruz" readonly class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 font-medium focus:outline-none cursor-default">
+                                    <input type="text" value="<?= h($user->username) ?>" readonly class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 font-medium focus:outline-none cursor-default">
                                 </div>
                             </div>
 
                             <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Email Address</label>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Role</label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                                         </svg>
                                     </div>
-                                    <input type="email" value="juan.delacruz@church.org" readonly class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 font-medium focus:outline-none cursor-default">
+                                    <input type="text" value="<?= h($user->role) ?>" readonly class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 font-medium focus:outline-none cursor-default">
                                 </div>
                             </div>
 
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Phone Number</label>
-                                <div class="relative">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                        </svg>
-                                    </div>
-                                    <input type="text" value="+63 917 123 4567" readonly class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 font-medium focus:outline-none cursor-default">
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Address</label>
-                                <div class="relative">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-                                    </div>
-                                    <input type="text" value="Manila, Philippines" readonly class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 font-medium focus:outline-none cursor-default">
-                                </div>
-                            </div>
-
-                        </form>
+                        </div>
                     </div>
 
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 animate-fade-in-up delay-200">
                         <div class="flex items-center gap-3 mb-6">
                             <div class="p-2 bg-red-50 text-red-500 rounded-lg">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -205,21 +226,24 @@
                             </div>
                         </div>
 
+                        <?php flash('password_success'); ?>
+                        <?php flash('password_error'); ?>
+
                         <form action="update_password.php" method="POST" class="space-y-4">
                             
                             <div>
                                 <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Current Password</label>
-                                <input type="password" placeholder="Enter current password" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                                <input type="password" name="current_password" required placeholder="Enter current password" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
                             </div>
 
                             <div>
                                 <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">New Password</label>
-                                <input type="password" placeholder="Enter new password" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                                <input type="password" name="new_password" required placeholder="Enter new password" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
                             </div>
 
                             <div class="mb-6">
                                 <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Confirm New Password</label>
-                                <input type="password" placeholder="Confirm new password" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                                <input type="password" name="confirm_password" required placeholder="Confirm new password" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
                             </div>
 
                             <div class="flex items-center gap-3 pt-2">
@@ -229,7 +253,7 @@
                                     </svg>
                                     Save Password
                                 </button>
-                                <button type="button" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3 rounded-xl transition-all active:scale-[0.98]">
+                                <button type="reset" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3 rounded-xl transition-all active:scale-[0.98]">
                                     Cancel
                                 </button>
                             </div>

@@ -1,7 +1,26 @@
 <!-- Load Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+<style>
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    .animate-fade-in-up {
+        animation: fadeInUp 0.6s ease-out forwards;
+    }
+    .delay-100 { animation-delay: 0.1s; }
+    .delay-200 { animation-delay: 0.2s; }
+    .delay-300 { animation-delay: 0.3s; }
+</style>
+
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4 animate-fade-in-up">
     <div>
         <h2 class="text-2xl font-bold text-slate-800">Reports</h2>
         <p class="text-slate-500 text-sm mt-1">View attendance summaries and analytics</p>
@@ -23,7 +42,7 @@
     </div>
 </div>
 
-<div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mb-8">
+<div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mb-8 animate-fade-in-up delay-100">
     <div class="flex items-center gap-2 mb-4">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -57,22 +76,22 @@
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <div class="bg-green-500 rounded-2xl p-6 text-white shadow-lg shadow-green-200">
+    <div class="bg-green-500 rounded-2xl p-6 text-white shadow-lg shadow-green-200 animate-fade-in-up delay-200">
         <p class="text-white/80 text-sm font-medium mb-1">Total Present</p>
         <h3 class="text-4xl font-bold mb-2">540</h3>
         <p class="text-xs bg-white/20 inline-block px-2 py-1 rounded-lg">88.8% rate</p>
     </div>
-    <div class="bg-amber-500 rounded-2xl p-6 text-white shadow-lg shadow-amber-200">
+    <div class="bg-amber-500 rounded-2xl p-6 text-white shadow-lg shadow-amber-200 animate-fade-in-up delay-200">
         <p class="text-white/80 text-sm font-medium mb-1">Late</p>
         <h3 class="text-4xl font-bold mb-2">38</h3>
         <p class="text-xs bg-white/20 inline-block px-2 py-1 rounded-lg">6.3% rate</p>
     </div>
-    <div class="bg-red-600 rounded-2xl p-6 text-white shadow-lg shadow-red-200">
+    <div class="bg-red-600 rounded-2xl p-6 text-white shadow-lg shadow-red-200 animate-fade-in-up delay-200">
         <p class="text-white/80 text-sm font-medium mb-1">Absent</p>
         <h3 class="text-4xl font-bold mb-2">30</h3>
         <p class="text-xs bg-white/20 inline-block px-2 py-1 rounded-lg">4.9% rate</p>
     </div>
-    <div class="bg-blue-500 rounded-2xl p-6 text-white shadow-lg shadow-blue-200">
+    <div class="bg-blue-500 rounded-2xl p-6 text-white shadow-lg shadow-blue-200 animate-fade-in-up delay-200">
         <p class="text-white/80 text-sm font-medium mb-1">Total Activities</p>
         <h3 class="text-4xl font-bold mb-2">24</h3>
         <p class="text-xs bg-white/20 inline-block px-2 py-1 rounded-lg">This month</p>
@@ -81,14 +100,14 @@
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
     
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 animate-fade-in-up delay-300">
         <h3 class="font-bold text-slate-700 mb-6">Monthly Attendance Trend</h3>
         <div class="h-64">
             <canvas id="attendanceBarChart"></canvas>
         </div>
     </div>
 
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 animate-fade-in-up delay-300">
         <h3 class="font-bold text-slate-700 mb-6">Overall Distribution</h3>
         <div class="h-64 flex justify-center">
             <canvas id="distributionPieChart"></canvas>
@@ -182,6 +201,11 @@
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: {
+                duration: 2000,
+                easing: 'easeOutQuart',
+                delay: (context) => context.dataIndex * 100
+            },
             plugins: {
                 legend: { display: false }
             },
@@ -189,7 +213,10 @@
                 y: {
                     beginAtZero: true,
                     max: 100,
-                    grid: { borderDash: [2, 2] }
+                    grid: { 
+                        color: '#f1f5f9',
+                        drawBorder: false
+                    }
                 },
                 x: {
                     grid: { display: false }
@@ -212,13 +239,19 @@
                     '#ef4444'  // Red 500
                 ],
                 borderWidth: 0,
-                hoverOffset: 4
+                hoverOffset: 15
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             cutout: '75%',
+            animation: {
+                animateScale: true,
+                animateRotate: true,
+                duration: 2500,
+                easing: 'easeInOutBack'
+            },
             plugins: {
                 legend: { display: false }
             }

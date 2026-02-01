@@ -1,7 +1,26 @@
 <!-- Load Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<div class="mb-8">
+<style>
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    .animate-fade-in-up {
+        animation: fadeInUp 0.6s ease-out forwards;
+    }
+    .delay-100 { animation-delay: 0.1s; }
+    .delay-200 { animation-delay: 0.2s; }
+    .delay-300 { animation-delay: 0.3s; }
+</style>
+
+<div class="mb-8 animate-fade-in-up">
     <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
         Dashboard 
         <span class="text-red-500 text-xl">🎯</span>
@@ -11,7 +30,7 @@
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
     
-    <div class="bg-blue-600 rounded-3xl p-6 text-white shadow-lg shadow-blue-200">
+    <div class="bg-blue-600 rounded-3xl p-6 text-white shadow-lg shadow-blue-200 animate-fade-in-up">
         <div class="flex justify-between items-start mb-4">
             <h3 class="font-medium opacity-90">Total Servers</h3>
             <div class="p-2 bg-white/20 rounded-lg">
@@ -26,7 +45,7 @@
         </div>
     </div>
 
-    <div class="bg-emerald-500 rounded-3xl p-6 text-white shadow-lg shadow-emerald-200">
+    <div class="bg-emerald-500 rounded-3xl p-6 text-white shadow-lg shadow-emerald-200 animate-fade-in-up delay-100">
         <div class="flex justify-between items-start mb-4">
             <h3 class="font-medium opacity-90">Present Today</h3>
             <div class="p-2 bg-white/20 rounded-lg">
@@ -41,7 +60,7 @@
         </div>
     </div>
 
-    <div class="bg-purple-600 rounded-3xl p-6 text-white shadow-lg shadow-purple-200">
+    <div class="bg-purple-600 rounded-3xl p-6 text-white shadow-lg shadow-purple-200 animate-fade-in-up delay-200">
         <div class="flex justify-between items-start mb-4">
             <h3 class="font-medium opacity-90">Mass Schedules</h3>
             <div class="p-2 bg-white/20 rounded-lg">
@@ -56,7 +75,7 @@
         </div>
     </div>
 
-    <div class="bg-orange-500 rounded-3xl p-6 text-white shadow-lg shadow-orange-200">
+    <div class="bg-orange-500 rounded-3xl p-6 text-white shadow-lg shadow-orange-200 animate-fade-in-up delay-300">
         <div class="flex justify-between items-start mb-4">
             <h3 class="font-medium opacity-90">Attendance</h3>
             <div class="p-2 bg-white/20 rounded-lg">
@@ -75,7 +94,7 @@
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
     <!-- Chart: Attendance Distribution -->
-    <div class="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+    <div class="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-slate-100 animate-fade-in-up">
         <h3 class="font-bold text-slate-700 mb-6">Attendance Distribution</h3>
         <div class="h-64 flex justify-center">
             <canvas id="dashboardDistChart"></canvas>
@@ -83,7 +102,7 @@
     </div>
 
     <!-- Quick Legend / Info -->
-    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 animate-fade-in-up delay-100">
         <h3 class="font-bold text-slate-700 mb-6">Service Status</h3>
         <div class="space-y-4">
             <div class="flex items-center justify-between">
@@ -135,7 +154,7 @@
         </div>
     </div>
 
-    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 animate-fade-in-up delay-300">
         <h3 class="font-bold text-slate-700 mb-6 text-lg">Upcoming Schedules</h3>
         
         <div class="space-y-4">
@@ -192,13 +211,27 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                animation: {
+                    duration: 2000,
+                    easing: 'easeOutQuart',
+                    delay: (context) => {
+                        let delay = 0;
+                        if (context.type === 'data' && context.mode === 'default') {
+                            delay = context.dataIndex * 200 + context.datasetIndex * 100;
+                        }
+                        return delay;
+                    }
+                },
                 plugins: {
                     legend: { display: false }
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
-                        grid: { display: false }
+                        grid: { 
+                            color: '#f1f5f9',
+                            drawBorder: false
+                        }
                     },
                     x: {
                         grid: { display: false }
