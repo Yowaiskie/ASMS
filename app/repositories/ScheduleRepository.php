@@ -1,0 +1,51 @@
+<?php
+
+namespace App\Repositories;
+
+use App\Interfaces\RepositoryInterface;
+use App\Core\Database;
+use App\Models\Schedule;
+
+class ScheduleRepository implements RepositoryInterface {
+    private $db;
+
+    public function __construct() {
+        $this->db = Database::getInstance();
+    }
+
+    public function getAll() {
+        $this->db->query("SELECT * FROM schedules ORDER BY mass_date ASC, mass_time ASC");
+        return $this->db->resultSet();
+    }
+
+    public function getById($id) {
+        $this->db->query("SELECT * FROM schedules WHERE id = :id");
+        $this->db->bind(':id', $id);
+        return $this->db->single();
+    }
+
+    public function create(array $data) {
+        $this->db->query("INSERT INTO schedules (mass_type, mass_date, mass_time, status) VALUES (:mass_type, :mass_date, :mass_time, :status)");
+        $this->db->bind(':mass_type', $data['mass_type']);
+        $this->db->bind(':mass_date', $data['mass_date']);
+        $this->db->bind(':mass_time', $data['mass_time']);
+        $this->db->bind(':status', $data['status']);
+        return $this->db->execute();
+    }
+
+    public function update($id, array $data) {
+        $this->db->query("UPDATE schedules SET mass_type = :type, mass_date = :date, mass_time = :time, status = :status WHERE id = :id");
+        $this->db->bind(':id', $id);
+        $this->db->bind(':type', $data['mass_type']);
+        $this->db->bind(':date', $data['mass_date']);
+        $this->db->bind(':time', $data['mass_time']);
+        $this->db->bind(':status', $data['status']);
+        return $this->db->execute();
+    }
+
+    public function delete($id) {
+        $this->db->query("DELETE FROM schedules WHERE id = :id");
+        $this->db->bind(':id', $id);
+        return $this->db->execute();
+    }
+}
