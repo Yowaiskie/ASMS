@@ -62,13 +62,5 @@ public/             # Web root (Index, CSS, JS, Assets)
 - **SQL Injection Prevention:** Strict use of PDO Prepared Statements.
 - **Session Security:** Strict session management and login requirements for protected routes.
 
-## 👤 Default Accounts
-
-| Role | Username | Password |
-| :--- | :--- | :--- |
-| **Superadmin** | `superadmin` | `123` |
-| **Admin** | `admin` | `123` |
-| **User** | `user` | `123` |
-
 ---
 *Developed with ❤️ for the Altar Server Ministry.*
