@@ -198,6 +198,57 @@ class ServerController extends Controller {
         exit;
     }
 
+    public function import() {
+        $this->verifyCsrf();
+
+        if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['csv_file']) && $_FILES['csv_file']['error'] == 0) {
+            $fileName = $_FILES['csv_file']['tmp_name'];
+            
+            if ($_FILES['csv_file']['size'] > 0) {
+                $file = fopen($fileName, "r");
+                $count = 0;
+                
+                $firstRow = true;
+                while (($column = fgetcsv($file, 10000, ",")) !== FALSE) {
+                    if ($firstRow) { $firstRow = false; continue; } // Skip Header
+
+                    if (count($column) < 1) continue;
+                    
+                    $data = [
+                        'name' => trim($column[0] ?? ''),
+                        'nickname' => trim($column[1] ?? ''),
+                        'address' => trim($column[2] ?? ''),
+                        'dob' => !empty($column[3]) ? date('Y-m-d', strtotime($column[3])) : null,
+                        'phone' => trim($column[4] ?? ''),
+                        'month_joined' => trim($column[5] ?? ''),
+                        'investiture_date' => !empty($column[6]) ? date('Y-m-d', strtotime($column[6])) : null,
+                        'order_name' => trim($column[7] ?? ''),
+                        'position' => trim($column[8] ?? ''),
+                        'rank' => trim($column[9] ?? 'Server'),
+                        'team' => trim($column[10] ?? 'Unassigned'),
+                        'status' => trim($column[11] ?? 'Active'),
+                        'email' => trim($column[12] ?? '')
+                    ];
+
+                    if (empty($data['name'])) continue;
+
+                    if ($this->serverRepo->create($data)) {
+                        $count++;
+                    }
+                }
+                
+                fclose($file);
+                logAction('Create', 'Servers', "Imported $count servers via CSV.");
+                setFlash('msg_success', "Imported $count servers successfully.");
+            } else {
+                setFlash('msg_error', 'Empty file uploaded.');
+            }
+        } else {
+            setFlash('msg_error', 'Invalid file upload.');
+        }
+        redirect('servers');
+    }
+
     public function delete() {
         $id = $_GET['id'] ?? null;
         

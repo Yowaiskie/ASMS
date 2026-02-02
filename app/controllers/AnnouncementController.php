@@ -52,6 +52,7 @@ class AnnouncementController extends Controller {
             ];
 
             if ($this->announcementRepo->create($data)) {
+                logAction('Create', 'Announcements', "Created announcement: " . $data['title']);
                 setFlash('msg_success', 'Announcement posted successfully!');
             } else {
                 setFlash('msg_error', 'Failed to post announcement.');
@@ -69,6 +70,7 @@ class AnnouncementController extends Controller {
 
         $id = $_GET['id'] ?? null;
         if ($id && $this->announcementRepo->delete($id)) {
+            logAction('Delete', 'Announcements', "Deleted announcement ID: $id");
             setFlash('msg_success', 'Announcement deleted.');
         } else {
             setFlash('msg_error', 'Failed to delete announcement.');

@@ -95,6 +95,7 @@ class AttendanceController extends Controller {
             $status = $_POST['status'];
 
             if ($this->attendanceRepo->updateStatus($id, $status)) {
+                logAction('Update', 'Attendance', "Updated attendance ID: $id to $status");
                 setFlash('msg_success', 'Attendance updated.');
             } else {
                 setFlash('msg_error', 'Update failed.');

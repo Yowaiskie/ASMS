@@ -75,35 +75,22 @@ class ScheduleController extends Controller {
                 // Update
                 if ($this->scheduleRepo->update($id, $data)) {
                     $this->scheduleRepo->syncAssignments($id, $assignedServers);
+                    logAction('Update', 'Schedules', "Updated schedule ID: $id (" . $data['mass_type'] . ")");
                     setFlash('msg_success', 'Schedule updated successfully!');
                 } else {
                     setFlash('msg_error', 'Failed to update schedule.');
                 }
             } else {
                 // Create
-                // We need the ID. `create` only returns true/false.
-                // Assuming Database class has lastInsertId method or similar logic.
-                // For now, let's try to fetch it after create or update repo.
-                
-                // Hack: We can't easily get ID from bool return. 
-                // We should update Repo to return ID.
-                // For now, I'll rely on update logic mostly or just not support assignment on create (user has to edit).
-                // "Click nalang para mag add" -> Implies edit flow usually.
-                
-                // But let's try to support it. 
                 if ($this->scheduleRepo->create($data)) {
-                    // Fetch the latest ID? unsafe.
-                    // Let's defer assignment on create if ID unavailable, or update Repo.
-                    
-                    // Actually, let's just save. Assignment might require a second step if I don't fix Repo.
-                    // But I will fix Repo next.
                     $db = \App\Core\Database::getInstance();
-                    $newId = $db->lastInsertId(); // Assuming this method exists or I can add it
+                    $newId = $db->lastInsertId();
                     
                     if ($newId) {
                         $this->scheduleRepo->syncAssignments($newId, $assignedServers);
                     }
                     
+                    logAction('Create', 'Schedules', "Created new schedule: " . $data['mass_type'] . " on " . $data['mass_date']);
                     setFlash('msg_success', 'Schedule created successfully!');
                 } else {
                     setFlash('msg_error', 'Failed to create schedule.');
@@ -116,6 +103,7 @@ class ScheduleController extends Controller {
     public function delete() {
         $id = $_GET['id'] ?? null;
         if ($id && $this->scheduleRepo->delete($id)) {
+            logAction('Delete', 'Schedules', "Deleted schedule ID: $id");
             setFlash('msg_success', 'Schedule deleted.');
         } else {
             setFlash('msg_error', 'Failed to delete schedule.');
@@ -133,6 +121,7 @@ class ScheduleController extends Controller {
                     $count++;
                 }
             }
+            logAction('Delete', 'Schedules', "Bulk deleted $count schedules.");
             setFlash('msg_success', "Deleted $count schedules successfully.");
         } else {
             setFlash('msg_error', "No schedules selected.");
@@ -153,6 +142,7 @@ class ScheduleController extends Controller {
                         $count++;
                     }
                 }
+                logAction('Update', 'Schedules', "Bulk updated status to $status for $count schedules.");
                 setFlash('msg_success', "Updated $count schedules.");
             }
         }
@@ -202,6 +192,7 @@ class ScheduleController extends Controller {
                 $date->modify('+1 day');
             }
 
+            logAction('Create', 'Schedules', "Generated $count schedules for $month/$year.");
             setFlash('msg_success', "Generated $count schedules (Saturdays & Sundays) for $month/$year.");
         } catch (\Exception $e) {
             setFlash('msg_error', "Error generating schedules: " . $e->getMessage());
@@ -218,22 +209,14 @@ class ScheduleController extends Controller {
                 $file = fopen($fileName, "r");
                 $count = 0;
                 
-                // Skip header if exists? Assume no header or handle basic check
-                // Let's assume standard format: Date, Time, Type, EventName
-                
                 while (($column = fgetcsv($file, 10000, ",")) !== FALSE) {
-                    // Validate minimal columns
                     if (count($column) < 3) continue;
                     
-                    // Basic cleanup
                     $date = trim($column[0]);
                     $time = trim($column[1]);
                     $type = trim($column[2]);
                     $eventName = isset($column[3]) ? trim($column[3]) : null;
 
-                    // Validate Date/Time format (optional but good practice)
-                    // For now, just try to insert
-                    
                     $data = [
                         'mass_date' => $date,
                         'mass_time' => $time,
@@ -248,6 +231,7 @@ class ScheduleController extends Controller {
                 }
                 
                 fclose($file);
+                logAction('Create', 'Schedules', "Imported $count schedules via CSV.");
                 setFlash('msg_success', "Imported $count schedules successfully.");
             } else {
                 setFlash('msg_error', 'Empty file uploaded.');

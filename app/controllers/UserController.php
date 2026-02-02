@@ -74,6 +74,7 @@ class UserController extends Controller {
                 ];
                 
                 if ($this->userRepo->create($userData)) {
+                    logAction('Create', 'Users', "Created user account: $username with role $role");
                     setFlash('msg_success', 'User created successfully.');
                 } else {
                     setFlash('msg_error', 'Failed to create user account.');
@@ -99,6 +100,7 @@ class UserController extends Controller {
             }
 
             if ($this->userRepo->update($id, $data)) {
+                logAction('Update', 'Users', "Updated user ID: $id. Role: $role");
                 setFlash('msg_success', 'User updated successfully.');
             } else {
                 setFlash('msg_error', 'Failed to update user.');
@@ -113,6 +115,7 @@ class UserController extends Controller {
             $id = $_POST['id'];
 
             if ($this->userRepo->delete($id)) {
+                logAction('Delete', 'Users', "Deleted user ID: $id");
                 setFlash('msg_success', 'User deleted successfully.');
             } else {
                 setFlash('msg_error', 'Failed to delete user.');
@@ -131,6 +134,7 @@ class UserController extends Controller {
                     $count++;
                 }
             }
+            logAction('Delete', 'Users', "Bulk deleted $count users.");
             setFlash('msg_success', "Deleted $count users successfully.");
         } else {
             setFlash('msg_error', "No users selected.");
@@ -198,6 +202,7 @@ class UserController extends Controller {
                 
                 fclose($file);
                 
+                logAction('Create', 'Users', "Imported $count users via CSV.");
                 $msg = "Imported $count users successfully. (Default Pass: 12345)";
                 if ($duplicates > 0) $msg .= " ($duplicates skipped as duplicates).";
                 

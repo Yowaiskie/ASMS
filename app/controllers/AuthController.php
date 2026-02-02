@@ -23,6 +23,10 @@ class AuthController extends Controller {
         require_once '../app/views/auth/login.php';
     }
 
+    public function maintenance() {
+        require_once '../app/views/pages/maintenance.php';
+    }
+
     // Process Login
     public function authenticate() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -84,6 +88,9 @@ class AuthController extends Controller {
 
     // Logout
     public function logout() {
+        if (isset($_SESSION['username'])) {
+            logAction('Logout', 'Auth', 'User ' . $_SESSION['username'] . ' logged out.');
+        }
         unset($_SESSION['user_id']);
         unset($_SESSION['username']);
         unset($_SESSION['role']);

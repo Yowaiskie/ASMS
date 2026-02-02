@@ -15,6 +15,7 @@ use App\Controllers\UserController;
 
 // Auth Routes
 $router->get('/login', [AuthController::class, 'login']);
+$router->get('/maintenance', [AuthController::class, 'maintenance']);
 $router->post('/auth/login', [AuthController::class, 'authenticate']);
 $router->get('/register', [AuthController::class, 'register']);
 $router->post('/auth/register', [AuthController::class, 'store']);
@@ -37,6 +38,7 @@ $router->post('/schedules/import', [ScheduleController::class, 'import']);
 // Servers
 $router->get('/servers', [ServerController::class, 'index']);
 $router->post('/servers/store', [ServerController::class, 'store']);
+$router->post('/servers/import', [ServerController::class, 'import']);
 $router->get('/servers/delete', [ServerController::class, 'delete']);
 $router->get('/servers/download', [ServerController::class, 'download_pdf']);
 
@@ -75,3 +77,4 @@ $router->get('/trainings', [TrainingController::class, 'index']);
 // Settings
 $router->get('/settings', [SettingsController::class, 'index']);
 $router->post('/settings/store', [SettingsController::class, 'store']);
+$router->get('/settings/backup', [SettingsController::class, 'backup']);

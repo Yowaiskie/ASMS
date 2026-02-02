@@ -137,6 +137,27 @@ try {
     $pdo->exec($sql);
     echo "Table 'logs' created.<br>";
 
+    // --- Table: system_settings ---
+    $sql = "CREATE TABLE IF NOT EXISTS system_settings (
+        setting_key VARCHAR(50) PRIMARY KEY,
+        setting_value TEXT,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    )";
+    $pdo->exec($sql);
+    echo "Table 'system_settings' created.<br>";
+
+    // Seed System Settings
+    $check = $pdo->query("SELECT count(*) FROM system_settings")->fetchColumn();
+    if ($check == 0) {
+        $stmt = $pdo->prepare("INSERT INTO system_settings (setting_key, setting_value) VALUES (?, ?)");
+        $stmt->execute(['system_name', 'Altar Servers Management System']);
+        $stmt->execute(['admin_email', 'admin@church.org']);
+        $stmt->execute(['contact_phone', '+63 912 345 6789']);
+        $stmt->execute(['maintenance_mode', 'off']);
+        $stmt->execute(['allow_registration', 'on']);
+        echo "Default system settings seeded.<br>";
+    }
+
     echo "<hr><strong>Database setup completed successfully!</strong> <a href='" . URLROOT . "'>Go to Dashboard</a>";
 
 } catch (PDOException $e) {
