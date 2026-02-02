@@ -20,8 +20,8 @@ class UserRepository implements RepositoryInterface {
     }
 
     public function getAll() {
-        // Not implemented for auth
-        return [];
+        $this->db->query("SELECT * FROM users ORDER BY created_at DESC");
+        return $this->db->resultSet();
     }
 
     public function getById($id) {
@@ -71,22 +71,30 @@ class UserRepository implements RepositoryInterface {
     }
 
     public function create(array $data) {
-        $this->db->query("INSERT INTO users (username, password, role) VALUES (:username, :password, :role)");
+        $this->db->query("INSERT INTO users (username, password, role, server_id) VALUES (:username, :password, :role, :server_id)");
         $this->db->bind(':username', $data['username']);
         $this->db->bind(':password', $data['password']); // Already hashed
         $this->db->bind(':role', $data['role']);
+        $this->db->bind(':server_id', $data['server_id'] ?? null);
         return $this->db->execute();
     }
 
     public function update($id, array $data) {
-        // Simple update for password/profile
-        if(isset($data['password'])) {
-            $this->db->query("UPDATE users SET password = :password WHERE id = :id");
+        if (isset($data['password'])) {
+            $this->db->query("UPDATE users SET password = :password, role = :role WHERE id = :id");
             $this->db->bind(':password', $data['password']);
-            $this->db->bind(':id', $id);
-            return $this->db->execute();
+        } else {
+            $this->db->query("UPDATE users SET role = :role WHERE id = :id");
         }
-        return false;
+        
+        $this->db->bind(':role', $data['role']);
+        $this->db->bind(':id', $id);
+        return $this->db->execute();
     }
-    public function delete($id) { return true; }
+
+    public function delete($id) {
+        $this->db->query("DELETE FROM users WHERE id = :id");
+        $this->db->bind(':id', $id);
+        return $this->db->execute();
+    }
 }

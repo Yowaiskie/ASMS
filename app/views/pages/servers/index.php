@@ -1,148 +1,209 @@
-<div class="flex items-end justify-between mb-8">
+<div class="flex items-end justify-between mb-8 animate-fade-in-up">
     <div>
-        <h2 class="text-2xl font-bold text-slate-800">Altar Servers</h2>
-        <p class="text-slate-500 text-sm mt-1">Manage altar servers and their details</p>
+        <h2 class="text-2xl font-bold text-slate-800">Altar Servers Directory</h2>
+        <p class="text-slate-500 text-sm mt-1">Manage server profiles and master list</p>
     </div>
     
-    <button onclick="toggleElement('createUserForm')" class="bg-primary hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl shadow-lg shadow-blue-200 transition-all flex items-center gap-2 font-semibold text-sm">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-        </svg>
-        Register Server
-    </button>
-</div>
-
-<div id="createUserForm" class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 mb-8 hidden transition-all duration-300">
-    <div class="mb-6">
-        <h3 class="text-lg font-bold text-slate-800">Register New Server</h3>
-    </div>
-
-    <form action="<?= URLROOT ?>/servers/store" method="POST" class="space-y-6">
-        <?php csrf_field(); ?>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-                <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Full Name</label>
-                <input type="text" name="name" placeholder="Enter full name" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder:text-slate-400">
-            </div>
-
-            <div>
-                <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Rank/Position</label>
-                <select name="rank" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none cursor-pointer">
-                    <option value="Senior Server">Senior Server</option>
-                    <option value="Junior Server">Junior Server</option>
-                    <option value="Aspirant">Aspirant</option>
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Team</label>
-                <select name="team" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none cursor-pointer">
-                    <option value="Team A">Team A</option>
-                    <option value="Team B">Team B</option>
-                    <option value="Team C">Team C</option>
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Email</label>
-                <input type="email" name="email" placeholder="Enter email address" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder:text-slate-400">
-            </div>
-            
-            <div>
-                <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Status</label>
-                <select name="status" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none cursor-pointer">
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="flex items-center gap-3 pt-4">
-            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-200 transition-all active:scale-[0.98]">Save Server</button>
-            <button type="button" onclick="toggleElement('createUserForm')" class="px-8 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition-all active:scale-[0.98]">Cancel</button>
-        </div>
-
-    </form>
-</div>
-
-<div class="bg-white rounded-t-2xl border-b border-slate-100 p-6 flex flex-col md:flex-row gap-4 justify-between items-center shadow-sm">
-    <div class="w-full md:w-96 relative">
-        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    <div class="flex gap-2">
+        <a href="<?= URLROOT ?>/servers/download" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-5 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 font-bold text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
             </svg>
-        </div>
-        <input type="text" placeholder="Search server..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+            Download PDF
+        </a>
+        <button onclick="openModal('add')" class="bg-primary hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl shadow-lg shadow-blue-200 transition-all flex items-center gap-2 font-semibold text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Add Server
+        </button>
     </div>
-    <button class="flex items-center gap-2 text-slate-500 hover:text-slate-700 text-sm font-medium">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-        </svg>
-        Filter
-    </button>
 </div>
 
-<div class="bg-white rounded-b-2xl shadow-sm border border-slate-100 border-t-0 overflow-hidden">
+<div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden animate-fade-in-up delay-100">
     <div class="overflow-x-auto">
         <table class="w-full text-left">
-            <thead class="bg-slate-50/50 text-xs font-bold text-slate-500 uppercase border-b border-slate-100">
+            <thead class="bg-slate-50/50 text-[10px] font-bold text-slate-500 uppercase border-b border-slate-100">
                 <tr>
-                    <th class="px-6 py-4">Name</th>
-                    <th class="px-6 py-4">Rank/Position</th>
-                    <th class="px-6 py-4">Team</th>
-                    <th class="px-6 py-4">Status</th>
+                    <th class="px-6 py-4">Full Name</th>
+                    <th class="px-6 py-4">Nickname</th>
+                    <th class="px-6 py-4 w-1/4">Address</th>
+                    <th class="px-6 py-4">Birth Date</th>
+                    <th class="px-6 py-4">Contact</th>
+                    <th class="px-6 py-4">Rank/Pos</th>
                     <th class="px-6 py-4 text-center">Actions</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-slate-50 text-sm">
-                
+            <tbody class="divide-y divide-slate-100 text-xs">
                 <?php if(!empty($servers)): ?>
-                    <?php foreach($servers as $server): ?>
+                    <?php foreach($servers as $svr): ?>
                     <tr class="hover:bg-slate-50 transition-colors">
                         <td class="px-6 py-4">
-                            <div class="flex items-center gap-3">
-                                <?php 
-                                    // Generate initials
-                                    $parts = explode(' ', $server->name);
-                                    $initials = '';
-                                    if(count($parts) >= 2) {
-                                        $initials = strtoupper(substr($parts[0], 0, 1) . substr($parts[1], 0, 1));
-                                    } else {
-                                        $initials = strtoupper(substr($server->name, 0, 2));
-                                    }
-                                ?>
-                                <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs"><?= h($initials) ?></div>
-                                <span class="font-bold text-slate-700"><?= h($server->name) ?></span>
+                            <span class="font-bold text-slate-700 block"><?= h($svr->name) ?></span>
+                            <span class="text-[10px] text-slate-400">Joined: <?= h($svr->month_joined) ?></span>
+                        </td>
+                        <td class="px-6 py-4 text-slate-600 font-medium">
+                            <?= h($svr->nickname) ?>
+                        </td>
+                        <td class="px-6 py-4 text-slate-500 leading-relaxed">
+                            <?= h($svr->address) ?>
+                        </td>
+                        <td class="px-6 py-4 text-slate-600">
+                            <?= $svr->dob ? date('M d, Y', strtotime($svr->dob)) : '-' ?>
+                        </td>
+                        <td class="px-6 py-4 text-slate-500">
+                            <?= h($svr->phone) ?>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex flex-col">
+                                <span class="font-bold text-blue-600"><?= h($svr->rank) ?></span>
+                                <span class="text-[10px] text-slate-400 font-medium uppercase"><?= h($svr->position) ?></span>
                             </div>
                         </td>
-                        <td class="px-6 py-4 text-slate-500"><?= h($server->rank) ?></td>
-                        <td class="px-6 py-4 text-slate-500"><?= h($server->team) ?></td>
-                        <td class="px-6 py-4">
-                            <?php if($server->status == 'Active'): ?>
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-green-50 text-green-600 border border-green-100">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Active
-                                </span>
-                            <?php else: ?>
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-500 border border-slate-200">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Inactive
-                                </span>
-                            <?php endif; ?>
-                        </td>
                         <td class="px-6 py-4 text-center">
-                                                                <div class="flex items-center justify-center gap-2">
-                                                                    <button class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></button>
-                                                                    <a href="<?= URLROOT ?>/servers/delete?id=<?= $server->id ?>" onclick="return confirm('Are you sure?')" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></a>
-                                                                </div>                        </td>
+                            <div class="flex items-center justify-center gap-2">
+                                <button onclick='openModal("edit", <?= json_encode($svr) ?>)' class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></button>
+                                <a href="<?= URLROOT ?>/servers/delete?id=<?= $svr->id ?>" onclick="return confirm('Delete this server?')" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></a>
+                            </div>
+                        </td>
                     </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <tr>
-                        <td colspan="5" class="px-6 py-8 text-center text-slate-500">No servers found.</td>
-                    </tr>
+                    <tr><td colspan="7" class="p-12 text-center text-slate-400 italic">No servers found in directory.</td></tr>
                 <?php endif; ?>
-
             </tbody>
         </table>
     </div>
 </div>
+
+<!-- Modal -->
+<div id="serverModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-300 flex flex-col max-h-[90vh]" id="modalContent">
+        <div class="p-6 overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="modalTitle" class="text-lg font-bold text-slate-800">Register New Server</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+            </div>
+
+            <form action="<?= URLROOT ?>/servers/store" method="POST" id="serverForm" class="space-y-4">
+                <?php csrf_field(); ?>
+                <input type="hidden" name="id" id="serverId">
+
+                <div class="grid grid-cols-1 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">Full Name</label>
+                        <input type="text" name="name" id="svr_name" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">Nickname</label>
+                            <input type="text" name="nickname" id="svr_nickname" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">Age</label>
+                            <input type="number" name="age" id="svr_age" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">Date of Birth</label>
+                            <input type="date" name="dob" id="svr_dob" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">Contact</label>
+                            <input type="text" name="phone" id="svr_phone" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">Home Address</label>
+                        <textarea name="address" id="svr_address" rows="2" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm"></textarea>
+                    </div>
+
+                    <div class="h-px bg-slate-100"></div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">Rank</label>
+                            <input type="text" name="rank" id="svr_rank" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">Team</label>
+                            <input type="text" name="team" id="svr_team" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">Order</label>
+                            <input type="text" name="order_name" id="svr_order" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">Position</label>
+                            <input type="text" name="position" id="svr_position" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">Joined</label>
+                            <input type="text" name="month_joined" id="svr_joined" placeholder="2023-07" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">Status</label>
+                            <select name="status" id="svr_status" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4 flex gap-2">
+                    <button type="button" onclick="closeModal()" class="flex-1 py-3 border border-slate-200 rounded-xl text-slate-600 font-bold text-sm">Cancel</button>
+                    <button type="submit" class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg text-sm">Save Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const modal = document.getElementById('serverModal');
+    const content = document.getElementById('modalContent');
+
+    function openModal(mode, data = null) {
+        modal.classList.remove('hidden');
+        setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); }, 10);
+        
+        if (mode === 'add') {
+            document.getElementById('modalTitle').innerText = 'Register New Server';
+            document.getElementById('serverForm').reset();
+            document.getElementById('serverId').value = '';
+        } else {
+            document.getElementById('modalTitle').innerText = 'Edit Server Profile';
+            document.getElementById('serverId').value = data.id;
+            document.getElementById('svr_name').value = data.name;
+            document.getElementById('svr_nickname').value = data.nickname || '';
+            document.getElementById('svr_dob').value = data.dob || '';
+            document.getElementById('svr_age').value = data.age || '';
+            document.getElementById('svr_phone').value = data.phone || '';
+            document.getElementById('svr_address').value = data.address || '';
+            document.getElementById('svr_rank').value = data.rank || '';
+            document.getElementById('svr_team').value = data.team || '';
+            document.getElementById('svr_joined').value = data.month_joined || '';
+            document.getElementById('svr_invest').value = data.investiture_date || '';
+            document.getElementById('svr_order').value = data.order_name || '';
+            document.getElementById('svr_position').value = data.position || '';
+            document.getElementById('svr_status').value = data.status;
+        }
+    }
+
+    function closeModal() {
+        modal.classList.add('opacity-0');
+        content.classList.add('scale-95');
+        setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+</script>

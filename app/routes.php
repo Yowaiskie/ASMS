@@ -11,6 +11,7 @@ use App\Controllers\AnnouncementController;
 use App\Controllers\ReportController;
 use App\Controllers\LogController;
 use App\Controllers\ExcuseController;
+use App\Controllers\UserController;
 
 // Auth Routes
 $router->get('/login', [AuthController::class, 'login']);
@@ -19,7 +20,7 @@ $router->get('/register', [AuthController::class, 'register']);
 $router->post('/auth/register', [AuthController::class, 'store']);
 $router->get('/logout', [AuthController::class, 'logout']);
 
-// Protected Routes (Session check logic should be inside Controllers or Middleware)
+// Protected Routes
 $router->get('/', [DashboardController::class, 'index']);
 $router->get('/dashboard', [DashboardController::class, 'index']);
 
@@ -36,7 +37,16 @@ $router->post('/schedules/import', [ScheduleController::class, 'import']);
 // Servers
 $router->get('/servers', [ServerController::class, 'index']);
 $router->post('/servers/store', [ServerController::class, 'store']);
-$router->get('/servers/delete', [ServerController::class, 'delete']); // Usage: /servers/delete?id=1
+$router->get('/servers/delete', [ServerController::class, 'delete']);
+$router->get('/servers/download', [ServerController::class, 'download_pdf']);
+
+// Users (Superadmin only)
+$router->get('/users', [UserController::class, 'index']);
+$router->post('/users/store', [UserController::class, 'store']);
+$router->post('/users/update', [UserController::class, 'update']);
+$router->post('/users/delete', [UserController::class, 'delete']);
+$router->post('/users/bulk-delete', [UserController::class, 'bulkDelete']);
+$router->post('/users/import', [UserController::class, 'import']);
 
 // Attendance
 $router->get('/attendance', [AttendanceController::class, 'index']);
@@ -65,6 +75,3 @@ $router->get('/trainings', [TrainingController::class, 'index']);
 // Settings
 $router->get('/settings', [SettingsController::class, 'index']);
 $router->post('/settings/store', [SettingsController::class, 'store']);
-
-// Logout (Mock) - Removed
-// $router->get('/logout', function() { ... });

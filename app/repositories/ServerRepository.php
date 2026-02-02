@@ -25,22 +25,42 @@ class ServerRepository implements RepositoryInterface {
     }
 
     public function create(array $data) {
-        $this->db->query("INSERT INTO servers (name, rank, team, status, email) VALUES (:name, :rank, :team, :status, :email)");
+        $this->db->query("INSERT INTO servers (name, nickname, dob, age, address, phone, email, rank, team, status, month_joined, investiture_date, order_name, position) 
+                          VALUES (:name, :nickname, :dob, :age, :address, :phone, :email, :rank, :team, :status, :month_joined, :investiture_date, :order_name, :position)");
         $this->db->bind(':name', $data['name']);
-        $this->db->bind(':rank', $data['rank']);
-        $this->db->bind(':team', $data['team']);
-        $this->db->bind(':status', $data['status']);
-        $this->db->bind(':email', $data['email']);
+        $this->db->bind(':nickname', $data['nickname'] ?? null);
+        $this->db->bind(':dob', $data['dob'] ?? null);
+        $this->db->bind(':age', $data['age'] ?? null);
+        $this->db->bind(':address', $data['address'] ?? null);
+        $this->db->bind(':phone', $data['phone'] ?? null);
+        $this->db->bind(':email', $data['email'] ?? '');
+        $this->db->bind(':rank', $data['rank'] ?? 'Server');
+        $this->db->bind(':team', $data['team'] ?? 'Unassigned');
+        $this->db->bind(':status', $data['status'] ?? 'Active');
+        $this->db->bind(':month_joined', $data['month_joined'] ?? null);
+        $this->db->bind(':investiture_date', $data['investiture_date'] ?? null);
+        $this->db->bind(':order_name', $data['order_name'] ?? null);
+        $this->db->bind(':position', $data['position'] ?? null);
         return $this->db->execute();
     }
 
     public function update($id, array $data) {
-        $this->db->query("UPDATE servers SET name = :name, rank = :rank, team = :team, status = :status WHERE id = :id");
+        $this->db->query("UPDATE servers SET name = :name, nickname = :nickname, dob = :dob, age = :age, address = :address, phone = :phone, email = :email, rank = :rank, team = :team, status = :status, month_joined = :month_joined, investiture_date = :investiture_date, order_name = :order_name, position = :position WHERE id = :id");
         $this->db->bind(':id', $id);
         $this->db->bind(':name', $data['name']);
-        $this->db->bind(':rank', $data['rank']);
-        $this->db->bind(':team', $data['team']);
-        $this->db->bind(':status', $data['status']);
+        $this->db->bind(':nickname', $data['nickname'] ?? null);
+        $this->db->bind(':dob', $data['dob'] ?? null);
+        $this->db->bind(':age', $data['age'] ?? null);
+        $this->db->bind(':address', $data['address'] ?? null);
+        $this->db->bind(':phone', $data['phone'] ?? null);
+        $this->db->bind(':email', $data['email'] ?? '');
+        $this->db->bind(':rank', $data['rank'] ?? '');
+        $this->db->bind(':team', $data['team'] ?? '');
+        $this->db->bind(':status', $data['status'] ?? '');
+        $this->db->bind(':month_joined', $data['month_joined'] ?? null);
+        $this->db->bind(':investiture_date', $data['investiture_date'] ?? null);
+        $this->db->bind(':order_name', $data['order_name'] ?? null);
+        $this->db->bind(':position', $data['position'] ?? null);
         return $this->db->execute();
     }
 
