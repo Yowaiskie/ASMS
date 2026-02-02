@@ -92,6 +92,9 @@ try {
         username VARCHAR(50) NOT NULL UNIQUE,
         password VARCHAR(255) NOT NULL,
         role VARCHAR(20) NOT NULL, -- User, Admin, Superadmin
+        is_verified TINYINT(1) DEFAULT 0,
+        last_read_announcements TIMESTAMP NULL,
+        server_id INT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )";
     $pdo->exec($sql);
@@ -145,6 +148,21 @@ try {
     )";
     $pdo->exec($sql);
     echo "Table 'system_settings' created.<br>";
+
+    // --- Table: excuses ---
+    $sql = "CREATE TABLE IF NOT EXISTS excuses (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        server_id INT NOT NULL,
+        type VARCHAR(50), -- Mass, Meeting, Event
+        absence_date DATE,
+        absence_time TIME,
+        reason TEXT,
+        image_path VARCHAR(255),
+        status VARCHAR(20) DEFAULT 'Pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )";
+    $pdo->exec($sql);
+    echo "Table 'excuses' created.<br>";
 
     // Seed System Settings
     $check = $pdo->query("SELECT count(*) FROM system_settings")->fetchColumn();

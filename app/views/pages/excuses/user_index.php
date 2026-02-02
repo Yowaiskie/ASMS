@@ -28,11 +28,11 @@
                 <div>
                     <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Type of Activity</label>
                     <div class="relative">
-                        <select name="type" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none">
+                        <select name="type" id="excuse_type" onchange="toggleTimeField()" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none">
                             <option value="" disabled selected>Select Activity</option>
+                            <option value="Sunday Schedule">Sunday Schedule</option>
                             <option value="Meeting">Meeting</option>
-                            <option value="Serve">Serve / Mass</option>
-                            <option value="Both">Both (Meeting & Serve)</option>
+                            <option value="Special Event">Special Event / Others</option>
                         </select>
                         <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-500">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -42,7 +42,25 @@
 
                 <div>
                     <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Date of Absence</label>
-                    <input type="date" name="date" required min="<?= date('Y-m-d') ?>" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <input type="date" name="date" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+            </div>
+
+            <div id="time_field" class="hidden animate-fade-in-up">
+                <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Select Schedule Time</label>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                    <?php 
+                        $sundayTimes = ['06:00', '07:30', '09:00', '16:00', '17:30', '19:00'];
+                        foreach($sundayTimes as $time):
+                            $timeId = str_replace(':', '', $time);
+                    ?>
+                    <div class="relative">
+                        <input type="radio" name="time" id="time_<?= $timeId ?>" value="<?= $time ?>" class="peer hidden">
+                        <label for="time_<?= $timeId ?>" class="block py-3 text-center bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-500 cursor-pointer transition-all hover:bg-slate-100 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 peer-checked:shadow-lg peer-checked:shadow-blue-100 peer-checked:hover:bg-blue-700 peer-checked:hover:text-white">
+                            <?= date('h:i A', strtotime($time)) ?>
+                        </label>
+                    </div>
+                    <?php endforeach; ?>
                 </div>
             </div>
 
@@ -149,6 +167,23 @@
             
             btnHistory.className = "px-4 py-2 rounded-lg text-sm font-bold bg-slate-800 text-white shadow-md transition-all flex items-center gap-2";
             btnForm.className = "px-4 py-2 rounded-lg text-sm font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all flex items-center gap-2";
+        }
+    }
+
+    function toggleTimeField() {
+        const type = document.getElementById('excuse_type').value;
+        const timeField = document.getElementById('time_field');
+        const timeInputs = timeField.querySelectorAll('input');
+
+        if (type === 'Sunday Schedule') {
+            timeField.classList.remove('hidden');
+            timeInputs.forEach(input => input.required = true);
+        } else {
+            timeField.classList.add('hidden');
+            timeInputs.forEach(input => {
+                input.required = false;
+                input.checked = false;
+            });
         }
     }
 

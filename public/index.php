@@ -4,6 +4,7 @@ session_start();
 
 require_once '../app/config/config.php';
 require_once '../app/helpers/functions.php';
+require_once '../app/helpers/mail_helper.php';
 
 // Simple Autoloader
 spl_autoload_register(function ($className) {

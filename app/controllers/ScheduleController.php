@@ -5,25 +5,37 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Repositories\ScheduleRepository;
 use App\Repositories\ServerRepository;
+use App\Repositories\AnnouncementRepository;
 
 class ScheduleController extends Controller {
     private $scheduleRepo;
     private $serverRepo;
+    private $announcementRepo;
+    private $userRepo;
+    private $db;
 
     public function __construct() {
         $this->requireLogin();
         $this->scheduleRepo = new ScheduleRepository();
         $this->serverRepo = new ServerRepository();
+        $this->announcementRepo = new AnnouncementRepository();
+        $this->userRepo = new \App\Repositories\UserRepository();
+        $this->db = \App\Core\Database::getInstance();
     }
 
     public function index() {
         if (isset($_SESSION['role']) && $_SESSION['role'] === 'User') {
-            $schedules = $this->scheduleRepo->getByUserId($_SESSION['user_id']);
+            // Get ALL schedules for the general calendar
+            $allSchedules = $this->scheduleRepo->getAll();
+            
+            // Get user's assigned IDs
+            $assignedIds = $this->scheduleRepo->getAssignedScheduleIds($_SESSION['user_id']);
             
             $data = [
-                'pageTitle' => 'My Schedule',
-                'title' => 'My Schedule | ASMS',
-                'schedules' => $schedules
+                'pageTitle' => 'Mass Schedules',
+                'title' => 'Schedules | ASMS',
+                'schedules' => $allSchedules,
+                'assignedIds' => $assignedIds
             ];
             
             $this->view('schedules/user_index', $data);
@@ -48,11 +60,77 @@ class ScheduleController extends Controller {
         }
     }
 
+    public function getServers() {
+        $id = $_GET['id'] ?? null;
+        if ($id) {
+            $servers = $this->scheduleRepo->getFullAssignments($id);
+            echo json_encode($servers);
+        }
+        exit;
+    }
+
     public function create() {
         $this->view('schedules/create', [
             'pageTitle' => 'New Schedule',
             'title' => 'Create Schedule | ASMS'
         ]);
+    }
+
+    public function selfAssign() {
+        $this->verifyCsrf();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Check verification again for safety
+            if (($_SESSION['role'] ?? '') === 'User' && !($_SESSION['is_verified'] ?? 0)) {
+                setFlash('msg_error', 'Your account must be verified before joining schedules.');
+                redirect('settings');
+                return;
+            }
+
+            $scheduleId = $_POST['schedule_id'];
+            if ($this->scheduleRepo->selfAssign($_SESSION['user_id'], $scheduleId)) {
+                $schedule = $this->scheduleRepo->getById($scheduleId);
+                
+                // Trigger Announcement
+                $this->announcementRepo->create([
+                    'title' => 'New Slot Filled',
+                    'category' => 'System',
+                    'message' => $_SESSION['username'] . ' has joined the schedule for ' . $schedule->mass_type . ' on ' . date('M d, Y', strtotime($schedule->mass_date)) . '.',
+                    'author' => 'System'
+                ]);
+
+                // Trigger Email to User
+                $this->db = \App\Core\Database::getInstance();
+                $this->db->query("SELECT email, name FROM servers WHERE id = (SELECT server_id FROM users WHERE id = :uid)");
+                $this->db->bind(':uid', $_SESSION['user_id']);
+                $srv = $this->db->single();
+                
+                if ($srv && $srv->email) {
+                    sendEmailNotification(
+                        $srv->email,
+                        'Schedule Confirmation',
+                        'You Joined a New Schedule!',
+                        "Hi {$srv->name}, you have successfully joined the schedule for <b>{$schedule->mass_type}</b> on <b>" . date('M d, Y', strtotime($schedule->mass_date)) . "</b> at <b>" . date('h:i A', strtotime($schedule->mass_time)) . "</b>. See you there!"
+                    );
+                }
+
+                // Notify Admins
+                $admins = $this->userRepo->getAdmins();
+                foreach ($admins as $admin) {
+                    sendEmailNotification(
+                        $admin->email,
+                        'System Alert: New Volunteer',
+                        'A slot has been filled!',
+                        "User <b>{$_SESSION['username']}</b> has self-assigned to the schedule for <b>{$schedule->mass_type}</b> on <b>" . date('M d, Y', strtotime($schedule->mass_date)) . "</b>."
+                    );
+                }
+
+                logAction('Update', 'Schedules', "User self-assigned to schedule ID: $scheduleId");
+                setFlash('msg_success', 'Successfully joined the schedule!');
+            } else {
+                setFlash('msg_error', 'Failed to join schedule.');
+            }
+            redirect('schedules');
+        }
     }
 
     public function store() {
@@ -75,6 +153,25 @@ class ScheduleController extends Controller {
                 // Update
                 if ($this->scheduleRepo->update($id, $data)) {
                     $this->scheduleRepo->syncAssignments($id, $assignedServers);
+                    
+                    // Email newly assigned servers
+                    if (!empty($assignedServers)) {
+                        $this->db = \App\Core\Database::getInstance();
+                        foreach ($assignedServers as $svid) {
+                            $this->db->query("SELECT email, name FROM servers WHERE id = :sid");
+                            $this->db->bind(':sid', $svid);
+                            $srv = $this->db->single();
+                            if ($srv && $srv->email) {
+                                sendEmailNotification(
+                                    $srv->email,
+                                    'New Schedule Assignment',
+                                    'You Have a New Assignment!',
+                                    "Hi {$srv->name}, you have been assigned to the schedule: <b>{$data['mass_type']}</b> on <b>" . date('M d, Y', strtotime($data['mass_date'])) . "</b> at <b>" . date('h:i A', strtotime($data['mass_time'])) . "</b>."
+                                );
+                            }
+                        }
+                    }
+
                     logAction('Update', 'Schedules', "Updated schedule ID: $id (" . $data['mass_type'] . ")");
                     setFlash('msg_success', 'Schedule updated successfully!');
                 } else {
@@ -88,8 +185,32 @@ class ScheduleController extends Controller {
                     
                     if ($newId) {
                         $this->scheduleRepo->syncAssignments($newId, $assignedServers);
+                        
+                        // Email assigned
+                        $this->db = \App\Core\Database::getInstance();
+                        foreach ($assignedServers as $svid) {
+                            $this->db->query("SELECT email, name FROM servers WHERE id = :sid");
+                            $this->db->bind(':sid', $svid);
+                            $srv = $this->db->single();
+                            if ($srv && $srv->email) {
+                                sendEmailNotification(
+                                    $srv->email,
+                                    'New Schedule Assignment',
+                                    'You Have a New Assignment!',
+                                    "Hi {$srv->name}, you have been assigned to the new schedule: <b>{$data['mass_type']}</b> on <b>" . date('M d, Y', strtotime($data['mass_date'])) . "</b> at <b>" . date('h:i A', strtotime($data['mass_time'])) . "</b>."
+                                );
+                            }
+                        }
                     }
                     
+                    // Trigger Announcement
+                    $this->announcementRepo->create([
+                        'title' => 'New Schedule Added',
+                        'category' => 'Mass Schedule',
+                        'message' => 'A new ' . $data['mass_type'] . ' has been scheduled for ' . date('M d, Y', strtotime($data['mass_date'])) . ' at ' . date('h:i A', strtotime($data['mass_time'])) . '.',
+                        'author' => $_SESSION['username'] ?? 'Admin'
+                    ]);
+
                     logAction('Create', 'Schedules', "Created new schedule: " . $data['mass_type'] . " on " . $data['mass_date']);
                     setFlash('msg_success', 'Schedule created successfully!');
                 } else {
@@ -175,7 +296,7 @@ class ScheduleController extends Controller {
                     $count++;
                 }
 
-                // Sunday: All slots
+                // Sunday: All slots + Fixed Meeting
                 if ($dayOfWeek == 0) {
                     foreach ($sundayTimes as $time) {
                         $data = [
@@ -187,12 +308,31 @@ class ScheduleController extends Controller {
                         $this->scheduleRepo->create($data);
                         $count++;
                     }
+
+                    // Add Fixed Meeting (1:00 PM - 3:00 PM)
+                    $this->scheduleRepo->create([
+                        'mass_type' => 'Meeting',
+                        'mass_date' => $dateStr,
+                        'mass_time' => '13:00',
+                        'status' => 'Confirmed',
+                        'color' => 'gray'
+                    ]);
+                    $count++;
                 }
                 
                 $date->modify('+1 day');
             }
 
             logAction('Create', 'Schedules', "Generated $count schedules for $month/$year.");
+            
+            // Bulk Announcement
+            $this->announcementRepo->create([
+                'title' => 'Monthly Schedules Generated',
+                'category' => 'System',
+                'message' => "Schedules for " . date('F Y', strtotime("$year-$month-01")) . " have been automatically generated. Please check the calendar for your assignments.",
+                'author' => 'System'
+            ]);
+
             setFlash('msg_success', "Generated $count schedules (Saturdays & Sundays) for $month/$year.");
         } catch (\Exception $e) {
             setFlash('msg_error', "Error generating schedules: " . $e->getMessage());

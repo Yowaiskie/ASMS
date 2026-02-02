@@ -65,15 +65,14 @@ class AttendanceController extends Controller {
                     $type = $row->mass_type;
                     if (stripos($type, 'Meeting') !== false) {
                         $attendanceList[$sid]['meeting'] = $row;
-                    } elseif (stripos($type, 'Mass') !== false) {
-                        // Assume first mass found is primary, others are extra
+                    } else {
+                        // Any other activity (Mass, Event, etc.) goes to the main column
                         if ($attendanceList[$sid]['mass'] === null) {
                             $attendanceList[$sid]['mass'] = $row;
                         } else {
-                            $attendanceList[$sid]['others'][] = $row;
+                            // If they have multiple assignments, we can handle it or just overwrite
+                            // For now, let's keep it simple.
                         }
-                    } else {
-                        $attendanceList[$sid]['others'][] = $row;
                     }
                 }
             }
@@ -93,14 +92,37 @@ class AttendanceController extends Controller {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $id = $_POST['attendance_id'];
             $status = $_POST['status'];
+            $date = $_POST['date'] ?? date('Y-m-d');
 
             if ($this->attendanceRepo->updateStatus($id, $status)) {
+                // Email Notification
+                $db = \App\Core\Database::getInstance();
+                $db->query("
+                    SELECT s.email, s.name, sch.mass_type, sch.mass_date 
+                    FROM attendance a 
+                    JOIN servers s ON a.server_id = s.id 
+                    JOIN schedules sch ON a.schedule_id = sch.id 
+                    WHERE a.id = :id
+                ");
+                $db->bind(':id', $id);
+                $info = $db->single();
+
+                if ($info && $info->email) {
+                    $color = $status === 'Present' ? '#10b981' : ($status === 'Late' ? '#f59e0b' : '#ef4444');
+                    sendEmailNotification(
+                        $info->email,
+                        'Attendance Update',
+                        'Your Attendance has been marked!',
+                        "Hi {$info->name}, your attendance for <b>{$info->mass_type}</b> on <b>" . date('M d, Y', strtotime($info->mass_date)) . "</b> has been marked as <b style='color:{$color}'>{$status}</b>."
+                    );
+                }
+
                 logAction('Update', 'Attendance', "Updated attendance ID: $id to $status");
                 setFlash('msg_success', 'Attendance updated.');
             } else {
                 setFlash('msg_error', 'Update failed.');
             }
-            redirect('attendance');
+            redirect('attendance?date=' . $date);
         }
     }
 }

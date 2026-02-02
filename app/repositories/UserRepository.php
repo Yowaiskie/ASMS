@@ -32,7 +32,7 @@ class UserRepository implements RepositoryInterface {
 
     public function getUserProfile($userId) {
         $this->db->query("
-            SELECT u.id as user_id, u.username, u.role, u.server_id,
+            SELECT u.id as user_id, u.username, u.role, u.server_id, u.is_verified,
                    s.name, s.email, s.phone, s.age, s.address, s.profile_image
             FROM users u
             LEFT JOIN servers s ON u.server_id = s.id
@@ -57,6 +57,14 @@ class UserRepository implements RepositoryInterface {
             $this->db->bind(':phone', $data['phone']);
             $this->db->bind(':email', $data['email']);
             $this->db->execute();
+
+            // Set verified if all critical info provided
+            if (!empty($data['name']) && !empty($data['phone']) && !empty($data['email'])) {
+                $this->db->query("UPDATE users SET is_verified = 1 WHERE id = :uid");
+                $this->db->bind(':uid', $userId);
+                $this->db->execute();
+                $_SESSION['is_verified'] = 1; // Update session
+            }
         }
         
         // Handle Image Upload if provided
@@ -96,5 +104,15 @@ class UserRepository implements RepositoryInterface {
         $this->db->query("DELETE FROM users WHERE id = :id");
         $this->db->bind(':id', $id);
         return $this->db->execute();
+    }
+
+    public function getAdmins() {
+        $this->db->query("
+            SELECT u.username, s.email 
+            FROM users u
+            JOIN servers s ON u.server_id = s.id
+            WHERE u.role IN ('Admin', 'Superadmin') AND s.email IS NOT NULL AND s.email != ''
+        ");
+        return $this->db->resultSet();
     }
 }

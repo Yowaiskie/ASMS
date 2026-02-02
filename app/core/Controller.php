@@ -39,6 +39,27 @@ class Controller {
             exit;
         }
         $this->checkMaintenanceMode();
+        $this->checkVerification();
+    }
+
+    protected function checkVerification() {
+        // Only enforce for normal Users
+        if (($_SESSION['role'] ?? '') !== 'User') return;
+
+        $isVerified = $_SESSION['is_verified'] ?? 0;
+        $current_path = rtrim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
+        $allowed_paths = [
+            rtrim(URLROOT . '/settings', '/'),
+            rtrim(URLROOT . '/settings/store', '/'),
+            rtrim(URLROOT . '/logout', '/'),
+            rtrim(URLROOT . '/maintenance', '/')
+        ];
+
+        if (!$isVerified && !in_array($current_path, $allowed_paths)) {
+            setFlash('msg_error', 'Please complete your personal details to verify your account.', 'bg-amber-100 border border-amber-200 text-amber-700 px-4 py-3 rounded-lg mb-4 text-sm font-bold');
+            header('Location: ' . URLROOT . '/settings');
+            exit;
+        }
     }
 
     protected function checkMaintenanceMode() {

@@ -71,4 +71,10 @@ class ExcuseRepository implements RepositoryInterface {
         $this->db->bind(':id', $id);
         return $this->db->execute();
     }
+
+    public function markAsSeen($userId) {
+        $this->db->query("UPDATE users SET last_viewed_excuses = NOW() WHERE id = :id");
+        $this->db->bind(':id', $userId);
+        return $this->db->execute();
+    }
 }

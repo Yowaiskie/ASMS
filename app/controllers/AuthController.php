@@ -40,6 +40,7 @@ class AuthController extends Controller {
                 $_SESSION['user_id'] = $user->id;
                 $_SESSION['username'] = $user->username;
                 $_SESSION['role'] = $user->role;
+                $_SESSION['is_verified'] = $user->is_verified;
 
                 logAction('Login', 'Auth', 'User ' . $user->username . ' logged in.');
 

@@ -45,6 +45,19 @@ class ScheduleRepository implements RepositoryInterface {
         return $this->db->resultSet();
     }
 
+    public function getAssignedScheduleIds($userId) {
+        $this->db->query("SELECT server_id FROM users WHERE id = :user_id");
+        $this->db->bind(':user_id', $userId);
+        $user = $this->db->single();
+
+        if (!$user || !$user->server_id) return [];
+
+        $this->db->query("SELECT schedule_id FROM attendance WHERE server_id = :sid");
+        $this->db->bind(':sid', $user->server_id);
+        $results = $this->db->resultSet();
+        return array_map(function($r) { return (int)$r->schedule_id; }, $results);
+    }
+
     public function create(array $data) {
         $this->db->query("INSERT INTO schedules (mass_type, event_name, color, mass_date, mass_time, status) VALUES (:mass_type, :event_name, :color, :mass_date, :mass_time, :status)");
         $this->db->bind(':mass_type', $data['mass_type']);
@@ -86,6 +99,37 @@ class ScheduleRepository implements RepositoryInterface {
         $this->db->bind(':id', $scheduleId);
         $results = $this->db->resultSet();
         return array_map(function($r) { return $r->server_id; }, $results);
+    }
+
+    public function getFullAssignments($scheduleId) {
+        $this->db->query("
+            SELECT s.name, s.rank, a.status 
+            FROM attendance a 
+            JOIN servers s ON a.server_id = s.id 
+            WHERE a.schedule_id = :id
+        ");
+        $this->db->bind(':id', $scheduleId);
+        return $this->db->resultSet();
+    }
+
+    public function selfAssign($userId, $scheduleId) {
+        // 1. Get server_id
+        $this->db->query("SELECT server_id FROM users WHERE id = :uid");
+        $this->db->bind(':uid', $userId);
+        $user = $this->db->single();
+        if (!$user || !$user->server_id) return false;
+
+        // 2. Check if already assigned
+        $this->db->query("SELECT id FROM attendance WHERE schedule_id = :sid AND server_id = :svid");
+        $this->db->bind(':sid', $scheduleId);
+        $this->db->bind(':svid', $user->server_id);
+        if ($this->db->single()) return true; // Already assigned
+
+        // 3. Assign
+        $this->db->query("INSERT INTO attendance (schedule_id, server_id, status) VALUES (:sid, :svid, 'Confirmed')");
+        $this->db->bind(':sid', $scheduleId);
+        $this->db->bind(':svid', $user->server_id);
+        return $this->db->execute();
     }
 
     public function syncAssignments($scheduleId, array $serverIds) {

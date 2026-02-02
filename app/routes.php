@@ -27,6 +27,8 @@ $router->get('/dashboard', [DashboardController::class, 'index']);
 
 // Schedules
 $router->get('/schedules', [ScheduleController::class, 'index']);
+$router->get('/schedules/get-servers', [ScheduleController::class, 'getServers']);
+$router->post('/schedules/self-assign', [ScheduleController::class, 'selfAssign']);
 $router->get('/schedules/create', [ScheduleController::class, 'create']);
 $router->post('/schedules/store', [ScheduleController::class, 'store']);
 $router->get('/schedules/delete', [ScheduleController::class, 'delete']);
