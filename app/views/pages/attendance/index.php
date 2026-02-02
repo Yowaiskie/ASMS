@@ -1,101 +1,94 @@
-<div class="mb-8">
-    <h2 class="text-2xl font-bold text-slate-800">Attendance Management</h2>
-    <p class="text-slate-500 text-sm mt-1">Mark and manage altar server attendance</p>
-</div>
-
-<div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mb-8">
-    <form action="" method="GET" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        <div>
-            <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Select Activity</label>
-            <select class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer">
-                <option>Sunday Mass</option>
-                <option>Formation Training</option>
-                <option>Special Event</option>
-            </select>
-        </div>
-
-        <div>
-            <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Date</label>
-            <input type="date" value="<?= date('Y-m-d') ?>" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-        </div>
-
-        <div>
-            <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Time</label>
-            <input type="time" value="08:00" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-        </div>
-
+<div class="flex justify-between items-end mb-8">
+    <div>
+        <h2 class="text-2xl font-bold text-slate-800">Attendance Management</h2>
+        <p class="text-slate-500 text-sm mt-1">Daily tracking for Mass and Meetings</p>
+    </div>
+    
+    <form action="" method="GET" class="flex items-center gap-2 bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
+        <input type="date" name="date" value="<?= $date ?>" class="px-4 py-2 bg-transparent text-sm font-bold text-slate-700 focus:outline-none" onchange="this.form.submit()">
     </form>
 </div>
 
-<!-- Stats -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    <div class="bg-green-50/50 border border-green-200 p-6 rounded-2xl">
-        <p class="text-xs font-medium text-slate-500 mb-1">Present</p>
-        <p class="text-3xl font-bold text-green-600">5</p>
-    </div>
-    <div class="bg-yellow-50/50 border border-yellow-200 p-6 rounded-2xl">
-        <p class="text-xs font-medium text-slate-500 mb-1">Late</p>
-        <p class="text-3xl font-bold text-yellow-600">1</p>
-    </div>
-    <div class="bg-red-50/50 border border-red-200 p-6 rounded-2xl">
-        <p class="text-xs font-medium text-slate-500 mb-1">Absent</p>
-        <p class="text-3xl font-bold text-red-600">2</p>
-    </div>
-</div>
-
-<div>
-    <h3 class="font-bold text-slate-700 mb-4">Mark Attendance</h3>
-    
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-        
-        <?php if (!empty($logs)): ?>
-            <?php foreach($logs as $log): ?>
-                <?php 
-                    $borderColor = 'border-slate-100';
-                    $btnPresentClass = 'bg-white border border-slate-200 text-slate-600 hover:bg-green-50 hover:text-green-600 hover:border-green-200';
-                    $btnLateClass = 'bg-white border border-slate-200 text-slate-600 hover:bg-yellow-50 hover:text-yellow-600 hover:border-yellow-200';
-                    $btnAbsentClass = 'bg-white border border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200';
-
-                    if ($log->status == 'Present') {
-                        $borderColor = 'border-green-500 border-2';
-                        $btnPresentClass = 'bg-green-500 text-white shadow-md shadow-green-200';
-                    } elseif ($log->status == 'Late') {
-                        $borderColor = 'border-yellow-500 border-2';
-                        $btnLateClass = 'bg-yellow-500 text-white shadow-md shadow-yellow-200';
-                    } elseif ($log->status == 'Absent') {
-                        $borderColor = 'border-red-500 border-2';
-                        $btnAbsentClass = 'bg-red-500 text-white shadow-md shadow-red-200';
-                    }
-                ?>
-                <div class="bg-white p-6 rounded-2xl shadow-sm transition-all <?= $borderColor ?>">
-                    <div class="mb-4">
-                        <h4 class="font-bold text-slate-800 text-lg"><?= h($log->server_name) ?></h4>
-                        <p class="text-slate-400 text-xs">Mass: <?= h($log->mass_time) ?></p>
-                    </div>
+<div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+    <table class="w-full text-left border-collapse">
+        <thead>
+            <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+                <th class="p-4 font-semibold w-1/4">Server Name</th>
+                <th class="p-4 font-semibold text-center w-1/4">Serve (Mass)</th>
+                <th class="p-4 font-semibold text-center w-1/4">Meeting</th>
+                <th class="p-4 font-semibold text-center w-1/4">Others</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 text-sm">
+            <?php if (!empty($attendanceList)): ?>
+                <?php foreach($attendanceList as $server): ?>
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="p-4 font-bold text-slate-700">
+                        <?= h($server['name']) ?>
+                    </td>
                     
-                    <form action="<?= URLROOT ?>/attendance/update" method="POST" class="flex gap-2">
-                        <?php csrf_field(); ?>
-                        <input type="hidden" name="attendance_id" value="<?= $log->id ?>">
-                        
-                        <button type="submit" name="status" value="Present" class="flex-1 py-2 rounded-lg text-sm font-medium transition-all <?= $btnPresentClass ?>">Present</button>
-                        <button type="submit" name="status" value="Late" class="flex-1 py-2 rounded-lg text-sm font-medium transition-all <?= $btnLateClass ?>">Late</button>
-                        <button type="submit" name="status" value="Absent" class="flex-1 py-2 rounded-lg text-sm font-medium transition-all <?= $btnAbsentClass ?>">Absent</button>
-                    </form>
-                </div>
-            <?php endforeach; ?>
-        <?php else: ?>
-            <p class="text-slate-500">No logs found.</p>
-        <?php endif; ?>
+                    <!-- Mass Column -->
+                    <td class="p-4 text-center">
+                        <?php if ($server['mass']): ?>
+                            <div class="flex justify-center gap-1">
+                                <?php renderStatusButtons($server['mass']->attendance_id, $server['mass']->status); ?>
+                            </div>
+                            <div class="text-[10px] text-slate-400 mt-1"><?= date('h:i A', strtotime($server['mass']->mass_time)) ?></div>
+                        <?php else: ?>
+                            <span class="text-slate-300 text-xs italic">No Schedule</span>
+                        <?php endif; ?>
+                    </td>
 
-    </div>
+                    <!-- Meeting Column -->
+                    <td class="p-4 text-center">
+                        <?php if ($server['meeting']): ?>
+                            <div class="flex justify-center gap-1">
+                                <?php renderStatusButtons($server['meeting']->attendance_id, $server['meeting']->status); ?>
+                            </div>
+                        <?php else: ?>
+                            <span class="text-slate-300 text-xs italic">No Meeting</span>
+                        <?php endif; ?>
+                    </td>
+
+                    <!-- Others / Actions -->
+                    <td class="p-4 text-center">
+                        <button class="text-xs font-bold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors">
+                            + Add Service
+                        </button>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <tr>
+                    <td colspan="4" class="p-8 text-center text-slate-400">No active servers found.</td>
+                </tr>
+            <?php endif; ?>
+        </tbody>
+    </table>
 </div>
 
-<div class="fixed bottom-6 right-6 z-40">
-    <button class="bg-primary hover:bg-blue-700 text-white px-6 py-3 rounded-full shadow-lg hover:scale-105 transition-all flex items-center gap-2 font-bold">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-        </svg>
-        Save Changes
-    </button>
-</div>
+<?php
+function renderStatusButtons($id, $currentStatus) {
+    // Helper to render P/L/A buttons
+    $statuses = [
+        'Present' => ['label' => 'P', 'class' => 'bg-green-100 text-green-700 hover:bg-green-200', 'active' => 'bg-green-500 text-white shadow-md shadow-green-200 ring-2 ring-green-500 ring-offset-1'],
+        'Late' =>    ['label' => 'L', 'class' => 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200', 'active' => 'bg-yellow-500 text-white shadow-md shadow-yellow-200 ring-2 ring-yellow-500 ring-offset-1'],
+        'Absent' =>  ['label' => 'A', 'class' => 'bg-red-100 text-red-700 hover:bg-red-200', 'active' => 'bg-red-500 text-white shadow-md shadow-red-200 ring-2 ring-red-500 ring-offset-1']
+    ];
+
+    foreach ($statuses as $status => $style) {
+        $isActive = ($currentStatus === $status);
+        $css = $isActive ? $style['active'] : $style['class'];
+        
+        echo "
+        <form action='".URLROOT."/attendance/update' method='POST' class='inline'>
+            <input type='hidden' name='attendance_id' value='$id'>
+            <input type='hidden' name='status' value='$status'>
+            <button type='submit' class='w-8 h-8 rounded-full font-bold text-xs transition-all duration-200 $css' title='$status'>
+                {$style['label']}
+            </button>
+        </form>
+        ";
+    }
+}
+?>

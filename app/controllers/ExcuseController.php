@@ -26,8 +26,28 @@ class ExcuseController extends Controller {
                 'excuses' => $excuses
             ]);
         } else {
-            // Admin View (Future implementation)
-            $this->view('dashboard', ['pageTitle' => 'Admin Excuses Not Implemented']);
+            // Admin View
+            $excuses = $this->excuseRepo->getAll();
+            $this->view('excuses/index', [
+                'pageTitle' => 'Manage Excuse Letters',
+                'title' => 'Excuse Management | ASMS',
+                'excuses' => $excuses
+            ]);
+        }
+    }
+
+    public function updateStatus() {
+        $this->verifyCsrf();
+        if ($_SERVER['REQUEST_METHOD'] == 'POST' && ($_SESSION['role'] ?? '') !== 'User') {
+            $id = $_POST['id'];
+            $status = $_POST['status'];
+
+            if ($this->excuseRepo->updateStatus($id, $status)) {
+                setFlash('msg_success', "Excuse letter marked as $status.");
+            } else {
+                setFlash('msg_error', "Failed to update status.");
+            }
+            redirect('excuses');
         }
     }
 

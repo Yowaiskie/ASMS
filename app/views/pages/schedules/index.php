@@ -1,110 +1,371 @@
 <div class="flex items-end justify-between mb-8">
     <div>
         <h2 class="text-2xl font-bold text-slate-800">Schedule Management</h2>
-        <p class="text-slate-500 text-sm mt-1">Create and manage mass schedules</p>
+        <p class="text-slate-500 text-sm mt-1">Manage mass schedules and assignments</p>
     </div>
     
-    <a href="<?= URLROOT ?>/schedules/create" class="bg-primary hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl shadow-lg shadow-blue-200 transition-all flex items-center gap-2 font-semibold text-sm">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-        </svg>
-        Create Schedule
-    </a>
-</div>
+    <div class="flex gap-2">
+        <button onclick="toggleSelectionMode()" id="selectModeBtn" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 p-2.5 rounded-xl shadow-sm transition-all" title="Select Multiple">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        </button>
 
-<div class="space-y-6">
-
-    <?php if(!empty($schedules)): ?>
-        <?php foreach($schedules as $schedule): ?>
-            <?php 
-                $date = new DateTime($schedule->mass_date);
-                $month = $date->format('M');
-                $day = $date->format('d');
-            ?>
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                <div class="flex flex-col md:flex-row gap-6 mb-6">
-                    
-                    <div class="flex items-start gap-4 flex-1">
-                        <div class="bg-blue-600 text-white rounded-xl w-16 h-16 flex flex-col items-center justify-center shrink-0 shadow-md shadow-blue-200">
-                            <span class="text-[10px] uppercase font-bold tracking-wider opacity-80"><?= $month ?></span>
-                            <span class="text-2xl font-bold leading-none"><?= $day ?></span>
-                        </div>
-
-                        <div>
-                            <h3 class="text-lg font-bold text-slate-800 mb-1"><?= $schedule->mass_type ?></h3>
-                            <div class="flex items-center gap-4 text-sm text-slate-500">
-                                <div class="flex items-center gap-1.5">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <?= date('g:i A', strtotime($schedule->mass_time)) ?>
-                                </div>
-                                <div class="flex items-center gap-1.5">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                    Main Church
-                                </div>
-                                <div class="flex items-center gap-1.5">
-                                    <span class="px-2 py-0.5 rounded-full text-xs font-bold 
-                                        <?= $schedule->status == 'Confirmed' ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600' ?>">
-                                        <?= $schedule->status ?>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex items-start gap-2">
-                        <button class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                        </button>
-                        <a href="<?= URLROOT ?>/schedules/delete?id=<?= $schedule->id ?>" onclick="return confirm('Are you sure?')" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                        </a>
-                    </div>
-                </div>
-
-                <div class="h-px bg-slate-100 mb-4 w-full"></div>
-
-                <div>
-                    <p class="text-xs font-semibold text-slate-400 uppercase mb-3">Assigned Servers:</p>
-                    <div class="flex flex-wrap gap-4">
-                        
-                        <!-- Mocked Assigned Servers for now -->
-                        <div class="flex items-center gap-3 bg-slate-50 border border-slate-100 rounded-xl p-2 pr-4">
-                            <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">
-                                JD
-                            </div>
-                            <div class="flex flex-col">
-                                <span class="text-xs font-bold text-slate-700">John Doe</span>
-                                <span class="text-[10px] text-slate-400">Server 1</span>
-                            </div>
-                        </div>
-
-                         <div class="flex items-center gap-3 bg-slate-50 border border-slate-100 rounded-xl p-2 pr-4">
-                            <button class="text-xs font-bold text-blue-600 hover:underline">+ Assign Server</button>
-                        </div>
-
-                    </div>
-                </div>
+        <button onclick="triggerImport()" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-5 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 font-bold text-sm relative group">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            Import CSV
+            <div class="absolute top-full right-0 mt-2 w-64 p-3 bg-slate-800 text-white text-xs rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-left">
+                <strong>Format:</strong> Date, Time, Type, Event Name<br>
+                <code class="block mt-1 bg-slate-700 p-1 rounded">2026-02-14,06:00,Weekday Mass,</code>
             </div>
-        <?php endforeach; ?>
-    <?php else: ?>
-        <p class="text-slate-500">No schedules found.</p>
-    <?php endif; ?>
+        </button>
 
+        <button onclick="generateSundays()" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-5 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 font-bold text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Auto-Fill
+        </button>
+        
+        <button onclick="openModal('add')" class="bg-primary hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl shadow-lg shadow-blue-200 transition-all flex items-center gap-2 font-semibold text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Add Schedule
+        </button>
+    </div>
 </div>
 
-<div class="fixed bottom-6 right-6 z-40">
-    <button class="bg-slate-900 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-    </button>
+<form action="<?= URLROOT ?>/schedules/import" method="POST" enctype="multipart/form-data" id="importForm" class="hidden">
+    <?php csrf_field(); ?>
+    <input type="file" name="csv_file" id="csv_file" accept=".csv" onchange="document.getElementById('importForm').submit()">
+</form>
+
+<!-- Calendar View -->
+<div id="calendar-view" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 relative overflow-hidden">
+    
+    <!-- Selection Bar -->
+    <div id="selectionBar" class="hidden absolute top-0 left-0 right-0 z-10 bg-blue-600 text-white p-4 flex justify-between items-center animate-fade-in-up">
+        <div class="flex items-center gap-3">
+            <span class="font-bold text-sm" id="selectedCount">0 Selected</span>
+            <div class="h-4 w-px bg-blue-400"></div>
+            <button type="button" onclick="selectAllCalendar(false)" class="text-xs hover:underline">Clear</button>
+        </div>
+        <div class="flex gap-2">
+            <button type="button" onclick="submitBulk('edit')" class="bg-white text-blue-600 hover:bg-blue-50 px-4 py-1.5 rounded-lg text-xs font-bold transition-all">
+                Edit Status
+            </button>
+            <button type="button" onclick="submitBulk('delete')" class="bg-red-500 text-white hover:bg-red-600 px-4 py-1.5 rounded-lg text-xs font-bold transition-all">
+                Delete
+            </button>
+        </div>
+    </div>
+
+    <div class="flex items-center justify-between mb-8 transition-all" id="calendarHeader">
+        <h3 id="currentMonth" class="font-bold text-2xl text-slate-800">Month Year</h3>
+        <div class="flex gap-2">
+            <button onclick="changeMonth(-1)" class="p-2 hover:bg-slate-50 rounded-xl text-slate-500 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+            </button>
+            <button onclick="changeMonth(1)" class="p-2 hover:bg-slate-50 rounded-xl text-slate-500 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </button>
+        </div>
+    </div>
+    
+    <div class="grid grid-cols-7 gap-4 mb-4 text-center">
+        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Sun</div>
+        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Mon</div>
+        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Tue</div>
+        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Wed</div>
+        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Thu</div>
+        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Fri</div>
+        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Sat</div>
+    </div>
+    
+    <div id="calendarGrid" class="grid grid-cols-7 gap-4 auto-rows-fr">
+        <!-- Calendar Cells -->
+    </div>
+
+    <!-- Legend -->
+    <div class="mt-6 flex flex-wrap gap-4 border-t border-slate-100 pt-4">
+        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-green-500"></span><span class="text-xs text-slate-500 font-medium">Regular Mass</span></div>
+        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-teal-500"></span><span class="text-xs text-slate-500 font-medium">Anticipated</span></div>
+        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-purple-500"></span><span class="text-xs text-slate-500 font-medium">Funeral</span></div>
+        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-yellow-500"></span><span class="text-xs text-slate-500 font-medium">Wedding</span></div>
+        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-sky-500"></span><span class="text-xs text-slate-500 font-medium">Baptism</span></div>
+        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-indigo-500"></span><span class="text-xs text-slate-500 font-medium">Special Event</span></div>
+        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-gray-500"></span><span class="text-xs text-slate-500 font-medium">Meeting</span></div>
+    </div>
 </div>
+
+<!-- Forms for Bulk Action -->
+<form action="<?= URLROOT ?>/schedules/bulk-action" method="POST" id="bulkForm" class="hidden">
+    <?php csrf_field(); ?>
+    <input type="hidden" name="action" id="bulkAction" value="">
+    <input type="hidden" name="ids" id="bulkIds" value="">
+</form>
+
+<!-- Add/Edit Modal -->
+<div id="scheduleModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 transform scale-95 transition-transform duration-300" id="modalContent">
+        <div class="flex justify-between items-center mb-6">
+            <h3 id="modalTitle" class="text-xl font-bold text-slate-800">Add Schedule</h3>
+            <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+        </div>
+        <form action="<?= URLROOT ?>/schedules/store" method="POST" id="scheduleForm">
+            <?php csrf_field(); ?><input type="hidden" name="id" id="scheduleId">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Activity / Mass Type</label>
+                    <select name="mass_type" id="mass_type" onchange="toggleEventName()" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="Sunday Mass">Sunday Mass</option>
+                        <option value="Anticipated Mass">Anticipated Mass</option>
+                        <option value="Weekday Mass">Weekday Mass</option>
+                        <option value="Wedding">Wedding</option>
+                        <option value="Funeral">Funeral</option>
+                        <option value="Baptism">Baptism</option>
+                        <option value="Special Event">Special Event</option>
+                        <option value="Meeting">Meeting</option>
+                    </select>
+                </div>
+                <div id="eventNameContainer" class="hidden"><label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Event Name</label><input type="text" name="event_name" id="event_name" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"></div>
+                <div><label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Color Label</label><div class="flex flex-wrap gap-3"><?php $colors = ['green','purple','yellow','blue','indigo','pink','red','teal','gray']; foreach($colors as $c): $bg = "bg-{$c}-500"; if($c=='yellow') $bg="bg-yellow-400"; ?><label class="cursor-pointer"><input type="radio" name="color" value="<?= $c ?>" class="peer hidden color-radio"><span class="block w-8 h-8 rounded-full <?= $bg ?> peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-slate-400 transition-all"></span></label><?php endforeach; ?></div></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Date</label><input type="date" name="mass_date" id="mass_date" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Time</label><input type="time" name="mass_time" id="mass_time" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"></div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Status</label>
+                    <select name="status" id="status" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"><option value="Confirmed">Confirmed</option><option value="Pending">Pending</option><option value="Cancelled">Cancelled</option></select>
+                </div>
+                <div><div class="flex justify-between items-end mb-2"><label class="block text-xs font-bold text-slate-500 ml-1">Assigned Servers</label><input type="text" id="serverSearch" onkeyup="filterServers()" placeholder="Search..." class="text-xs px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none"></div><div class="max-h-40 overflow-y-auto border border-slate-200 rounded-xl p-2 bg-slate-50" id="serverList"><?php foreach($servers as $svr): ?><label class="flex items-center gap-2 p-2 hover:bg-white rounded-lg cursor-pointer server-item"><input type="checkbox" name="assigned_servers[]" value="<?= $svr->id ?>" class="server-checkbox rounded text-blue-600 border-gray-300"><span class="text-sm text-slate-700 server-name"><?= h($svr->name) ?></span></label><?php endforeach; ?></div></div>
+            </div>
+            <div class="mt-8 flex gap-3"><button type="button" onclick="closeModal()" class="flex-1 py-3 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-colors">Cancel</button><button type="submit" class="flex-1 py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-lg shadow-blue-200">Save</button></div>
+            <div id="deleteBtnContainer" class="hidden mt-4 pt-4 border-t border-slate-100 text-center"><a href="#" id="deleteLink" onclick="return confirm('Delete this schedule?')" class="text-xs text-red-500 font-bold hover:underline">Delete Schedule</a></div>
+        </form>
+    </div>
+</div>
+
+<!-- Bulk Edit Modal -->
+<div id="bulkEditModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6">
+        <h3 class="font-bold text-lg mb-4">Bulk Edit</h3>
+        <form action="<?= URLROOT ?>/schedules/bulk-update" method="POST">
+            <?php csrf_field(); ?>
+            <input type="hidden" name="ids" id="bulkEditIds">
+            
+            <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Update Status</label>
+            <select name="status" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none mb-6">
+                <option value="">No Change</option>
+                <option value="Confirmed">Confirmed</option>
+                <option value="Pending">Pending</option>
+                <option value="Cancelled">Cancelled</option>
+            </select>
+
+            <div class="flex gap-2">
+                <button type="button" onclick="document.getElementById('bulkEditModal').classList.add('hidden')" class="flex-1 py-2 border rounded-xl text-sm font-bold">Cancel</button>
+                <button type="submit" class="flex-1 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold">Update</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const schedules = <?= json_encode($schedules) ?>;
+    let currentDate = new Date();
+    let isSelectionMode = false;
+    let selectedIds = [];
+
+    const modal = document.getElementById('scheduleModal');
+    const modalContent = document.getElementById('modalContent');
+
+    function renderCalendar() {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        document.getElementById('currentMonth').innerText = new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const grid = document.getElementById('calendarGrid');
+        grid.innerHTML = '';
+        
+        for(let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div'));
+        
+        for(let day = 1; day <= daysInMonth; day++) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const cell = document.createElement('div');
+            cell.className = "min-h-[100px] border border-slate-100 rounded-2xl p-2 transition-all hover:border-blue-300 hover:shadow-md cursor-pointer flex flex-col gap-1 relative group bg-slate-50/30";
+            
+            // Add schedule
+            cell.onclick = (e) => { 
+                if(!isSelectionMode && (e.target === cell || e.target.classList.contains('day-num'))) openModal('add', dateStr); 
+            };
+            
+            const dayNum = document.createElement('span');
+            dayNum.className = "text-sm font-bold text-slate-400 mb-1 day-num"; dayNum.innerText = day;
+            cell.appendChild(dayNum);
+            
+            const dayEvents = schedules.filter(s => s.mass_date === dateStr);
+            dayEvents.forEach(evt => {
+                const eventEl = document.createElement('div');
+                let colorClass = 'bg-green-100 text-green-700 hover:bg-green-200';
+                if (evt.color) colorClass = `bg-${evt.color}-100 text-${evt.color}-700 hover:bg-${evt.color}-200`;
+                else if (evt.mass_type === 'Funeral') colorClass = 'bg-purple-100 text-purple-700 hover:bg-purple-200';
+                else if (evt.mass_type === 'Wedding') colorClass = 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200';
+                
+                // Selection Style
+                const isSelected = selectedIds.includes(evt.id.toString());
+                if (isSelectionMode) {
+                    if (isSelected) {
+                        eventEl.className = `text-[10px] font-bold px-2 py-1 rounded-lg truncate transition-all ring-2 ring-blue-500 ring-offset-1 bg-white text-blue-600 relative`;
+                    } else {
+                        eventEl.className = `text-[10px] font-bold px-2 py-1 rounded-lg truncate transition-all opacity-60 hover:opacity-100 ${colorClass}`;
+                    }
+                } else {
+                    eventEl.className = `text-[10px] font-bold px-2 py-1 rounded-lg truncate transition-colors ${colorClass}`;
+                }
+
+                eventEl.innerText = `${evt.mass_time.substring(0,5)} ${evt.mass_type === 'Special Event' ? (evt.event_name || evt.mass_type) : evt.mass_type}`;
+                
+                // Add Check Icon if Selected
+                if (isSelectionMode && isSelected) {
+                    eventEl.innerHTML += ' <span class="absolute right-1 top-1 text-blue-600">✓</span>';
+                }
+
+                eventEl.onclick = (e) => { 
+                    e.stopPropagation(); 
+                    if (isSelectionMode) {
+                        toggleSelection(evt.id.toString());
+                    } else {
+                        openModal('edit', null, evt); 
+                    }
+                };
+                cell.appendChild(eventEl);
+            });
+            grid.appendChild(cell);
+        }
+    }
+
+    function toggleSelectionMode() {
+        isSelectionMode = !isSelectionMode;
+        const btn = document.getElementById('selectModeBtn');
+        const bar = document.getElementById('selectionBar');
+        const header = document.getElementById('calendarHeader');
+        
+        if (isSelectionMode) {
+            btn.classList.add('bg-blue-50', 'text-blue-600', 'border-blue-200', 'ring-2', 'ring-blue-200');
+            bar.classList.remove('hidden');
+            header.classList.add('pt-16'); // Push header down
+        } else {
+            btn.classList.remove('bg-blue-50', 'text-blue-600', 'border-blue-200', 'ring-2', 'ring-blue-200');
+            bar.classList.add('hidden');
+            header.classList.remove('pt-16');
+            selectedIds = [];
+        }
+        renderCalendar();
+        updateSelectedCount();
+    }
+
+    function toggleSelection(id) {
+        if (selectedIds.includes(id)) {
+            selectedIds = selectedIds.filter(i => i !== id);
+        } else {
+            selectedIds.push(id);
+        }
+        renderCalendar();
+        updateSelectedCount();
+    }
+
+    function selectAllCalendar(check) {
+        if (!check) {
+            selectedIds = [];
+        } // Add true case if needed to select ALL currently visible? Maybe later.
+        renderCalendar();
+        updateSelectedCount();
+    }
+
+    function updateSelectedCount() {
+        document.getElementById('selectedCount').innerText = `${selectedIds.length} Selected`;
+    }
+
+    function submitBulk(action) {
+        if (selectedIds.length === 0) return alert('No items selected');
+
+        if (action === 'delete') {
+            if (confirm(`Delete ${selectedIds.length} selected schedules?`)) {
+                const form = document.getElementById('bulkForm');
+                form.action = "<?= URLROOT ?>/schedules/bulk-delete";
+                // Create inputs for ids
+                const container = document.getElementById('bulkIds'); 
+                // Wait, I can't put array in value easily for standard POST without JSON or multiple inputs.
+                // Reusing the form structure from list view:
+                
+                // Let's dynamically create inputs inside the form
+                const formEl = document.getElementById('bulkForm');
+                // Remove old inputs if any except tokens
+                
+                // Actually easier: Put JSON in a hidden input
+                // ScheduleController needs to handle JSON or array.
+                // List view used `ids[]`. 
+                // Controller `bulkDelete` uses `$_POST['ids']` (array).
+                
+                // Let's create inputs:
+                formEl.innerHTML = '<?php csrf_field(); ?>'; // Reset form content to token
+                selectedIds.forEach(id => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'ids[]';
+                    input.value = id;
+                    formEl.appendChild(input);
+                });
+                
+                formEl.submit();
+            }
+        } else if (action === 'edit') {
+            document.getElementById('bulkEditIds').value = JSON.stringify(selectedIds);
+            document.getElementById('bulkEditModal').classList.remove('hidden');
+        }
+    }
+
+    function filterServers() {
+        const query = document.getElementById('serverSearch').value.toLowerCase();
+        document.querySelectorAll('.server-item').forEach(item => {
+            item.style.display = item.querySelector('.server-name').innerText.toLowerCase().includes(query) ? 'flex' : 'none';
+        });
+    }
+
+    function openModal(mode, date = null, event = null) {
+        modal.classList.remove('hidden'); setTimeout(() => { modal.classList.remove('opacity-0'); modalContent.classList.remove('scale-95'); }, 10);
+        document.querySelectorAll('.server-checkbox').forEach(cb => cb.checked = false);
+        document.querySelectorAll('.color-radio').forEach(r => r.checked = false);
+        if (mode === 'add') {
+            document.getElementById('modalTitle').innerText = 'Add Schedule'; document.getElementById('scheduleForm').reset();
+            document.getElementById('scheduleId').value = ''; document.getElementById('deleteBtnContainer').classList.add('hidden');
+            if(date) document.getElementById('mass_date').value = date; toggleEventName();
+        } else {
+            document.getElementById('modalTitle').innerText = 'Edit Schedule'; document.getElementById('scheduleId').value = event.id;
+            document.getElementById('mass_type').value = event.mass_type; document.getElementById('event_name').value = event.event_name || '';
+            toggleEventName(); document.getElementById('mass_date').value = event.mass_date; document.getElementById('mass_time').value = event.mass_time;
+            document.getElementById('status').value = event.status;
+            if (event.color) { const r = document.querySelector(`.color-radio[value="${event.color}"]`); if (r) r.checked = true; }
+            if (event.assigned_servers) event.assigned_servers.forEach(id => { const cb = document.querySelector(`.server-checkbox[value="${id}"]`); if (cb) cb.checked = true; });
+            document.getElementById('deleteBtnContainer').classList.remove('hidden');
+            document.getElementById('deleteLink').href = `<?= URLROOT ?>/schedules/delete?id=${event.id}`;
+        }
+    }
+
+    function closeModal() { modal.classList.add('opacity-0'); modalContent.classList.add('scale-95'); setTimeout(() => modal.classList.add('hidden'), 300); }
+    function changeMonth(d) { currentDate.setMonth(currentDate.getMonth() + d); renderCalendar(); }
+    function triggerImport() { document.getElementById('csv_file').click(); }
+    function generateSundays() {
+        const m = prompt("Month (1-12):", new Date().getMonth() + 1);
+        if (m) { const y = prompt("Year:", new Date().getFullYear()); if (y) window.location.href = `<?= URLROOT ?>/schedules/generate?month=${m}&year=${y}`; }
+    }
+    function toggleEventName() {
+        const t = document.getElementById('mass_type').value;
+        document.getElementById('eventNameContainer').classList.toggle('hidden', t !== 'Special Event');
+    }
+    renderCalendar();
+</script>

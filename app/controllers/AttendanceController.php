@@ -15,6 +15,7 @@ class AttendanceController extends Controller {
 
     public function index() {
         if (isset($_SESSION['role']) && $_SESSION['role'] === 'User') {
+            // ... (Keep existing User Logic) ...
             $allRecords = $this->attendanceRepo->getByUserId($_SESSION['user_id']);
             
             $stats = ['Present' => 0, 'Late' => 0, 'Absent' => 0];
@@ -44,11 +45,44 @@ class AttendanceController extends Controller {
             ]);
         } else {
             // Admin View
-            $logs = $this->attendanceRepo->getAll();
+            $date = $_GET['date'] ?? date('Y-m-d');
+            $rawLogs = $this->attendanceRepo->getDailyAttendance($date);
+            
+            $attendanceList = [];
+            foreach($rawLogs as $row) {
+                $sid = $row->server_id;
+                if (!isset($attendanceList[$sid])) {
+                    $attendanceList[$sid] = [
+                        'id' => $sid,
+                        'name' => $row->name,
+                        'mass' => null,
+                        'meeting' => null,
+                        'others' => []
+                    ];
+                }
+
+                if ($row->schedule_id) {
+                    $type = $row->mass_type;
+                    if (stripos($type, 'Meeting') !== false) {
+                        $attendanceList[$sid]['meeting'] = $row;
+                    } elseif (stripos($type, 'Mass') !== false) {
+                        // Assume first mass found is primary, others are extra
+                        if ($attendanceList[$sid]['mass'] === null) {
+                            $attendanceList[$sid]['mass'] = $row;
+                        } else {
+                            $attendanceList[$sid]['others'][] = $row;
+                        }
+                    } else {
+                        $attendanceList[$sid]['others'][] = $row;
+                    }
+                }
+            }
+
             $this->view('attendance/index', [
                 'pageTitle' => 'Attendance Management',
                 'title' => 'Attendance | ASMS',
-                'logs' => $logs
+                'attendanceList' => $attendanceList,
+                'date' => $date
             ]);
         }
     }

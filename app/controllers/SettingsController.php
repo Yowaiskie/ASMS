@@ -14,23 +14,23 @@ class SettingsController extends Controller {
     }
 
     public function index() {
+        $userProfile = $this->userRepo->getUserProfile($_SESSION['user_id']);
+
+        // Fallback if no profile found
+        if (!$userProfile) {
+            $userProfile = (object)[
+                'username' => $_SESSION['username'],
+                'role' => $_SESSION['role'],
+                'profile_image' => null,
+                'name' => '',
+                'age' => '',
+                'phone' => '',
+                'address' => '',
+                'email' => ''
+            ];
+        }
+
         if (($_SESSION['role'] ?? '') === 'User') {
-            $userProfile = $this->userRepo->getUserProfile($_SESSION['user_id']);
-
-            // Fallback if no profile found (e.g., user exists but no server linked)
-            if (!$userProfile) {
-                $userProfile = (object)[
-                    'username' => $_SESSION['username'],
-                    'role' => $_SESSION['role'],
-                    'profile_image' => null,
-                    'name' => '',
-                    'age' => '',
-                    'phone' => '',
-                    'address' => '',
-                    'email' => ''
-                ];
-            }
-
             $this->view('settings/user_index', [
                 'pageTitle' => 'Account Settings',
                 'title' => 'Settings | ASMS',
@@ -39,7 +39,8 @@ class SettingsController extends Controller {
         } else {
             $this->view('settings/index', [
                 'pageTitle' => 'System Settings',
-                'title' => 'Settings | ASMS'
+                'title' => 'Settings | ASMS',
+                'profile' => $userProfile
             ]);
         }
     }

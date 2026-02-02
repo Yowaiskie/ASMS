@@ -70,6 +70,26 @@ class AttendanceRepository implements RepositoryInterface {
         return $this->db->resultSet();
     }
 
+    public function getDailyAttendance($date) {
+        $this->db->query("
+            SELECT 
+                s.id as server_id, 
+                s.name, 
+                a.id as attendance_id,
+                a.status,
+                sch.id as schedule_id,
+                sch.mass_type,
+                sch.mass_time
+            FROM servers s
+            LEFT JOIN attendance a ON s.id = a.server_id
+            LEFT JOIN schedules sch ON a.schedule_id = sch.id AND sch.mass_date = :date
+            WHERE s.status = 'Active'
+            ORDER BY s.name ASC
+        ");
+        $this->db->bind(':date', $date);
+        return $this->db->resultSet();
+    }
+
     public function update($id, array $data) { return true; }
     public function delete($id) { return true; }
 }

@@ -28,6 +28,10 @@ $router->get('/schedules', [ScheduleController::class, 'index']);
 $router->get('/schedules/create', [ScheduleController::class, 'create']);
 $router->post('/schedules/store', [ScheduleController::class, 'store']);
 $router->get('/schedules/delete', [ScheduleController::class, 'delete']);
+$router->post('/schedules/bulk-delete', [ScheduleController::class, 'bulkDelete']);
+$router->post('/schedules/bulk-update', [ScheduleController::class, 'bulkUpdate']);
+$router->get('/schedules/generate', [ScheduleController::class, 'generate']);
+$router->post('/schedules/import', [ScheduleController::class, 'import']);
 
 // Servers
 $router->get('/servers', [ServerController::class, 'index']);
@@ -46,9 +50,11 @@ $router->get('/announcements/delete', [AnnouncementController::class, 'delete'])
 // Excuses
 $router->get('/excuses', [ExcuseController::class, 'index']);
 $router->post('/excuses/store', [ExcuseController::class, 'store']);
+$router->post('/excuses/update-status', [ExcuseController::class, 'updateStatus']);
 
 // Reports
 $router->get('/reports', [ReportController::class, 'index']);
+$router->get('/reports/download', [ReportController::class, 'download']);
 
 // Logs
 $router->get('/logs', [LogController::class, 'index']);

@@ -58,6 +58,14 @@ class ExcuseRepository implements RepositoryInterface {
     }
 
     public function update($id, array $data) { return true; }
+
+    public function updateStatus($id, $status) {
+        $this->db->query("UPDATE excuses SET status = :status WHERE id = :id");
+        $this->db->bind(':id', $id);
+        $this->db->bind(':status', $status);
+        return $this->db->execute();
+    }
+
     public function delete($id) { 
         $this->db->query("DELETE FROM excuses WHERE id = :id");
         $this->db->bind(':id', $id);
