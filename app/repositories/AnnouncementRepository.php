@@ -36,4 +36,29 @@ class AnnouncementRepository implements RepositoryInterface {
         $this->db->bind(':id', $id);
         return $this->db->execute();
     }
+
+    public function getUnreadCountForUser($userId) {
+        // Get user's last read time
+        $this->db->query("SELECT last_read_announcements FROM users WHERE id = :id");
+        $this->db->bind(':id', $userId);
+        $user = $this->db->single();
+
+        $lastRead = $user->last_read_announcements;
+
+        if (!$lastRead) {
+            // If never read, count all
+            $this->db->query("SELECT COUNT(*) as count FROM announcements");
+        } else {
+            $this->db->query("SELECT COUNT(*) as count FROM announcements WHERE created_at > :last_read");
+            $this->db->bind(':last_read', $lastRead);
+        }
+        
+        return $this->db->single()->count;
+    }
+
+    public function markAsRead($userId) {
+        $this->db->query("UPDATE users SET last_read_announcements = NOW() WHERE id = :id");
+        $this->db->bind(':id', $userId);
+        return $this->db->execute();
+    }
 }

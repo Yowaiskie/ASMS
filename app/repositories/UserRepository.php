@@ -30,6 +30,46 @@ class UserRepository implements RepositoryInterface {
         return $this->db->single();
     }
 
+    public function getUserProfile($userId) {
+        $this->db->query("
+            SELECT u.id as user_id, u.username, u.role, u.server_id,
+                   s.name, s.email, s.phone, s.age, s.address, s.profile_image
+            FROM users u
+            LEFT JOIN servers s ON u.server_id = s.id
+            WHERE u.id = :id
+        ");
+        $this->db->bind(':id', $userId);
+        return $this->db->single();
+    }
+
+    public function updateProfile($userId, $data) {
+        // Get server_id
+        $this->db->query("SELECT server_id FROM users WHERE id = :id");
+        $this->db->bind(':id', $userId);
+        $user = $this->db->single();
+
+        if ($user && $user->server_id) {
+            $this->db->query("UPDATE servers SET name = :name, age = :age, address = :address, phone = :phone, email = :email WHERE id = :id");
+            $this->db->bind(':id', $user->server_id);
+            $this->db->bind(':name', $data['name']);
+            $this->db->bind(':age', $data['age']);
+            $this->db->bind(':address', $data['address']);
+            $this->db->bind(':phone', $data['phone']);
+            $this->db->bind(':email', $data['email']);
+            $this->db->execute();
+        }
+        
+        // Handle Image Upload if provided
+        if (isset($data['profile_image']) && $user && $user->server_id) {
+            $this->db->query("UPDATE servers SET profile_image = :img WHERE id = :id");
+            $this->db->bind(':id', $user->server_id);
+            $this->db->bind(':img', $data['profile_image']);
+            $this->db->execute();
+        }
+        
+        return true;
+    }
+
     public function create(array $data) {
         $this->db->query("INSERT INTO users (username, password, role) VALUES (:username, :password, :role)");
         $this->db->bind(':username', $data['username']);

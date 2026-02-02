@@ -3,17 +3,50 @@
 $current_path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $root = URLROOT; // /ASMS/public
 
+// Check for unread announcements (for Users)
+$unreadCount = 0;
+if (isset($_SESSION['user_id']) && ($_SESSION['role'] ?? '') === 'User') {
+    // We can't easily rely on dependency injection here, so we use the Singleton Database
+    try {
+        $db = \App\Core\Database::getInstance();
+        
+        // Get last read
+        $db->query("SELECT last_read_announcements FROM users WHERE id = :id");
+        $db->bind(':id', $_SESSION['user_id']);
+        $res = $db->single();
+        
+        if ($res) {
+            $lastRead = $res->last_read_announcements;
+            if (!$lastRead) {
+                 // If null, count all
+                 $db->query("SELECT COUNT(*) as count FROM announcements");
+            } else {
+                 $db->query("SELECT COUNT(*) as count FROM announcements WHERE created_at > :last_read");
+                 $db->bind(':last_read', $lastRead);
+            }
+            $unreadCount = $db->single()->count;
+        }
+    } catch (Exception $e) {
+        // Fail silently in view
+    }
+}
+
 // Define Menu Items
 $menu_items = [
     [
         'label' => 'Dashboard',
         'url' => $root . '/dashboard',
-        'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />'
+        'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2z" />'
     ],
     [
         'label' => 'Attendance',
         'url' => $root . '/attendance',
         'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />'
+    ],
+    [
+        'label' => 'Excuse Letter',
+        'url' => $root . '/excuses',
+        'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />'
     ],
     [
         'label' => 'Schedules',
@@ -28,6 +61,7 @@ $menu_items = [
     [
         'label' => 'Announcements',
         'url' => $root . '/announcements',
+        'badge' => $unreadCount,
         'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />'
     ],
     [
@@ -72,6 +106,20 @@ $menu_items = [
         <nav class="px-4 space-y-1">
             <?php foreach ($menu_items as $item): ?>
                 <?php 
+                    // Role-based filtering
+                    $role = $_SESSION['role'] ?? 'User';
+                    $restricted_items = ['Servers', 'Reports', 'Logs'];
+                    
+                    // Hide Admin items from Users
+                    if ($role === 'User' && in_array($item['label'], $restricted_items)) {
+                        continue;
+                    }
+
+                    // Hide User items from Admin (Excuse Letter, My Performance)
+                    if ($role !== 'User' && in_array($item['label'], ['Excuse Letter', 'My Performance'])) {
+                        continue;
+                    }
+
                     $isActive = false;
                     
                     // Simple logic to check if URL matches start of path (e.g., /schedules/create matches /schedules)
@@ -96,7 +144,13 @@ $menu_items = [
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <?= $item['icon'] ?>
                     </svg>
-                    <span class="font-medium text-sm"><?= $item['label'] ?></span>
+                    <span class="font-medium text-sm flex-1"><?= $item['label'] ?></span>
+                    
+                    <?php if (isset($item['badge']) && $item['badge'] > 0): ?>
+                        <span class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                            <?= $item['badge'] > 99 ? '99+' : $item['badge'] ?>
+                        </span>
+                    <?php endif; ?>
                 </a>
             <?php endforeach; ?>
         </nav>

@@ -49,6 +49,27 @@ class AttendanceRepository implements RepositoryInterface {
         return $this->db->execute();
     }
 
+    public function getByUserId($userId) {
+        // Fetch server_id for the user first (assuming 1:1 relation users -> servers)
+        $this->db->query("SELECT server_id FROM users WHERE id = :user_id");
+        $this->db->bind(':user_id', $userId);
+        $user = $this->db->single();
+
+        if (!$user || !$user->server_id) {
+            return [];
+        }
+
+        $this->db->query("
+            SELECT a.*, s.mass_type, s.mass_date, s.mass_time 
+            FROM attendance a 
+            JOIN schedules s ON a.schedule_id = s.id 
+            WHERE a.server_id = :server_id 
+            ORDER BY s.mass_date DESC
+        ");
+        $this->db->bind(':server_id', $user->server_id);
+        return $this->db->resultSet();
+    }
+
     public function update($id, array $data) { return true; }
     public function delete($id) { return true; }
 }

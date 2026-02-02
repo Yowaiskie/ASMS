@@ -15,15 +15,33 @@ class AnnouncementController extends Controller {
 
     public function index() {
         $announcements = $this->announcementRepo->getAll();
-        $this->view('announcements/index', [
-            'pageTitle' => 'Announcements',
-            'title' => 'Announcements | ASMS',
-            'announcements' => $announcements
-        ]);
+        
+        if (isset($_SESSION['role']) && $_SESSION['role'] === 'User') {
+            // Mark as read when user views the list
+            $this->announcementRepo->markAsRead($_SESSION['user_id']);
+
+            $this->view('announcements/user_index', [
+                'pageTitle' => 'Announcements',
+                'title' => 'Announcements | ASMS',
+                'announcements' => $announcements
+            ]);
+        } else {
+            $this->view('announcements/index', [
+                'pageTitle' => 'Announcements',
+                'title' => 'Announcements | ASMS',
+                'announcements' => $announcements
+            ]);
+        }
     }
 
     public function store() {
         $this->verifyCsrf();
+
+        if (($_SESSION['role'] ?? '') === 'User') {
+            setFlash('msg_error', 'Unauthorized access.');
+            redirect('announcements');
+            return;
+        }
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $data = [
@@ -43,6 +61,12 @@ class AnnouncementController extends Controller {
     }
 
     public function delete() {
+        if (($_SESSION['role'] ?? '') === 'User') {
+            setFlash('msg_error', 'Unauthorized access.');
+            redirect('announcements');
+            return;
+        }
+
         $id = $_GET['id'] ?? null;
         if ($id && $this->announcementRepo->delete($id)) {
             setFlash('msg_success', 'Announcement deleted.');

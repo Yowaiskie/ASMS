@@ -14,15 +14,28 @@ class ScheduleController extends Controller {
     }
 
     public function index() {
-        $schedules = $this->scheduleRepo->getAll();
-        
-        $data = [
-            'pageTitle' => 'Mass Schedules',
-            'title' => 'Schedules | ASMS',
-            'schedules' => $schedules
-        ];
-        
-        $this->view('schedules/index', $data);
+        if (isset($_SESSION['role']) && $_SESSION['role'] === 'User') {
+            $schedules = $this->scheduleRepo->getByUserId($_SESSION['user_id']);
+            
+            $data = [
+                'pageTitle' => 'My Schedule',
+                'title' => 'My Schedule | ASMS',
+                'schedules' => $schedules
+            ];
+            
+            $this->view('schedules/user_index', $data);
+        } else {
+            // Admin View
+            $schedules = $this->scheduleRepo->getAll();
+            
+            $data = [
+                'pageTitle' => 'Mass Schedules',
+                'title' => 'Schedules | ASMS',
+                'schedules' => $schedules
+            ];
+            
+            $this->view('schedules/index', $data);
+        }
     }
 
     public function create() {

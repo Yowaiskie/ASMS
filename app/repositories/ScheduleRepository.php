@@ -24,6 +24,27 @@ class ScheduleRepository implements RepositoryInterface {
         return $this->db->single();
     }
 
+    public function getByUserId($userId) {
+        // Get server_id first
+        $this->db->query("SELECT server_id FROM users WHERE id = :user_id");
+        $this->db->bind(':user_id', $userId);
+        $user = $this->db->single();
+
+        if (!$user || !$user->server_id) {
+            return [];
+        }
+
+        $this->db->query("
+            SELECT s.*, a.status as attendance_status 
+            FROM schedules s
+            JOIN attendance a ON s.id = a.schedule_id
+            WHERE a.server_id = :server_id
+            ORDER BY s.mass_date ASC, s.mass_time ASC
+        ");
+        $this->db->bind(':server_id', $user->server_id);
+        return $this->db->resultSet();
+    }
+
     public function create(array $data) {
         $this->db->query("INSERT INTO schedules (mass_type, mass_date, mass_time, status) VALUES (:mass_type, :mass_date, :mass_time, :status)");
         $this->db->bind(':mass_type', $data['mass_type']);

@@ -10,6 +10,7 @@ use App\Controllers\AuthController;
 use App\Controllers\AnnouncementController;
 use App\Controllers\ReportController;
 use App\Controllers\LogController;
+use App\Controllers\ExcuseController;
 
 // Auth Routes
 $router->get('/login', [AuthController::class, 'login']);
@@ -41,6 +42,10 @@ $router->post('/attendance/update', [AttendanceController::class, 'update']);
 $router->get('/announcements', [AnnouncementController::class, 'index']);
 $router->post('/announcements/store', [AnnouncementController::class, 'store']);
 $router->get('/announcements/delete', [AnnouncementController::class, 'delete']);
+
+// Excuses
+$router->get('/excuses', [ExcuseController::class, 'index']);
+$router->post('/excuses/store', [ExcuseController::class, 'store']);
 
 // Reports
 $router->get('/reports', [ReportController::class, 'index']);

@@ -30,12 +30,22 @@ try {
             ORDER BY s.mass_date DESC
         ");
         $stmt->execute([$user->server_id]);
-        $records = $stmt->fetchAll(PDO::FETCH_OBJ);
+        $allRecords = $stmt->fetchAll(PDO::FETCH_OBJ);
 
-        // Count Stats
-        foreach ($records as $r) {
+        // Split Records
+        $massRecords = [];
+        $meetingRecords = [];
+        foreach ($allRecords as $r) {
+            // Count Stats
             if (isset($stats[$r->status])) {
                 $stats[$r->status]++;
+            }
+            
+            // Categorize
+            if (stripos($r->mass_type, 'Meeting') !== false) {
+                $meetingRecords[] = $r;
+            } else {
+                $massRecords[] = $r;
             }
         }
     }
@@ -192,11 +202,16 @@ try {
             </div>
 
             <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden animate-fade-in-up delay-300">
-                <div class="p-6 border-b border-slate-50">
+                <div class="p-6 border-b border-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <h3 class="font-bold text-slate-800">Attendance Records</h3>
+                    
+                    <div class="flex bg-slate-100 p-1 rounded-lg">
+                        <button onclick="switchTab('mass')" id="tab-mass" class="px-4 py-1.5 text-xs font-bold rounded-md bg-white text-slate-800 shadow-sm transition-all">Mass</button>
+                        <button onclick="switchTab('meeting')" id="tab-meeting" class="px-4 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-700 transition-all">Meeting</button>
+                    </div>
                 </div>
                 
-                <div class="overflow-x-auto">
+                <div id="content-mass" class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-white text-slate-500 text-xs uppercase tracking-wider">
@@ -207,9 +222,8 @@ try {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50 text-sm">
-                            
-                            <?php if(!empty($records)): ?>
-                                <?php foreach($records as $row): ?>
+                            <?php if(!empty($massRecords)): ?>
+                                <?php foreach($massRecords as $row): ?>
                                 <tr class="hover:bg-slate-50 transition-colors">
                                     <td class="p-6 text-slate-600 font-medium"><?= date('M d, Y', strtotime($row->mass_date)) ?></td>
                                     <td class="p-6 text-slate-800"><?= h($row->mass_type) ?></td>
@@ -228,13 +242,51 @@ try {
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="4" class="p-6 text-center text-slate-400">No attendance records found.</td>
+                                    <td colspan="4" class="p-6 text-center text-slate-400">No mass attendance records found.</td>
                                 </tr>
                             <?php endif; ?>
-                            
                         </tbody>
                     </table>
                 </div>
+
+                <div id="content-meeting" class="overflow-x-auto hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-white text-slate-500 text-xs uppercase tracking-wider">
+                                <th class="p-6 font-semibold">Date</th>
+                                <th class="p-6 font-semibold">Event</th>
+                                <th class="p-6 font-semibold">Time</th>
+                                <th class="p-6 font-semibold">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50 text-sm">
+                            <?php if(!empty($meetingRecords)): ?>
+                                <?php foreach($meetingRecords as $row): ?>
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="p-6 text-slate-600 font-medium"><?= date('M d, Y', strtotime($row->mass_date)) ?></td>
+                                    <td class="p-6 text-slate-800"><?= h($row->mass_type) ?></td>
+                                    <td class="p-6 text-slate-500"><?= h($row->mass_time) ?></td>
+                                    <td class="p-6">
+                                        <?php 
+                                            $color = 'bg-green-50 text-green-700';
+                                            if($row->status == 'Late') $color = 'bg-yellow-50 text-yellow-700';
+                                            if($row->status == 'Absent') $color = 'bg-red-50 text-red-700';
+                                        ?>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold <?= $color ?>">
+                                            <?= h($row->status) ?>
+                                        </span>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="4" class="p-6 text-center text-slate-400">No meeting attendance records found.</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+
             </div>
 
         </div>
@@ -247,6 +299,35 @@ try {
             </svg>
         </button>
     </div>
+
+    <script>
+        function switchTab(tab) {
+            const massContent = document.getElementById('content-mass');
+            const meetingContent = document.getElementById('content-meeting');
+            const massTab = document.getElementById('tab-mass');
+            const meetingTab = document.getElementById('tab-meeting');
+
+            if (tab === 'mass') {
+                massContent.classList.remove('hidden');
+                meetingContent.classList.add('hidden');
+                
+                massTab.classList.add('bg-white', 'text-slate-800', 'shadow-sm');
+                massTab.classList.remove('text-slate-500');
+                
+                meetingTab.classList.remove('bg-white', 'text-slate-800', 'shadow-sm');
+                meetingTab.classList.add('text-slate-500');
+            } else {
+                massContent.classList.add('hidden');
+                meetingContent.classList.remove('hidden');
+                
+                meetingTab.classList.add('bg-white', 'text-slate-800', 'shadow-sm');
+                meetingTab.classList.remove('text-slate-500');
+                
+                massTab.classList.remove('bg-white', 'text-slate-800', 'shadow-sm');
+                massTab.classList.add('text-slate-500');
+            }
+        }
+    </script>
 
 </body>
 </html>
