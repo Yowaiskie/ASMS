@@ -133,22 +133,26 @@ class AttendanceController extends Controller {
             $date = $_POST['date'] ?? date('Y-m-d');
             $scheduleId = $_POST['schedule_id'] ?? '';
             $serverId = $_POST['server_id'] ?? '';
+            $page = $_POST['page'] ?? 1;
+            $search = $_POST['search'] ?? '';
 
             // Handle creation if no ID
+            // ... (keep logic) ...
             if (empty($id) && !empty($scheduleId) && !empty($serverId)) {
                 $id = $this->attendanceRepo->assign($scheduleId, $serverId, $status);
                 if (!$id) {
                     setFlash('msg_error', 'Failed to create attendance record.');
-                    redirect('attendance?date=' . $date);
+                    redirect("attendance?date=$date&page=$page&search=" . urlencode($search));
                     return;
                 }
             }
 
             if ($this->attendanceRepo->updateStatus($id, $status)) {
-                // Email Notification
+                // ... (keep logic) ...
+                // Email Notification and Suspension Logic
                 $db = Database::getInstance();
-                $db->query("
-                    SELECT s.email, s.name, sch.mass_type, sch.mass_date 
+                $this->db->query("
+                    SELECT s.id as server_id, s.email, CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) as name, sch.mass_type, sch.mass_date 
                     FROM attendance a 
                     JOIN servers s ON a.server_id = s.id 
                     JOIN schedules sch ON a.schedule_id = sch.id 
@@ -158,6 +162,7 @@ class AttendanceController extends Controller {
                 $info = $db->single();
 
                 if ($info && $info->email) {
+                    // ... (keep email logic) ...
                     $color = match($status) {
                         'Present' => '#10b981',
                         'Late' => '#f59e0b',
@@ -172,14 +177,55 @@ class AttendanceController extends Controller {
                         'Your Attendance has been marked!',
                         "Hi {$info->name}, your attendance for <b>{$info->mass_type}</b> on <b>" . date('M d, Y', strtotime($info->mass_date)) . "</b> has been marked as <b style='color:{$color}'>{$status}</b>."
                     );
+
+                    // --- START SUSPENSION LOGIC ---
+                    // ... (keep suspension logic) ...
+                    if ($status === 'Absent' && stripos($info->mass_type, 'Meeting') === false) {
+                        // Count absences for this month (excluding meetings)
+                        $db->query("
+                            SELECT COUNT(*) as count 
+                            FROM attendance a
+                            JOIN schedules sch ON a.schedule_id = sch.id
+                            WHERE a.server_id = :sid 
+                            AND a.status = 'Absent'
+                            AND MONTH(sch.mass_date) = MONTH(CURRENT_DATE())
+                            AND YEAR(sch.mass_date) = YEAR(CURRENT_DATE())
+                            AND sch.mass_type NOT LIKE '%Meeting%'
+                        ");
+                        $db->bind(':sid', $info->server_id);
+                        $absenceCount = $db->single()->count;
+
+                        if ($absenceCount == 2) {
+                            // WARNING
+                            sendEmailNotification(
+                                $info->email,
+                                'URGENT: Attendance Warning',
+                                'Second Absence Recorded',
+                                "Hi {$info->name}, you have recorded your <b>2nd absence</b> this month. Please be reminded that a 3rd absence will result in an automatic 30-day suspension from joining schedules. Keep serving!"
+                            );
+                        } elseif ($absenceCount >= 3) {
+                            // SUSPENSION
+                            $until = date('Y-m-d', strtotime('+30 days'));
+                            $this->serverRepo->suspendServer($info->server_id, $until);
+                            
+                            sendEmailNotification(
+                                $info->email,
+                                'Account Suspended',
+                                'Automatic Suspension Triggered',
+                                "Hi {$info->name}, you have recorded your <b>3rd absence</b> this month. As per system rules, your account has been <b>Suspended until " . date('M d, Y', strtotime($until)) . "</b>. You will not be able to join new schedules during this period."
+                            );
+                        }
+                    }
+                    // --- END SUSPENSION LOGIC ---
                 }
 
-                logAction('Update', 'Attendance', "Updated attendance ID: $id to $status");
+                $logName = $info ? $info->name : "ID: $id";
+                logAction('Update', 'Attendance', "Updated attendance for $logName to $status");
                 setFlash('msg_success', 'Attendance updated.');
             } else {
                 setFlash('msg_error', 'Update failed.');
             }
-            redirect('attendance?date=' . $date);
+            redirect("attendance?date=$date&page=$page&search=" . urlencode($search));
         }
     }
 

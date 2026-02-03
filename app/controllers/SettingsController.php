@@ -60,7 +60,9 @@ class SettingsController extends Controller {
             // 1. Update Profile (Both Admin & User)
             if ($action === 'update_profile') {
                 $data = [
-                    'name' => trim($_POST['name']),
+                    'first_name' => trim($_POST['first_name']),
+                    'middle_name' => trim($_POST['middle_name'] ?? ''),
+                    'last_name' => trim($_POST['last_name']),
                     'nickname' => trim($_POST['nickname'] ?? ''),
                     'dob' => $_POST['dob'] ?? null,
                     'age' => trim($_POST['age']),

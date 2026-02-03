@@ -62,6 +62,7 @@
                                 <?php csrf_field(); ?>
                                 <input type="hidden" name="id" value="<?= $exc->id ?>">
                                 <input type="hidden" name="status" value="Approved">
+                                <input type="hidden" name="page" value="<?= $pagination['page'] ?? 1 ?>">
                                 <button type="submit" class="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg shadow-sm transition-all" title="Approve">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
                                 </button>
@@ -70,6 +71,7 @@
                                 <?php csrf_field(); ?>
                                 <input type="hidden" name="id" value="<?= $exc->id ?>">
                                 <input type="hidden" name="status" value="Rejected">
+                                <input type="hidden" name="page" value="<?= $pagination['page'] ?? 1 ?>">
                                 <button type="submit" class="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg shadow-sm transition-all" title="Reject">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                                 </button>
@@ -94,17 +96,28 @@
     <div class="text-xs text-slate-500">
         Page <span class="font-bold"><?= $pagination['page'] ?></span> of <span class="font-bold"><?= $pagination['totalPages'] ?></span>
     </div>
-    <div class="flex gap-2">
+    <div class="flex items-center gap-1.5">
         <?php if ($pagination['page'] > 1): ?>
-            <a href="<?= URLROOT ?>/excuses?page=<?= $pagination['page'] - 1 ?>" class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">Previous</a>
-        <?php else: ?>
-            <span class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-400 cursor-not-allowed">Previous</span>
+            <a href="<?= URLROOT ?>/excuses?page=<?= $pagination['page'] - 1 ?>" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7" /></svg>
+            </a>
         <?php endif; ?>
 
+        <?php 
+            $start = max(1, $pagination['page'] - 2);
+            $end = min($pagination['totalPages'], $start + 4);
+            if ($end - $start < 4) $start = max(1, $end - 4);
+            
+            for($i = $start; $i <= $end; $i++): 
+                $active = ($i == $pagination['page']) ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-100' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 shadow-sm';
+        ?>
+            <a href="<?= URLROOT ?>/excuses?page=<?= $i ?>" class="w-8 h-8 flex items-center justify-center border rounded-lg text-xs font-bold transition-all <?= $active ?>"><?= $i ?></a>
+        <?php endfor; ?>
+
         <?php if ($pagination['page'] < $pagination['totalPages']): ?>
-            <a href="<?= URLROOT ?>/excuses?page=<?= $pagination['page'] + 1 ?>" class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">Next</a>
-        <?php else: ?>
-            <span class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-400 cursor-not-allowed">Next</span>
+            <a href="<?= URLROOT ?>/excuses?page=<?= $pagination['page'] + 1 ?>" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7" /></svg>
+            </a>
         <?php endif; ?>
     </div>
 </div>
@@ -184,12 +197,14 @@
                     <?php csrf_field(); ?>
                     <input type="hidden" name="id" value="${data.id}">
                     <input type="hidden" name="status" value="Rejected">
+                    <input type="hidden" name="page" value="<?= $pagination['page'] ?? 1 ?>">
                     <button type="submit" class="w-full py-3 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-all">Disapprove</button>
                 </form>
                 <form action="<?= URLROOT ?>/excuses/update-status" method="POST" class="flex-1">
                     <?php csrf_field(); ?>
                     <input type="hidden" name="id" value="${data.id}">
                     <input type="hidden" name="status" value="Approved">
+                    <input type="hidden" name="page" value="<?= $pagination['page'] ?? 1 ?>">
                     <button type="submit" class="w-full py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">Approve Request</button>
                 </form>
             `;

@@ -103,6 +103,25 @@ class DashboardController extends Controller {
             $this->db->bind(':sid', $serverId);
             $nextSchedule = $this->db->single();
 
+            // Monthly Absence Count (Excluding Meetings) for Warning
+            $this->db->query("
+                SELECT COUNT(*) as count 
+                FROM attendance a
+                JOIN schedules sch ON a.schedule_id = sch.id
+                WHERE a.server_id = :sid 
+                AND a.status = 'Absent'
+                AND MONTH(sch.mass_date) = MONTH(CURRENT_DATE())
+                AND YEAR(sch.mass_date) = YEAR(CURRENT_DATE())
+                AND sch.mass_type NOT LIKE '%Meeting%'
+            ");
+            $this->db->bind(':sid', $serverId);
+            $monthlyAbsences = $this->db->single()->count;
+
+            // Fetch Server Status for the view
+            $this->db->query("SELECT * FROM servers WHERE id = :sid");
+            $this->db->bind(':sid', $serverId);
+            $serverProfile = $this->db->single();
+
             // Recent Announcements
             $this->db->query("SELECT * FROM announcements ORDER BY created_at DESC LIMIT 3");
             $announcements = $this->db->resultSet();
@@ -118,6 +137,8 @@ class DashboardController extends Controller {
                     'massPresent' => $massPresent,
                     'meetingPresent' => $meetingPresent
                 ],
+                'server' => $serverProfile,
+                'monthlyAbsences' => $monthlyAbsences,
                 'nextSchedule' => $nextSchedule,
                 'announcements' => $announcements,
                 'chartData' => [
@@ -148,7 +169,7 @@ class DashboardController extends Controller {
 
             // Fetch Today's Attendance List
             $this->db->query("
-                SELECT a.*, s.name 
+                SELECT a.*, CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) as name 
                 FROM attendance a 
                 JOIN servers s ON a.server_id = s.id 
                 WHERE DATE(a.created_at) = CURDATE() 

@@ -46,19 +46,21 @@ class AnnouncementController extends Controller {
 
     public function store() {
         $this->verifyCsrf();
+        $page = $_POST['page'] ?? 1;
 
         if (($_SESSION['role'] ?? '') === 'User') {
             setFlash('msg_error', 'Unauthorized access.');
-            redirect('announcements');
+            redirect('announcements?page=' . $page);
             return;
         }
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // ... (keep logic) ...
             $data = [
                 'title' => trim($_POST['title']),
                 'category' => trim($_POST['category']),
                 'message' => trim($_POST['message']),
-                'author' => $_SESSION['username'] ?? 'Admin'
+                'author' => $_SESSION['full_name'] ?? 'Admin'
             ];
 
             if ($this->announcementRepo->create($data)) {
@@ -67,24 +69,28 @@ class AnnouncementController extends Controller {
             } else {
                 setFlash('msg_error', 'Failed to post announcement.');
             }
-            redirect('announcements');
+            redirect('announcements?page=' . $page);
         }
     }
 
     public function delete() {
+        $page = $_GET['page'] ?? 1;
         if (($_SESSION['role'] ?? '') === 'User') {
-            setFlash('msg_error', 'Unauthorized access.');
-            redirect('announcements');
+            setFlash('msg_error', 'Unauthorized access to Audit Logs.');
+            redirect('announcements?page=' . $page);
             return;
         }
 
         $id = $_GET['id'] ?? null;
+        $announcement = $this->announcementRepo->getById($id);
+        $title = $announcement ? $announcement->title : "ID: $id";
+
         if ($id && $this->announcementRepo->delete($id)) {
-            logAction('Delete', 'Announcements', "Deleted announcement ID: $id");
+            logAction('Delete', 'Announcements', "Deleted announcement: $title");
             setFlash('msg_success', 'Announcement deleted.');
         } else {
             setFlash('msg_error', 'Failed to delete announcement.');
         }
-        redirect('announcements');
+        redirect('announcements?page=' . $page);
     }
 }

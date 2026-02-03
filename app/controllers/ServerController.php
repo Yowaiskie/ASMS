@@ -36,19 +36,22 @@ class ServerController extends Controller {
 
     public function store() {
         $this->verifyCsrf();
+        $page = $_POST['page'] ?? 1;
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $id = $_POST['id'] ?? '';
             $data = [
-                'name' => trim($_POST['name']),
+                'first_name' => trim($_POST['first_name']),
+                'middle_name' => trim($_POST['middle_name'] ?? ''),
+                'last_name' => trim($_POST['last_name']),
                 'nickname' => trim($_POST['nickname'] ?? ''),
                 'dob' => $_POST['dob'] ?? null,
-                'age' => $_POST['age'] ?? null,
+                'age' => trim($_POST['age'] ?? ''),
                 'address' => trim($_POST['address'] ?? ''),
                 'phone' => trim($_POST['phone'] ?? ''),
                 'email' => trim($_POST['email'] ?? ''),
                 'rank' => trim($_POST['rank']),
-                'team' => trim($_POST['team']),
+                'team' => trim($_POST['team'] ?? 'Unassigned'),
                 'status' => trim($_POST['status']),
                 'month_joined' => trim($_POST['month_joined'] ?? ''),
                 'investiture_date' => $_POST['investiture_date'] ?? null,
@@ -58,23 +61,53 @@ class ServerController extends Controller {
 
             if (!empty($id)) {
                 if ($this->serverRepo->update($id, $data)) {
+                    logAction('Update', 'Servers', 'Updated server profile: ' . $data['first_name'] . ' ' . $data['last_name']);
                     setFlash('msg_success', 'Server profile updated.');
                 } else {
                     setFlash('msg_error', 'Update failed.');
                 }
             } else {
                 if ($this->serverRepo->create($data)) {
+                    logAction('Create', 'Servers', 'Registered new server: ' . $data['first_name'] . ' ' . $data['last_name']);
                     setFlash('msg_success', 'Server registered successfully!');
                 } else {
                     setFlash('msg_error', 'Registration failed.');
                 }
             }
-            redirect('servers');
+            redirect('servers?page=' . $page);
+        }
+    }
+
+    public function updateStatus() {
+        $this->verifyCsrf();
+        $page = $_POST['page'] ?? 1;
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $id = $_POST['id'];
+            $action = $_POST['action'];
+
+            $server = $this->serverRepo->getById($id);
+            $name = $server ? $server->name : "ID: $id";
+
+            if ($action === 'suspend') {
+                $until = date('Y-m-d', strtotime('+30 days'));
+                if ($this->serverRepo->suspendServer($id, $until)) {
+                    logAction('Update', 'Servers', "Manually suspended server: $name until $until");
+                    setFlash('msg_success', "Server suspended until " . date('M d, Y', strtotime($until)));
+                }
+            } elseif ($action === 'unsuspend') {
+                $this->db = \App\Core\Database::getInstance();
+                $this->db->query("UPDATE servers SET status = 'Active', suspension_until = NULL WHERE id = :id");
+                $this->db->bind(':id', $id);
+                if ($this->db->execute()) {
+                    logAction('Update', 'Servers', "Manually unsuspended server: $name");
+                    setFlash('msg_success', "Server unsuspended successfully.");
+                }
+            }
+            redirect('servers?page=' . $page);
         }
     }
 
     public function download_pdf() {
-        // Load DomPDF via Composer Autoloader
         $autoloadPath = __DIR__ . '/../../vendor/autoload.php';
         if (file_exists($autoloadPath)) {
             require_once $autoloadPath;
@@ -84,25 +117,20 @@ class ServerController extends Controller {
 
         $servers = $this->serverRepo->getAll();
 
-        // Prepare Logo 1
         $logoPath = __DIR__ . '/../../public/images/logo.png';
         $logoData = '';
         if (file_exists($logoPath)) {
             $type = pathinfo($logoPath, PATHINFO_EXTENSION);
-            $dataImg = file_get_contents($logoPath);
-            $logoData = 'data:image/' . $type . ';base64,' . base64_encode($dataImg);
+            $logoData = 'data:image/' . $type . ';base64,' . base64_encode(file_get_contents($logoPath));
         }
 
-        // Prepare Logo 2 (Parish Logo)
         $parishLogoPath = __DIR__ . '/../../public/images/parish-logo.png';
         $parishLogoData = '';
         if (file_exists($parishLogoPath)) {
             $type = pathinfo($parishLogoPath, PATHINFO_EXTENSION);
-            $dataImg = file_get_contents($parishLogoPath);
-            $parishLogoData = 'data:image/' . $type . ';base64,' . base64_encode($dataImg);
+            $parishLogoData = 'data:image/' . $type . ';base64,' . base64_encode(file_get_contents($parishLogoPath));
         }
 
-        // HTML for Master List (Landscape)
         $html = '
         <html>
         <head>
@@ -110,10 +138,8 @@ class ServerController extends Controller {
                 @page { margin: 0.5cm; }
                 body { font-family: "Helvetica", sans-serif; font-size: 9px; color: #000; }
                 .header-container { text-align: center; margin-bottom: 20px; }
-                
                 .title { font-size: 18px; font-weight: bold; text-align: right; text-transform: uppercase; margin-bottom: 5px; }
                 .subtitle { font-size: 10px; text-align: right; }
-                
                 table.master-list { width: 100%; border-collapse: collapse; clear: both; }
                 table.master-list th { border: 1px solid #000; padding: 5px; text-align: left; font-weight: bold; text-transform: uppercase; background: #f0f0f0; }
                 table.master-list td { border: 1px solid #000; padding: 5px; vertical-align: top; }
@@ -131,10 +157,8 @@ class ServerController extends Controller {
                             <div style="font-size: 8px;">Pilar Rd., Morning Breeze Subdivision, Caloocan City</div>
                         </td>
                         <td style="width: 40%; text-align: center; border: none; vertical-align: middle;">
-                            <div style="display: inline-block;">
-                                ' . ($logoData ? '<img src="' . $logoData . '" style="width: 55px; margin-right: 10px; vertical-align: middle;">' : '') . '
-                                ' . ($parishLogoData ? '<img src="' . $parishLogoData . '" style="width: 55px; vertical-align: middle;">' : '') . '
-                            </div>
+                            ' . ($logoData ? '<img src="' . $logoData . '" style="width: 55px; margin-right: 10px; vertical-align: middle;">' : '') . '
+                            ' . ($parishLogoData ? '<img src="' . $parishLogoData . '" style="width: 55px; vertical-align: middle;">' : '') . '
                         </td>
                         <td style="width: 30%; text-align: right; border: none; vertical-align: middle;">
                             <div class="title">Official Master List</div>
@@ -179,10 +203,7 @@ class ServerController extends Controller {
             </tr>';
         }
 
-        $html .= '
-                </tbody>
-            </table>
-            
+        $html .= '</tbody></table>
             <div style="margin-top: 30px; width: 100%;">
                 <table style="width: 100%; border: none;">
                     <tr>
@@ -197,8 +218,7 @@ class ServerController extends Controller {
                     </tr>
                 </table>
             </div>
-        </body>
-        </html>';
+        </body></html>';
 
         $options = new \Dompdf\Options();
         $options->set('defaultFont', 'Helvetica');
@@ -219,75 +239,157 @@ class ServerController extends Controller {
             if ($_FILES['csv_file']['size'] > 0) {
                 $file = fopen($fileName, "r");
                 $count = 0;
+                $skipped = 0;
+                $userRepo = new \App\Repositories\UserRepository();
+                $db = \App\Core\Database::getInstance();
                 
                 $firstRow = true;
-                while (($column = fgetcsv($file, 10000, ",")) !== FALSE) {
+                while (($line = fgetcsv($file, 10000, ",")) !== FALSE) {
+                    $column = $line;
+                    
+                    // Delimiter Detection: If only 1 column found, try semicolon
+                    if (count($column) == 1 && strpos($column[0], ';') !== false) {
+                        $column = str_getcsv($column[0], ';');
+                    }
+
                     if ($firstRow) { $firstRow = false; continue; } // Skip Header
 
-                    if (count($column) < 1) continue;
-                    
-                    $data = [
-                        'name' => trim($column[0] ?? ''),
-                        'nickname' => trim($column[1] ?? ''),
-                        'address' => trim($column[2] ?? ''),
-                        'dob' => !empty($column[3]) ? date('Y-m-d', strtotime($column[3])) : null,
-                        'phone' => trim($column[4] ?? ''),
-                        'month_joined' => trim($column[5] ?? ''),
-                        'investiture_date' => !empty($column[6]) ? date('Y-m-d', strtotime($column[6])) : null,
-                        'order_name' => trim($column[7] ?? ''),
-                        'position' => trim($column[8] ?? ''),
-                        'rank' => trim($column[9] ?? 'Server'),
-                        'team' => trim($column[10] ?? 'Unassigned'),
-                        'status' => trim($column[11] ?? 'Active'),
-                        'email' => trim($column[12] ?? '')
-                    ];
+                    $colCount = count($column);
+                    if ($colCount < 1) { $skipped++; continue; }
 
-                    if (empty($data['name'])) continue;
+                    // Clean BOM from first column
+                    $column[0] = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $column[0]);
+
+                    if ($colCount <= 14) {
+                        // --- OLD FORMAT (1 Name Column + 13 others = 14 total) ---
+                        $fullName = trim($column[0]);
+                        if (empty($fullName)) { $skipped++; continue; }
+
+                        $parts = explode(' ', $fullName);
+                        $lastName = (count($parts) > 1) ? array_pop($parts) : 'Server';
+                        $firstName = (count($parts) >= 1) ? array_shift($parts) : $fullName;
+                        $middleName = implode(' ', $parts);
+
+                        $data = [
+                            'first_name' => $firstName,
+                            'middle_name' => $middleName,
+                            'last_name' => $lastName,
+                            'nickname' => trim($column[1] ?? ''),
+                            'address' => trim($column[2] ?? ''),
+                            'dob' => !empty($column[3]) ? date('Y-m-d', strtotime($column[3])) : null,
+                            'age' => trim($column[4] ?? ''),
+                            'phone' => trim($column[5] ?? ''),
+                            'month_joined' => trim($column[6] ?? ''),
+                            'investiture_date' => !empty($column[7]) ? date('Y-m-d', strtotime($column[7])) : null,
+                            'order_name' => trim($column[8] ?? ''),
+                            'position' => trim($column[9] ?? ''),
+                            'rank' => trim($column[10] ?? 'Server'),
+                            'team' => trim($column[11] ?? 'Unassigned'),
+                            'status' => trim($column[12] ?? 'Active'),
+                            'email' => trim($column[13] ?? '')
+                        ];
+                    } else {
+                        // --- NEW FORMAT (3 Name Columns + 13 others = 16 total) ---
+                        $data = [
+                            'first_name' => trim($column[0] ?? ''),
+                            'middle_name' => trim($column[1] ?? ''),
+                            'last_name' => trim($column[2] ?? ''),
+                            'nickname' => trim($column[3] ?? ''),
+                            'address' => trim($column[4] ?? ''),
+                            'dob' => !empty($column[5]) ? date('Y-m-d', strtotime($column[5])) : null,
+                            'age' => trim($column[6] ?? ''),
+                            'phone' => trim($column[7] ?? ''),
+                            'month_joined' => trim($column[8] ?? ''),
+                            'investiture_date' => !empty($column[9]) ? date('Y-m-d', strtotime($column[9])) : null,
+                            'order_name' => trim($column[10] ?? ''),
+                            'position' => trim($column[11] ?? ''),
+                            'rank' => trim($column[12] ?? 'Server'),
+                            'team' => trim($column[13] ?? 'Unassigned'),
+                            'status' => trim($column[14] ?? 'Active'),
+                            'email' => trim($column[15] ?? '')
+                        ];
+                    }
+
+                    if (empty($data['first_name'])) { $skipped++; continue; }
 
                     if ($this->serverRepo->create($data)) {
+                        $serverId = $db->lastInsertId();
                         $count++;
+
+                        // Username Generation: Primary source is First Name
+                        $baseUsername = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $data['first_name']));
+                        $username = $baseUsername;
+                        
+                        // Check if username exists
+                        if ($userRepo->findByUsername($username)) {
+                            // Try First + Last Name
+                            $username = $baseUsername . '.' . strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $data['last_name']));
+                            
+                            // If still exists, append unique ID
+                            if ($userRepo->findByUsername($username)) {
+                                $username .= $serverId;
+                            }
+                        }
+
+                        $userData = [
+                            'username' => $username,
+                            'password' => password_hash('12345', PASSWORD_DEFAULT),
+                            'role' => 'User',
+                            'server_id' => $serverId
+                        ];
+                        
+                        $userRepo->create($userData);
+                    } else {
+                        $skipped++;
                     }
                 }
                 
                 fclose($file);
-                logAction('Create', 'Servers', "Imported $count servers via CSV.");
-                setFlash('msg_success', "Imported $count servers successfully.");
+                logAction('Create', 'Servers', "Imported $count servers. Skipped $skipped rows.");
+                setFlash('msg_success', "Imported $count servers and accounts successfully. " . ($skipped > 0 ? "Skipped $skipped rows." : ""));
             } else {
-                setFlash('msg_error', 'Empty file uploaded.');
+                setFlash('msg_error', 'Empty file.');
             }
         } else {
-            setFlash('msg_error', 'Invalid file upload.');
+            setFlash('msg_error', 'Invalid upload.');
         }
         redirect('servers');
     }
 
     public function delete() {
         $id = $_GET['id'] ?? null;
-        
+        $page = $_GET['page'] ?? 1;
+        $server = $this->serverRepo->getById($id);
+        $name = $server ? $server->name : "ID: $id";
+
         if ($id && $this->serverRepo->delete($id)) {
-            logAction('Delete', 'Servers', 'Removed server ID: ' . $id);
+            logAction('Delete', 'Servers', "Removed server: $name");
             setFlash('msg_success', 'Server removed successfully.');
         } else {
             setFlash('msg_error', 'Failed to remove server.');
         }
-        redirect('servers');
+        redirect('servers?page=' . $page);
     }
 
     public function bulkDelete() {
         $this->verifyCsrf();
+        $page = $_POST['page'] ?? 1;
         if ($_SERVER['REQUEST_METHOD'] == 'POST' && !empty($_POST['ids'])) {
             $ids = $_POST['ids'];
             $count = 0;
+            $names = [];
             foreach ($ids as $id) {
+                $server = $this->serverRepo->getById($id);
+                if ($server) $names[] = $server->name;
                 if ($this->serverRepo->delete($id)) {
                     $count++;
                 }
             }
-            logAction('Delete', 'Servers', "Bulk deleted $count servers.");
+            logAction('Delete', 'Servers', "Bulk deleted $count servers: " . implode(', ', $names));
             setFlash('msg_success', "Deleted $count servers successfully.");
         } else {
             setFlash('msg_error', "No servers selected.");
         }
-        redirect('servers');
+        redirect('servers?page=' . $page);
     }
 }

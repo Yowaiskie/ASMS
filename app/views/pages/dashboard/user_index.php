@@ -3,11 +3,51 @@
 
 <div class="mb-8 animate-fade-in-up">
     <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
-        Welcome, <?= h($_SESSION['username']) ?>! 
+        Welcome, <?= h($_SESSION['full_name'] ?? $_SESSION['username']) ?>! 
         <span class="text-2xl">👋</span>
     </h2>
     <p class="text-slate-500 text-sm mt-1">Here is your performance overview</p>
 </div>
+
+<?php if (isset($server) && $server->status === 'Suspended'): ?>
+    <!-- SUSPENSION ALERT -->
+    <div class="mb-8 bg-red-50 border-2 border-red-200 p-6 rounded-3xl animate-fade-in-up flex items-center gap-5 shadow-sm">
+        <div class="w-14 h-14 rounded-2xl bg-red-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-red-200">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+        </div>
+        <div>
+            <h3 class="text-lg font-bold text-red-900">Account Suspended</h3>
+            <p class="text-sm text-red-700 leading-relaxed mb-4">
+                Your account has been restricted due to multiple absences. You are suspended until <b class="underline"><?= date('F d, Y', strtotime($server->suspension_until)) ?></b> and cannot join new schedules.
+            </p>
+            <a href="<?= URLROOT ?>/schedules" class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-bold hover:bg-red-700 transition-all shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 00.586 1.414l2.828 2.828z" /></svg>
+                Go to Meeting (Talk to Coordinator)
+            </a>
+        </div>
+    </div>
+<?php elseif (isset($monthlyAbsences) && $monthlyAbsences >= 2): ?>
+    <!-- WARNING ALERT -->
+    <div class="mb-8 bg-amber-50 border-2 border-amber-200 p-6 rounded-3xl animate-fade-in-up flex items-center gap-5 shadow-sm">
+        <div class="w-14 h-14 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-amber-200">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        </div>
+        <div>
+            <h3 class="text-lg font-bold text-amber-900">Attendance Warning!</h3>
+            <p class="text-sm text-amber-700 leading-relaxed mb-4">
+                You have recorded <b class="text-amber-900"><?= $monthlyAbsences ?> absences</b> this month. Please be reminded that <b class="underline">one more absence</b> will result in an automatic 30-day suspension.
+            </p>
+            <a href="<?= URLROOT ?>/schedules" class="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-xl text-xs font-bold hover:bg-amber-700 transition-all shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 00.586 1.414l2.828 2.828z" /></svg>
+                Talk to Coordinator
+            </a>
+        </div>
+    </div>
+<?php endif; ?>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
     

@@ -51,15 +51,17 @@ class ExcuseController extends Controller {
 
     public function updateStatus() {
         $this->verifyCsrf();
+        $page = $_POST['page'] ?? 1;
         if ($_SERVER['REQUEST_METHOD'] == 'POST' && ($_SESSION['role'] ?? '') !== 'User') {
             $id = $_POST['id'];
             $status = $_POST['status'];
 
             if ($this->excuseRepo->updateStatus($id, $status)) {
                 // Email Notification
+                // ... (keep logic) ...
                 $db = \App\Core\Database::getInstance();
-                $db->query("
-                    SELECT s.email, s.name, e.reason 
+                $this->db->query("
+                    SELECT s.email, CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) as name, e.reason 
                     FROM excuses e
                     JOIN servers s ON e.server_id = s.id 
                     WHERE e.id = :id
@@ -77,11 +79,12 @@ class ExcuseController extends Controller {
                     );
                 }
 
-                logAction('Update', 'Excuses', "Updated excuse ID: $id status to $status");
+                $logName = $info ? $info->name : "ID: $id";
+                logAction('Update', 'Excuses', "Updated excuse status for $logName to $status");
             } else {
                 setFlash('msg_error', "Failed to update status.");
             }
-            redirect('excuses');
+            redirect('excuses?page=' . $page);
         }
     }
 

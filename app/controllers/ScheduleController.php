@@ -86,7 +86,26 @@ class ScheduleController extends Controller {
     public function selfAssign() {
         $this->verifyCsrf();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Check verification again for safety
+            // 1. Fetch Server Status
+            $this->db->query("SELECT status, suspension_until FROM servers WHERE id = (SELECT server_id FROM users WHERE id = :uid)");
+            $this->db->bind(':uid', $_SESSION['user_id']);
+            $server = $this->db->single();
+
+            if ($server && $server->status === 'Suspended') {
+                $today = date('Y-m-d');
+                if ($server->suspension_until >= $today) {
+                    setFlash('msg_error', 'Your account is currently suspended until ' . date('M d, Y', strtotime($server->suspension_until)) . '.', 'bg-red-100 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm font-bold');
+                    redirect('schedules');
+                    return;
+                } else {
+                    // Auto-unsuspend if date passed
+                    $this->db->query("UPDATE servers SET status = 'Active', suspension_until = NULL WHERE id = (SELECT server_id FROM users WHERE id = :uid)");
+                    $this->db->bind(':uid', $_SESSION['user_id']);
+                    $this->db->execute();
+                }
+            }
+
+            // 2. Existing verification check
             if (($_SESSION['role'] ?? '') === 'User' && !($_SESSION['is_verified'] ?? 0)) {
                 setFlash('msg_error', 'Your account must be verified before joining schedules.');
                 redirect('settings');
@@ -99,7 +118,7 @@ class ScheduleController extends Controller {
                 
                 // Ensure full_name is available
                 if (empty($_SESSION['full_name'])) {
-                    $this->db->query("SELECT s.name FROM users u JOIN servers s ON u.server_id = s.id WHERE u.id = :id");
+                    $this->db->query("SELECT CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) as name FROM users u JOIN servers s ON u.server_id = s.id WHERE u.id = :id");
                     $this->db->bind(':id', $_SESSION['user_id']);
                     $res = $this->db->single();
                     $_SESSION['full_name'] = $res ? $res->name : $_SESSION['username'];
@@ -363,14 +382,22 @@ class ScheduleController extends Controller {
             if ($_FILES['csv_file']['size'] > 0) {
                 $file = fopen($fileName, "r");
                 $count = 0;
+                $firstRow = true;
                 
                 while (($column = fgetcsv($file, 10000, ",")) !== FALSE) {
+                    if ($firstRow) { $firstRow = false; continue; } // Skip Header row
+
                     if (count($column) < 3) continue;
                     
+                    // Clean BOM or weird chars from first column
+                    $column[0] = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $column[0]);
+
                     $date = trim($column[0]);
                     $time = trim($column[1]);
                     $type = trim($column[2]);
                     $eventName = isset($column[3]) ? trim($column[3]) : null;
+
+                    if (empty($date) || empty($time)) continue;
 
                     $data = [
                         'mass_date' => $date,

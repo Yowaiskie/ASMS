@@ -14,9 +14,8 @@ class AttendanceRepository implements RepositoryInterface {
     }
 
     public function getAll() {
-        // Joining servers and schedules tables to get readable names and times
         $this->db->query("
-            SELECT a.*, s.name as server_name, sch.mass_date, sch.mass_time 
+            SELECT a.*, CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) as server_name, sch.mass_date, sch.mass_time 
             FROM attendance a
             JOIN servers s ON a.server_id = s.id
             JOIN schedules sch ON a.schedule_id = sch.id
@@ -25,7 +24,6 @@ class AttendanceRepository implements RepositoryInterface {
         
         $results = $this->db->resultSet();
         
-        // Map to simpler object structure expected by view
         $logs = [];
         foreach($results as $row) {
             $log = new Attendance();
@@ -61,7 +59,6 @@ class AttendanceRepository implements RepositoryInterface {
     }
 
     public function getByUserId($userId) {
-        // Fetch server_id for the user first (assuming 1:1 relation users -> servers)
         $this->db->query("SELECT server_id FROM users WHERE id = :user_id");
         $this->db->bind(':user_id', $userId);
         $user = $this->db->single();
@@ -85,22 +82,22 @@ class AttendanceRepository implements RepositoryInterface {
         $sql = "
             SELECT 
                 s.id as server_id, 
-                s.name, 
+                CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) as name, 
                 a.id as attendance_id,
                 a.status,
                 sch.id as schedule_id,
                 sch.mass_type,
                 sch.mass_time
             FROM (
-                SELECT id, name FROM servers 
+                SELECT id, first_name, middle_name, last_name FROM servers 
                 WHERE status = 'Active' 
-                " . (!empty($search) ? "AND name LIKE :search" : "") . "
-                ORDER BY name ASC 
+                " . (!empty($search) ? "AND (first_name LIKE :search OR last_name LIKE :search)" : "") . "
+                ORDER BY first_name ASC 
                 LIMIT :limit OFFSET :offset
             ) s
             LEFT JOIN attendance a ON s.id = a.server_id
             LEFT JOIN schedules sch ON a.schedule_id = sch.id AND sch.mass_date = :date
-            ORDER BY s.name ASC
+            ORDER BY s.first_name ASC
         ";
         
         $this->db->query($sql);
@@ -117,7 +114,7 @@ class AttendanceRepository implements RepositoryInterface {
     public function countActiveServers($search = '') {
         $sql = "SELECT COUNT(*) as count FROM servers WHERE status = 'Active'";
         if (!empty($search)) {
-            $sql .= " AND name LIKE :search";
+            $sql .= " AND (first_name LIKE :search OR last_name LIKE :search)";
         }
         $this->db->query($sql);
         if (!empty($search)) {
@@ -130,7 +127,7 @@ class AttendanceRepository implements RepositoryInterface {
         $this->db->query("
             SELECT 
                 s.id as server_id, 
-                s.name, 
+                CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) as name, 
                 a.status,
                 DAY(sch.mass_date) as day,
                 sch.mass_type
@@ -140,7 +137,7 @@ class AttendanceRepository implements RepositoryInterface {
             WHERE MONTH(sch.mass_date) = :month 
             AND YEAR(sch.mass_date) = :year
             AND s.status = 'Active'
-            ORDER BY s.name ASC, sch.mass_date ASC
+            ORDER BY s.first_name ASC, sch.mass_date ASC
         ");
         $this->db->bind(':month', $month);
         $this->db->bind(':year', $year);

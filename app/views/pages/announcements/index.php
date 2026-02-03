@@ -24,6 +24,7 @@
 
     <form action="<?= URLROOT ?>/announcements/store" method="POST" class="space-y-6">
         <?php csrf_field(); ?>
+        <input type="hidden" name="page" value="<?= $pagination['page'] ?? 1 ?>">
         <div>
             <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Title</label>
             <input type="text" name="title" required placeholder="Enter announcement title" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-400">
@@ -71,7 +72,7 @@
                         <span class="text-xs text-slate-400 font-medium"><?= date('M j, Y', strtotime($announcement->created_at)) ?></span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <a href="<?= URLROOT ?>/announcements/delete?id=<?= $announcement->id ?>" data-loading onclick="return confirm('Are you sure?')" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></a>
+                        <a href="<?= URLROOT ?>/announcements/delete?id=<?= $announcement->id ?>&page=<?= $pagination['page'] ?? 1 ?>" data-loading onclick="return confirm('Are you sure?')" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></a>
                     </div>
                 </div>
                 <h3 class="text-lg font-bold text-slate-800 mb-2"><?= h($announcement->title) ?></h3>
@@ -90,17 +91,28 @@
     <div class="text-xs text-slate-500">
         Page <span class="font-bold"><?= $pagination['page'] ?></span> of <span class="font-bold"><?= $pagination['totalPages'] ?></span>
     </div>
-    <div class="flex gap-2">
+    <div class="flex items-center gap-1.5">
         <?php if ($pagination['page'] > 1): ?>
-            <a href="<?= URLROOT ?>/announcements?page=<?= $pagination['page'] - 1 ?>" class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">Previous</a>
-        <?php else: ?>
-            <span class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-400 cursor-not-allowed">Previous</span>
+            <a href="<?= URLROOT ?>/announcements?page=<?= $pagination['page'] - 1 ?>" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7" /></svg>
+            </a>
         <?php endif; ?>
 
+        <?php 
+            $start = max(1, $pagination['page'] - 2);
+            $end = min($pagination['totalPages'], $start + 4);
+            if ($end - $start < 4) $start = max(1, $end - 4);
+            
+            for($i = $start; $i <= $end; $i++): 
+                $active = ($i == $pagination['page']) ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-100' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 shadow-sm';
+        ?>
+            <a href="<?= URLROOT ?>/announcements?page=<?= $i ?>" class="w-8 h-8 flex items-center justify-center border rounded-lg text-xs font-bold transition-all <?= $active ?>"><?= $i ?></a>
+        <?php endfor; ?>
+
         <?php if ($pagination['page'] < $pagination['totalPages']): ?>
-            <a href="<?= URLROOT ?>/announcements?page=<?= $pagination['page'] + 1 ?>" class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">Next</a>
-        <?php else: ?>
-            <span class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-400 cursor-not-allowed">Next</span>
+            <a href="<?= URLROOT ?>/announcements?page=<?= $pagination['page'] + 1 ?>" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7" /></svg>
+            </a>
         <?php endif; ?>
     </div>
 </div>

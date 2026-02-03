@@ -15,7 +15,7 @@ class UserRepository implements RepositoryInterface {
 
     public function findByUsername($username) {
         $this->db->query("
-            SELECT u.*, s.name as full_name 
+            SELECT u.*, CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) as full_name 
             FROM users u 
             LEFT JOIN servers s ON u.server_id = s.id 
             WHERE u.username = :username
@@ -25,14 +25,14 @@ class UserRepository implements RepositoryInterface {
     }
 
     public function getAll($limit = 1000, $offset = 0) {
-        $this->db->query("SELECT * FROM users ORDER BY created_at DESC LIMIT :limit OFFSET :offset");
+        $this->db->query("SELECT * FROM users WHERE role != 'Superadmin' ORDER BY created_at DESC LIMIT :limit OFFSET :offset");
         $this->db->bind(':limit', $limit);
         $this->db->bind(':offset', $offset);
         return $this->db->resultSet();
     }
 
     public function countAll() {
-        $this->db->query("SELECT COUNT(*) as count FROM users");
+        $this->db->query("SELECT COUNT(*) as count FROM users WHERE role != 'Superadmin'");
         return $this->db->single()->count;
     }
 
@@ -45,7 +45,7 @@ class UserRepository implements RepositoryInterface {
     public function getUserProfile($userId) {
         $this->db->query("
             SELECT u.id as user_id, u.username, u.role, u.server_id, u.is_verified,
-                   s.name, s.nickname, s.dob, s.email, s.phone, s.age, s.address, s.profile_image
+                   s.first_name, s.middle_name, s.last_name, s.nickname, s.dob, s.email, s.phone, s.age, s.address, s.profile_image
             FROM users u
             LEFT JOIN servers s ON u.server_id = s.id
             WHERE u.id = :id
@@ -61,9 +61,11 @@ class UserRepository implements RepositoryInterface {
         $user = $this->db->single();
 
         if ($user && $user->server_id) {
-            $this->db->query("UPDATE servers SET name = :name, nickname = :nickname, dob = :dob, age = :age, address = :address, phone = :phone, email = :email WHERE id = :id");
+            $this->db->query("UPDATE servers SET first_name = :fname, middle_name = :mname, last_name = :lname, nickname = :nickname, dob = :dob, age = :age, address = :address, phone = :phone, email = :email WHERE id = :id");
             $this->db->bind(':id', $user->server_id);
-            $this->db->bind(':name', $data['name']);
+            $this->db->bind(':fname', $data['first_name']);
+            $this->db->bind(':mname', $data['middle_name'] ?? '');
+            $this->db->bind(':lname', $data['last_name']);
             $this->db->bind(':nickname', $data['nickname'] ?? null);
             $this->db->bind(':dob', $data['dob'] ?? null);
             $this->db->bind(':age', $data['age']);
@@ -73,7 +75,7 @@ class UserRepository implements RepositoryInterface {
             $this->db->execute();
 
             // Set verified if all critical info provided
-            if (!empty($data['name']) && !empty($data['phone']) && !empty($data['email']) && !empty($data['address'])) {
+            if (!empty($data['first_name']) && !empty($data['last_name']) && !empty($data['phone']) && !empty($data['email']) && !empty($data['address'])) {
                 $this->db->query("UPDATE users SET is_verified = 1 WHERE id = :uid");
                 $this->db->bind(':uid', $userId);
                 $this->db->execute();

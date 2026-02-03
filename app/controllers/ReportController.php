@@ -69,13 +69,13 @@ class ReportController extends Controller {
         // 3. Server Performance (Top 5)
         $this->db->query("
             SELECT 
-                srv.name,
-                COUNT(a.id) as total_assigned,
-                SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) as present_count
-            FROM servers srv
-            JOIN attendance a ON srv.id = a.server_id
+                CONCAT_WS(' ', srv.first_name, srv.middle_name, srv.last_name) as name, 
+                COUNT(*) as total,
+                SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) as present
+            FROM attendance a
+            JOIN servers srv ON a.server_id = srv.id
             GROUP BY srv.id
-            ORDER BY present_count DESC
+            ORDER BY present DESC
             LIMIT 5
         ");
         $topServers = $this->db->resultSet();

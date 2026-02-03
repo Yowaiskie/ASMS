@@ -47,6 +47,7 @@ class UserController extends Controller {
 
     public function store() {
         $this->verifyCsrf();
+        $page = $_POST['page'] ?? $_GET['page'] ?? 1;
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $username = trim($_POST['username']);
@@ -59,7 +60,7 @@ class UserController extends Controller {
             // Check if user exists
             if ($this->userRepo->findByUsername($username)) {
                 setFlash('msg_error', 'Username already taken.');
-                redirect('users');
+                redirect('users?page=' . $page);
                 return;
             }
 
@@ -96,17 +97,21 @@ class UserController extends Controller {
             } else {
                 setFlash('msg_error', 'Failed to create server profile.');
             }
-            redirect('users');
+            redirect('users?page=' . $page);
         }
     }
 
     public function update() {
         $this->verifyCsrf();
+        $page = $_POST['page'] ?? $_GET['page'] ?? 1;
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $id = $_POST['id'];
             $role = $this->normalizeRole($_POST['role']);
             $password = $_POST['password'] ?? '';
+
+            $user = $this->userRepo->getById($id);
+            $username = $user ? $user->username : "ID: $id";
 
             $data = ['role' => $role];
             if (!empty($password)) {
@@ -114,12 +119,12 @@ class UserController extends Controller {
             }
 
             if ($this->userRepo->update($id, $data)) {
-                logAction('Update', 'Users', "Updated user ID: $id. Role: $role");
+                logAction('Update', 'Users', "Updated user account: $username");
                 setFlash('msg_success', 'User updated successfully.');
             } else {
                 setFlash('msg_error', 'Failed to update user.');
             }
-            redirect('users');
+            redirect('users?page=' . $page);
         }
     }
 
@@ -127,33 +132,39 @@ class UserController extends Controller {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $this->verifyCsrf();
             $id = $_POST['id'];
+            $page = $_POST['page'] ?? $_GET['page'] ?? 1;
+            
+            $user = $this->userRepo->getById($id);
+            $username = $user ? $user->username : "ID: $id";
 
             if ($this->userRepo->delete($id)) {
-                logAction('Delete', 'Users', "Deleted user ID: $id");
-                setFlash('msg_success', 'User deleted successfully.');
+                logAction('Delete', 'Users', "Removed user account: $username");
+                setFlash('msg_success', 'User removed successfully.');
             } else {
-                setFlash('msg_error', 'Failed to delete user.');
+                setFlash('msg_error', 'Failed to remove user.');
             }
-            redirect('users');
+            redirect('users?page=' . $page);
         }
     }
 
     public function bulkDelete() {
         $this->verifyCsrf();
+        $page = $_POST['page'] ?? $_GET['page'] ?? 1;
         if ($_SERVER['REQUEST_METHOD'] == 'POST' && !empty($_POST['ids'])) {
             $ids = $_POST['ids'];
             $count = 0;
+            $usernames = [];
             foreach ($ids as $id) {
+                $user = $this->userRepo->getById($id);
+                if ($user) $usernames[] = $user->username;
                 if ($this->userRepo->delete($id)) {
                     $count++;
                 }
             }
-            logAction('Delete', 'Users', "Bulk deleted $count users.");
+            logAction('Delete', 'Users', "Bulk deleted $count users: " . implode(', ', $usernames));
             setFlash('msg_success', "Deleted $count users successfully.");
-        } else {
-            setFlash('msg_error', "No users selected.");
         }
-        redirect('users');
+        redirect('users?page=' . $page);
     }
 
     public function import() {

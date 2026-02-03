@@ -44,9 +44,19 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="md:col-span-2">
-                        <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Full Name</label>
-                        <input type="text" name="name" value="<?= h($profile->name ?? '') ?>" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                    <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">First Name</label>
+                            <input type="text" name="first_name" value="<?= h($profile->first_name ?? '') ?>" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Middle Name</label>
+                            <input type="text" name="middle_name" value="<?= h($profile->middle_name ?? '') ?>" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Last Name</label>
+                            <input type="text" name="last_name" value="<?= h($profile->last_name ?? '') ?>" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none">
+                        </div>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Nickname</label>
@@ -54,7 +64,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Age</label>
-                        <input type="number" name="age" value="<?= h($profile->age ?? '') ?>" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none">
+                        <input type="text" name="age" value="<?= h($profile->age ?? '') ?>" maxlength="2" oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0,2)" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Date of Birth</label>

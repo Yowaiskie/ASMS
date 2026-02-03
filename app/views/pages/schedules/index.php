@@ -11,15 +11,11 @@
             </svg>
         </button>
 
-        <button onclick="document.getElementById('importModal').classList.remove('hidden')" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-5 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 font-bold text-sm relative group">
+        <button onclick="document.getElementById('importModal').classList.remove('hidden')" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-5 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 font-bold text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
             Import CSV
-            <div class="absolute top-full right-0 mt-2 w-64 p-3 bg-slate-800 text-white text-xs rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-left font-normal">
-                <strong>Format:</strong> Date, Time, Type, Event Name<br>
-                <code class="block mt-1 bg-slate-700 p-1 rounded">2026-02-14,06:00,Weekday Mass,</code>
-            </div>
         </button>
 
         <button onclick="generateSundays()" data-loading class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-5 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 font-bold text-sm">
@@ -48,6 +44,15 @@
 
         <form action="<?= URLROOT ?>/schedules/import" method="POST" enctype="multipart/form-data" id="importForm">
             <?php csrf_field(); ?>
+
+            <div class="mb-6 p-4 bg-slate-50 rounded-2xl border border-slate-100 text-[10px] text-slate-600">
+                <strong class="block mb-2 text-slate-700 uppercase tracking-widest text-[9px]">Required CSV Format (In Order):</strong>
+                <code class="block bg-white p-2 rounded border border-slate-200 leading-relaxed break-all">
+                    Date (YYYY-MM-DD), Time (HH:MM), Mass Type, Event Name (Optional)
+                </code>
+                <p class="mt-2 text-slate-400 italic font-medium">* Date must be YYYY-MM-DD (e.g., 2026-02-14)</p>
+            </div>
+
             <div id="dropZone" class="border-2 border-dashed border-slate-200 rounded-3xl p-10 flex flex-col items-center justify-center gap-4 hover:border-blue-400 hover:bg-blue-50 transition-all cursor-pointer group text-center">
                 <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">

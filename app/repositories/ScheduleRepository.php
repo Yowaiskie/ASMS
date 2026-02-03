@@ -101,10 +101,12 @@ class ScheduleRepository implements RepositoryInterface {
     }
 
     public function getAssignments($scheduleId) {
-        $this->db->query("SELECT server_id FROM attendance WHERE schedule_id = :id");
-        $this->db->bind(':id', $scheduleId);
-        $results = $this->db->resultSet();
-        return array_map(function($r) { return $r->server_id; }, $results);
+        $this->db->query("SELECT s.id, CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) as name, s.rank, a.status 
+                          FROM attendance a 
+                          JOIN servers s ON a.server_id = s.id 
+                          WHERE a.schedule_id = :sid");
+        $this->db->bind(':sid', $scheduleId);
+        return $this->db->resultSet();
     }
 
     public function getFullAssignments($scheduleId) {

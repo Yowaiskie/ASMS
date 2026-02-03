@@ -116,7 +116,7 @@ $menu_items = [
 
         <!-- Role Badge -->
         <div class="px-6 mb-6">
-            <span class="inline-block bg-fuchsia-100 text-fuchsia-600 text-xs font-bold px-3 py-1 rounded-full">
+            <span class="inline-block bg-fuchsia-100 text-fuchsia-600 text-xs font-bold px-3 py-1 rounded-full w-fit">
                 <?php 
                     $displayRole = $_SESSION['role'] ?? 'Server';
                     echo ($displayRole === 'User') ? 'Server' : $displayRole;
@@ -137,7 +137,7 @@ $menu_items = [
 
                     // Admin Restrictions
                     if ($role === 'Admin') {
-                        if (in_array($item['label'], ['Servers', 'User Management'])) continue;
+                        if (in_array($item['label'], ['Servers', 'User Management', 'Logs'])) continue;
                     }
 
                     // Superadmin sees EVERYTHING.

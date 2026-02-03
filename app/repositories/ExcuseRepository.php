@@ -14,7 +14,11 @@ class ExcuseRepository implements RepositoryInterface {
 
     public function getAll($limit = 1000, $offset = 0) {
         // Admin use mainly
-        $this->db->query("SELECT e.*, s.name as server_name FROM excuses e JOIN servers s ON e.server_id = s.id ORDER BY e.created_at DESC LIMIT :limit OFFSET :offset");
+        $this->db->query("SELECT e.*, CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) as server_name 
+                          FROM excuses e 
+                          JOIN servers s ON e.server_id = s.id 
+                          ORDER BY e.created_at DESC 
+                          LIMIT :limit OFFSET :offset");
         $this->db->bind(':limit', $limit);
         $this->db->bind(':offset', $offset);
         return $this->db->resultSet();

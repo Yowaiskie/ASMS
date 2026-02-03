@@ -14,6 +14,12 @@ class LogController extends Controller {
     }
 
     public function index() {
+        if (($_SESSION['role'] ?? '') !== 'Superadmin') {
+            setFlash('msg_error', 'Unauthorized access to Audit Logs.');
+            redirect('dashboard');
+            return;
+        }
+
         $search = trim($_GET['search'] ?? '');
         $role = trim($_GET['role'] ?? '');
         $action = trim($_GET['action'] ?? '');
@@ -21,7 +27,7 @@ class LogController extends Controller {
         $endDate = trim($_GET['end_date'] ?? '');
 
         $sql = "
-            SELECT l.*, u.username, u.role as user_role, s.name as real_name
+            SELECT l.*, u.username, u.role as user_role, CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) as real_name
             FROM logs l 
             LEFT JOIN users u ON l.user_id = u.id 
             LEFT JOIN servers s ON u.server_id = s.id
