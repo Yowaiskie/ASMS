@@ -48,12 +48,19 @@ class ScheduleController extends Controller {
             foreach ($schedules as $s) {
                 $s->assigned_servers = $this->scheduleRepo->getAssignments($s->id);
             }
+
+            // Get Current Admin's Server ID
+            $this->db->query("SELECT server_id FROM users WHERE id = :uid");
+            $this->db->bind(':uid', $_SESSION['user_id']);
+            $cu = $this->db->single();
+            $currentServerId = $cu ? $cu->server_id : null;
             
             $data = [
                 'pageTitle' => 'Mass Schedules',
                 'title' => 'Schedules | ASMS',
                 'schedules' => $schedules,
-                'servers' => $servers
+                'servers' => $servers,
+                'currentServerId' => $currentServerId
             ];
             
             $this->view('schedules/index', $data);
@@ -90,11 +97,19 @@ class ScheduleController extends Controller {
             if ($this->scheduleRepo->selfAssign($_SESSION['user_id'], $scheduleId)) {
                 $schedule = $this->scheduleRepo->getById($scheduleId);
                 
+                // Ensure full_name is available
+                if (empty($_SESSION['full_name'])) {
+                    $this->db->query("SELECT s.name FROM users u JOIN servers s ON u.server_id = s.id WHERE u.id = :id");
+                    $this->db->bind(':id', $_SESSION['user_id']);
+                    $res = $this->db->single();
+                    $_SESSION['full_name'] = $res ? $res->name : $_SESSION['username'];
+                }
+
                 // Trigger Announcement
                 $this->announcementRepo->create([
                     'title' => 'New Slot Filled',
                     'category' => 'System',
-                    'message' => $_SESSION['username'] . ' has joined the schedule for ' . $schedule->mass_type . ' on ' . date('M d, Y', strtotime($schedule->mass_date)) . '.',
+                    'message' => $_SESSION['full_name'] . ' has joined the schedule for ' . $schedule->mass_type . ' on ' . date('M d, Y', strtotime($schedule->mass_date)) . '.',
                     'author' => 'System'
                 ]);
 
@@ -208,7 +223,7 @@ class ScheduleController extends Controller {
                         'title' => 'New Schedule Added',
                         'category' => 'Mass Schedule',
                         'message' => 'A new ' . $data['mass_type'] . ' has been scheduled for ' . date('M d, Y', strtotime($data['mass_date'])) . ' at ' . date('h:i A', strtotime($data['mass_time'])) . '.',
-                        'author' => $_SESSION['username'] ?? 'Admin'
+                        'author' => $_SESSION['full_name'] ?? 'Admin'
                     ]);
 
                     logAction('Create', 'Schedules', "Created new schedule: " . $data['mass_type'] . " on " . $data['mass_date']);

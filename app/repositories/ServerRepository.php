@@ -13,9 +13,17 @@ class ServerRepository implements RepositoryInterface {
         $this->db = Database::getInstance();
     }
 
-    public function getAll() {
-        $this->db->query("SELECT * FROM servers ORDER BY name ASC");
+    public function getAll($limit = 1000, $offset = 0) {
+        $this->db->query("SELECT * FROM servers ORDER BY name ASC LIMIT :limit OFFSET :offset");
+        $this->db->bind(':limit', $limit);
+        $this->db->bind(':offset', $offset);
         return $this->db->resultSet();
+    }
+
+    public function countAll() {
+        $this->db->query("SELECT COUNT(*) as count FROM servers");
+        $row = $this->db->single();
+        return $row ? $row->count : 0;
     }
 
     public function getById($id) {

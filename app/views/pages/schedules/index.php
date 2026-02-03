@@ -22,7 +22,7 @@
             </div>
         </button>
 
-        <button onclick="generateSundays()" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-5 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 font-bold text-sm">
+        <button onclick="generateSundays()" data-loading class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-5 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 font-bold text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
@@ -142,44 +142,81 @@
 
 <!-- Add/Edit Modal -->
 <div id="scheduleModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 transform scale-95 transition-transform duration-300" id="modalContent">
-        <div class="flex justify-between items-center mb-6">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-6 transform scale-95 transition-transform duration-300 max-h-[90vh] overflow-y-auto" id="modalContent">
+        <div class="flex justify-between items-center mb-5">
             <h3 id="modalTitle" class="text-xl font-bold text-slate-800">Add Schedule</h3>
             <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
         </div>
         <form action="<?= URLROOT ?>/schedules/store" method="POST" id="scheduleForm">
             <?php csrf_field(); ?><input type="hidden" name="id" id="scheduleId">
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Activity / Mass Type</label>
-                    <select name="mass_type" id="mass_type" onchange="toggleEventName()" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="Sunday Mass">Sunday Mass</option>
-                        <option value="Anticipated Mass">Anticipated Mass</option>
-                        <option value="Weekday Mass">Weekday Mass</option>
-                        <option value="Wedding">Wedding</option>
-                        <option value="Funeral">Funeral</option>
-                        <option value="Baptism">Baptism</option>
-                        <option value="Special Event">Special Event</option>
-                        <option value="Meeting">Meeting</option>
-                    </select>
-                </div>
-                <div id="eventNameContainer" class="hidden"><label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Event Name</label><input type="text" name="event_name" id="event_name" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"></div>
-                <div><label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Color Label</label><div class="flex flex-wrap gap-3"><?php $colors = ['green','purple','yellow','blue','indigo','pink','red','teal','gray']; foreach($colors as $c): $bg = "bg-{$c}-500"; if($c=='yellow') $bg="bg-yellow-400"; ?><label class="cursor-pointer"><input type="radio" name="color" value="<?= $c ?>" class="peer hidden color-radio"><span class="block w-8 h-8 rounded-full <?= $bg ?> peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-slate-400 transition-all"></span></label><?php endforeach; ?></div></div>
+            <div class="space-y-3">
                 <div class="grid grid-cols-2 gap-4">
-                    <div><label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Date</label><input type="date" name="mass_date" id="mass_date" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"></div>
-                    <div><label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Time</label><input type="time" name="mass_time" id="mass_time" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"></div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">Activity / Mass Type</label>
+                        <select name="mass_type" id="mass_type" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="Sunday Mass">Sunday Mass</option>
+                            <option value="Anticipated Mass">Anticipated Mass</option>
+                            <option value="Weekday Mass">Weekday Mass</option>
+                            <option value="Wedding">Wedding</option>
+                            <option value="Funeral">Funeral</option>
+                            <option value="Baptism">Baptism</option>
+                            <option value="Special Event">Special Event</option>
+                            <option value="Meeting">Meeting</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">Status</label>
+                        <select name="status" id="status" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"><option value="Confirmed">Confirmed</option><option value="Pending">Pending</option><option value="Cancelled">Cancelled</option></select>
+                    </div>
                 </div>
+
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Status</label>
-                    <select name="status" id="status" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"><option value="Confirmed">Confirmed</option><option value="Pending">Pending</option><option value="Cancelled">Cancelled</option></select>
+                    <label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">Event / Mass Name <span class="font-normal text-slate-400">(Optional - e.g. Memorial of St. Joseph)</span></label>
+                    <input type="text" name="event_name" id="event_name" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter specific name if applicable">
                 </div>
-                <div><div class="flex justify-between items-end mb-2"><label class="block text-xs font-bold text-slate-500 ml-1">Assigned Servers</label><input type="text" id="serverSearch" onkeyup="filterServers()" placeholder="Search..." class="text-xs px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none"></div><div class="max-h-40 overflow-y-auto border border-slate-200 rounded-xl p-2 bg-slate-50" id="serverList"><?php foreach($servers as $svr): ?><label class="flex items-center gap-2 p-2 hover:bg-white rounded-lg cursor-pointer server-item"><input type="checkbox" name="assigned_servers[]" value="<?= $svr->id ?>" class="server-checkbox rounded text-blue-600 border-gray-300"><span class="text-sm text-slate-700 server-name"><?= h($svr->name) ?></span></label><?php endforeach; ?></div></div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">Date</label><input type="date" name="mass_date" id="mass_date" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">Time</label><input type="time" name="mass_time" id="mass_time" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"></div>
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">Color Label</label>
+                    <div class="flex flex-wrap gap-2"><?php $colors = ['green','purple','yellow','blue','indigo','pink','red','teal','gray']; foreach($colors as $c): $bg = "bg-{$c}-500"; if($c=='yellow') $bg="bg-yellow-400"; ?><label class="cursor-pointer"><input type="radio" name="color" value="<?= $c ?>" class="peer hidden color-radio"><span class="block w-6 h-6 rounded-full <?= $bg ?> peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-slate-400 transition-all"></span></label><?php endforeach; ?></div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-end mb-1.5">
+                        <label class="block text-xs font-bold text-slate-500 ml-1">Assigned Servers</label>
+                        <input type="text" id="serverSearch" onkeyup="filterServers()" placeholder="Search..." class="text-[10px] px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none">
+                    </div>
+                    <div class="max-h-32 overflow-y-auto border border-slate-200 rounded-xl p-2 bg-slate-50 custom-scrollbar" id="serverList">
+                        <?php foreach($servers as $svr): ?>
+                            <label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg cursor-pointer server-item transition-colors">
+                                <input type="checkbox" name="assigned_servers[]" value="<?= $svr->id ?>" class="server-checkbox rounded text-blue-600 border-gray-300 w-4 h-4 focus:ring-blue-500">
+                                <span class="text-xs text-slate-700 font-medium server-name"><?= h($svr->name) ?></span>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
             </div>
-            <div class="mt-8 flex gap-3"><button type="button" onclick="closeModal()" class="flex-1 py-3 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-colors">Cancel</button><button type="submit" class="flex-1 py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-lg shadow-blue-200">Save</button></div>
-            <div id="deleteBtnContainer" class="hidden mt-4 pt-4 border-t border-slate-100 text-center"><a href="#" id="deleteLink" onclick="return confirm('Delete this schedule?')" class="text-xs text-red-500 font-bold hover:underline">Delete Schedule</a></div>
+            <div class="mt-6 flex gap-3">
+                <button type="button" onclick="closeModal()" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition-colors">Cancel</button>
+                <div id="joinBtnContainer" class="hidden flex-1">
+                    <button type="button" onclick="selfAssign()" class="w-full py-2.5 rounded-xl bg-green-500 text-white text-sm font-bold hover:bg-green-600 shadow-lg shadow-green-200 transition-all">Join Schedule</button>
+                </div>
+                <button type="submit" class="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">Save Schedule</button>
+            </div>
+            <div id="deleteBtnContainer" class="hidden mt-4 pt-3 border-t border-slate-100 text-center"><a href="#" id="deleteLink" data-loading onclick="return confirm('Delete this schedule?')" class="text-xs text-red-500 font-bold hover:underline">Delete Schedule</a></div>
         </form>
     </div>
 </div>
+
+<!-- Self Assign Form -->
+<form action="<?= URLROOT ?>/schedules/self-assign" method="POST" id="selfAssignForm" class="hidden">
+    <?php csrf_field(); ?>
+    <input type="hidden" name="schedule_id" id="selfAssignId">
+</form>
 
 <!-- Bulk Edit Modal -->
 <div id="bulkEditModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
@@ -207,6 +244,7 @@
 
 <script>
     const schedules = <?= json_encode($schedules) ?>;
+    const currentServerId = <?= json_encode($currentServerId) ?>;
     let currentDate = new Date();
     let isSelectionMode = false;
     let selectedIds = [];
@@ -263,7 +301,12 @@
                 
                 // Add Check Icon if Selected
                 if (isSelectionMode && isSelected) {
+                    eventEl.className += ' ring-2 ring-blue-500 ring-offset-1 bg-white text-blue-600 relative';
                     eventEl.innerHTML += ' <span class="absolute right-1 top-1 text-blue-600">✓</span>';
+                } else if (currentServerId && evt.assigned_servers && evt.assigned_servers.includes(currentServerId)) {
+                    // Admin Assigned: Highlight and add star
+                    eventEl.className += ' ring-2 ring-blue-600 ring-offset-1 z-10 shadow-sm';
+                    eventEl.innerHTML = `<span class="flex items-center gap-1"><span>⭐</span> ${eventEl.innerText}</span>`;
                 }
 
                 eventEl.onclick = (e) => { 
@@ -372,20 +415,34 @@
         modal.classList.remove('hidden'); setTimeout(() => { modal.classList.remove('opacity-0'); modalContent.classList.remove('scale-95'); }, 10);
         document.querySelectorAll('.server-checkbox').forEach(cb => cb.checked = false);
         document.querySelectorAll('.color-radio').forEach(r => r.checked = false);
+        
+        const joinBtn = document.getElementById('joinBtnContainer');
+        joinBtn.classList.add('hidden');
+
         if (mode === 'add') {
             document.getElementById('modalTitle').innerText = 'Add Schedule'; document.getElementById('scheduleForm').reset();
             document.getElementById('scheduleId').value = ''; document.getElementById('deleteBtnContainer').classList.add('hidden');
-            if(date) document.getElementById('mass_date').value = date; toggleEventName();
+            if(date) document.getElementById('mass_date').value = date;
         } else {
             document.getElementById('modalTitle').innerText = 'Edit Schedule'; document.getElementById('scheduleId').value = event.id;
             document.getElementById('mass_type').value = event.mass_type; document.getElementById('event_name').value = event.event_name || '';
-            toggleEventName(); document.getElementById('mass_date').value = event.mass_date; document.getElementById('mass_time').value = event.mass_time;
+            document.getElementById('mass_date').value = event.mass_date; document.getElementById('mass_time').value = event.mass_time;
             document.getElementById('status').value = event.status;
             if (event.color) { const r = document.querySelector(`.color-radio[value="${event.color}"]`); if (r) r.checked = true; }
             if (event.assigned_servers) event.assigned_servers.forEach(id => { const cb = document.querySelector(`.server-checkbox[value="${id}"]`); if (cb) cb.checked = true; });
             document.getElementById('deleteBtnContainer').classList.remove('hidden');
             document.getElementById('deleteLink').href = `<?= URLROOT ?>/schedules/delete?id=${event.id}`;
+
+            // Self-Assign Logic for Admin
+            if (currentServerId && event.assigned_servers && !event.assigned_servers.includes(currentServerId)) {
+                joinBtn.classList.remove('hidden');
+                document.getElementById('selfAssignId').value = event.id;
+            }
         }
+    }
+
+    function selfAssign() {
+        document.getElementById('selfAssignForm').submit();
     }
 
     function closeModal() { modal.classList.add('opacity-0'); modalContent.classList.add('scale-95'); setTimeout(() => modal.classList.add('hidden'), 300); }
@@ -434,10 +491,6 @@
     function generateSundays() {
         const m = prompt("Month (1-12):", new Date().getMonth() + 1);
         if (m) { const y = prompt("Year:", new Date().getFullYear()); if (y) window.location.href = `<?= URLROOT ?>/schedules/generate?month=${m}&year=${y}`; }
-    }
-    function toggleEventName() {
-        const t = document.getElementById('mass_type').value;
-        document.getElementById('eventNameContainer').classList.toggle('hidden', t !== 'Special Event');
     }
     renderCalendar();
 </script>

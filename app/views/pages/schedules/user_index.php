@@ -137,7 +137,7 @@
                 <form id="assignForm" action="<?= URLROOT ?>/schedules/self-assign" method="POST" class="hidden">
                     <?php csrf_field(); ?>
                     <input type="hidden" name="schedule_id" id="targetScheduleId">
-                    <button type="submit" class="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all">
+                    <button type="submit" data-loading class="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all">
                         Join this Schedule
                     </button>
                 </form>

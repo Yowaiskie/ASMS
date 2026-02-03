@@ -21,9 +21,10 @@ class LogController extends Controller {
         $endDate = trim($_GET['end_date'] ?? '');
 
         $sql = "
-            SELECT l.*, u.username, u.role as user_role
+            SELECT l.*, u.username, u.role as user_role, s.name as real_name
             FROM logs l 
             LEFT JOIN users u ON l.user_id = u.id 
+            LEFT JOIN servers s ON u.server_id = s.id
             WHERE 1=1
         ";
         $params = [];
@@ -60,13 +61,35 @@ class LogController extends Controller {
             return;
         }
 
-        // Pagination (simple)
-        $sql .= " LIMIT 100";
+        // Pagination
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = 10;
+        $offset = ($page - 1) * $limit;
 
+        // Get Total Count for Pagination
+        $countSql = "SELECT COUNT(*) as count FROM logs l LEFT JOIN users u ON l.user_id = u.id WHERE 1=1";
+        if (!empty($search)) $countSql .= " AND (l.description LIKE :search OR l.ip_address LIKE :search OR u.username LIKE :search)";
+        if (!empty($role)) $countSql .= " AND u.role = :role";
+        if (!empty($action)) $countSql .= " AND l.action = :action";
+        if (!empty($startDate)) $countSql .= " AND DATE(l.created_at) >= :start_date";
+        if (!empty($endDate)) $countSql .= " AND DATE(l.created_at) <= :end_date";
+
+        $this->db->query($countSql);
+        foreach ($params as $key => $val) {
+            $this->db->bind($key, $val);
+        }
+        $totalRecords = $this->db->single()->count;
+        $totalPages = ceil($totalRecords / $limit);
+
+        // Main Query with Limit
+        $sql .= " LIMIT :limit OFFSET :offset";
         $this->db->query($sql);
         foreach ($params as $key => $val) {
             $this->db->bind($key, $val);
         }
+        $this->db->bind(':limit', $limit);
+        $this->db->bind(':offset', $offset);
+        
         $logs = $this->db->resultSet();
 
         $this->view('logs/index', [
@@ -79,6 +102,11 @@ class LogController extends Controller {
                 'action' => $action,
                 'start_date' => $startDate,
                 'end_date' => $endDate
+            ],
+            'pagination' => [
+                'page' => $page,
+                'totalPages' => $totalPages,
+                'totalRecords' => $totalRecords
             ]
         ]);
     }

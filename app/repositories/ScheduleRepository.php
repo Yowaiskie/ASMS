@@ -58,6 +58,12 @@ class ScheduleRepository implements RepositoryInterface {
         return array_map(function($r) { return (int)$r->schedule_id; }, $results);
     }
 
+    public function getByDate($date) {
+        $this->db->query("SELECT * FROM schedules WHERE mass_date = :date");
+        $this->db->bind(':date', $date);
+        return $this->db->resultSet();
+    }
+
     public function create(array $data) {
         $this->db->query("INSERT INTO schedules (mass_type, event_name, color, mass_date, mass_time, status) VALUES (:mass_type, :event_name, :color, :mass_date, :mass_time, :status)");
         $this->db->bind(':mass_type', $data['mass_type']);

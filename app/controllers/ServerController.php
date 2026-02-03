@@ -14,11 +14,23 @@ class ServerController extends Controller {
     }
 
     public function index() {
-        $servers = $this->serverRepo->getAll();
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = 10;
+        $offset = ($page - 1) * $limit;
+
+        $servers = $this->serverRepo->getAll($limit, $offset);
+        $totalRecords = $this->serverRepo->countAll();
+        $totalPages = ceil($totalRecords / $limit);
+
         $this->view('servers/index', [
             'pageTitle' => 'Altar Servers Directory',
             'title' => 'Servers | ASMS',
-            'servers' => $servers
+            'servers' => $servers,
+            'pagination' => [
+                'page' => $page,
+                'totalPages' => $totalPages,
+                'totalRecords' => $totalRecords
+            ]
         ]);
     }
 
@@ -257,6 +269,24 @@ class ServerController extends Controller {
             setFlash('msg_success', 'Server removed successfully.');
         } else {
             setFlash('msg_error', 'Failed to remove server.');
+        }
+        redirect('servers');
+    }
+
+    public function bulkDelete() {
+        $this->verifyCsrf();
+        if ($_SERVER['REQUEST_METHOD'] == 'POST' && !empty($_POST['ids'])) {
+            $ids = $_POST['ids'];
+            $count = 0;
+            foreach ($ids as $id) {
+                if ($this->serverRepo->delete($id)) {
+                    $count++;
+                }
+            }
+            logAction('Delete', 'Servers', "Bulk deleted $count servers.");
+            setFlash('msg_success', "Deleted $count servers successfully.");
+        } else {
+            setFlash('msg_error', "No servers selected.");
         }
         redirect('servers');
     }

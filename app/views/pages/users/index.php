@@ -5,13 +5,13 @@
     </div>
     
     <div class="flex gap-2">
-        <button onclick="toggleSelectionMode()" id="selectModeBtn" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 p-2.5 rounded-xl shadow-sm transition-all" title="Select Multiple">
+        <button type="button" onclick="toggleSelectionMode()" id="selectModeBtn" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 p-2.5 rounded-xl shadow-sm transition-all" title="Select Multiple">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
         </button>
 
-        <button onclick="document.getElementById('importModal').classList.remove('hidden')" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-5 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 font-bold text-sm relative group">
+        <button type="button" onclick="document.getElementById('importModal').classList.remove('hidden')" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-5 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 font-bold text-sm relative group">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
@@ -23,7 +23,7 @@
             </div>
         </button>
 
-        <button onclick="toggleForm()" class="bg-primary hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl shadow-lg shadow-blue-200 transition-all flex items-center gap-2 font-semibold text-sm">
+        <button type="button" onclick="toggleForm()" class="bg-primary hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl shadow-lg shadow-blue-200 transition-all flex items-center gap-2 font-semibold text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
@@ -84,6 +84,14 @@
                 <input type="text" name="username" required placeholder="Choose a username" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
             </div>
             <div>
+                <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Email Address</label>
+                <input type="email" name="email" placeholder="Enter email address (Optional)" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Contact Number</label>
+                <input type="text" name="phone" maxlength="11" pattern="\d{11}" placeholder="09xxxxxxxxx (Optional)" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+            </div>
+            <div>
                 <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Password</label>
                 <input type="password" name="password" value="12345" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
             </div>
@@ -107,20 +115,20 @@
     <form action="<?= URLROOT ?>/users/bulk-delete" method="POST" id="bulkDeleteForm">
         <?php csrf_field(); ?>
         
-        <!-- Selection Bar -->
-        <div id="selectionBar" class="hidden absolute -top-16 left-0 right-0 z-10 bg-blue-600 text-white p-4 rounded-t-3xl flex justify-between items-center animate-fade-in-up">
-            <div class="flex items-center gap-3">
-                <span class="font-bold text-sm" id="selectedCount">0 Selected</span>
-                <div class="h-4 w-px bg-blue-400"></div>
-                <button type="button" onclick="selectAll(true)" class="text-xs hover:underline">Select All</button>
-                <button type="button" onclick="selectAll(false)" class="text-xs hover:underline">Clear</button>
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden animate-fade-in-up delay-100 relative">
+            <!-- Selection Bar -->
+            <div id="selectionBar" class="hidden absolute top-0 left-0 right-0 z-20 bg-blue-600 text-white p-4 flex justify-between items-center shadow-md">
+                <div class="flex items-center gap-3">
+                    <span class="font-bold text-sm" id="selectedCount">0 Selected</span>
+                    <div class="h-4 w-px bg-blue-400"></div>
+                    <button type="button" onclick="selectAll(true)" class="text-xs hover:underline">Select All</button>
+                    <button type="button" onclick="toggleSelectionMode()" class="text-xs hover:underline">Cancel</button>
+                </div>
+                <button type="submit" onclick="return confirm('Delete selected users?')" class="bg-red-500 text-white hover:bg-red-600 px-4 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm">
+                    Delete Selected
+                </button>
             </div>
-            <button type="submit" onclick="return confirm('Delete selected users?')" class="bg-red-500 text-white hover:bg-red-600 px-4 py-1.5 rounded-lg text-xs font-bold transition-all">
-                Delete Selected
-            </button>
-        </div>
 
-        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden animate-fade-in-up delay-100">
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
                     <thead class="bg-slate-50/50 text-xs font-bold text-slate-500 uppercase border-b border-slate-100">
@@ -162,7 +170,7 @@
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     <div class="flex items-center justify-center gap-2">
-                                        <button type="button" onclick="openEditModal(<?= json_encode($user) ?>)" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors action-btn"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></button>
+                                        <button type="button" onclick='openEditModal(<?= htmlspecialchars(json_encode($user), ENT_QUOTES, 'UTF-8') ?>)' class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors action-btn"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></button>
                                         <form action="<?= URLROOT ?>/users/delete" method="POST" onsubmit="return confirm('Are you sure?')" class="inline action-btn">
                                             <?php csrf_field(); ?>
                                             <input type="hidden" name="id" value="<?= $user->id ?>">
@@ -180,6 +188,28 @@
                     </tbody>
                 </table>
             </div>
+            
+            <!-- Pagination -->
+            <?php if (isset($pagination) && $pagination['totalPages'] > 1): ?>
+            <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div class="text-xs text-slate-500">
+                    Showing page <span class="font-bold"><?= $pagination['page'] ?></span> of <span class="font-bold"><?= $pagination['totalPages'] ?></span>
+                </div>
+                <div class="flex gap-2">
+                    <?php if ($pagination['page'] > 1): ?>
+                        <a href="<?= URLROOT ?>/users?page=<?= $pagination['page'] - 1 ?>" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">Previous</a>
+                    <?php else: ?>
+                        <span class="px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs font-bold text-slate-400 cursor-not-allowed">Previous</span>
+                    <?php endif; ?>
+
+                    <?php if ($pagination['page'] < $pagination['totalPages']): ?>
+                        <a href="<?= URLROOT ?>/users?page=<?= $pagination['page'] + 1 ?>" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">Next</a>
+                    <?php else: ?>
+                        <span class="px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs font-bold text-slate-400 cursor-not-allowed">Next</span>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
     </form>
 </div>

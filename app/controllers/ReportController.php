@@ -4,15 +4,91 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 
+use App\Repositories\AttendanceRepository;
+use App\Repositories\ServerRepository;
+use App\Core\Database;
+
 class ReportController extends Controller {
+    private $attendanceRepo;
+    private $serverRepo;
+    private $db;
+
     public function __construct() {
         $this->requireLogin();
+        $this->attendanceRepo = new AttendanceRepository();
+        $this->serverRepo = new ServerRepository();
+        $this->db = Database::getInstance();
     }
 
     public function index() {
+        // 1. Overall Stats (Current Month)
+        $this->db->query("
+            SELECT 
+                SUM(CASE WHEN status = 'Present' THEN 1 ELSE 0 END) as total_present,
+                SUM(CASE WHEN status = 'Late' THEN 1 ELSE 0 END) as total_late,
+                SUM(CASE WHEN status = 'Absent' THEN 1 ELSE 0 END) as total_absent,
+                COUNT(*) as total_records
+            FROM attendance 
+            WHERE MONTH(created_at) = MONTH(CURRENT_DATE()) 
+            AND YEAR(created_at) = YEAR(CURRENT_DATE())
+        ");
+        $stats = $this->db->single();
+
+        // Avoid division by zero
+        $total = $stats->total_records > 0 ? $stats->total_records : 1;
+        $rates = [
+            'present' => round(($stats->total_present / $total) * 100, 1),
+            'late' => round(($stats->total_late / $total) * 100, 1),
+            'absent' => round(($stats->total_absent / $total) * 100, 1)
+        ];
+
+        // Total Activities (Schedules) this month
+        $this->db->query("SELECT COUNT(*) as count FROM schedules WHERE MONTH(mass_date) = MONTH(CURRENT_DATE()) AND YEAR(mass_date) = YEAR(CURRENT_DATE())");
+        $totalActivities = $this->db->single()->count;
+
+        // 2. Monthly Trends (Last 6 Months)
+        $this->db->query("
+            SELECT 
+                DATE_FORMAT(s.mass_date, '%b') as month_name,
+                SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) as present_count
+            FROM attendance a
+            JOIN schedules s ON a.schedule_id = s.id
+            WHERE s.mass_date >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+            GROUP BY YEAR(s.mass_date), MONTH(s.mass_date)
+            ORDER BY s.mass_date ASC
+        ");
+        $trends = $this->db->resultSet();
+        
+        $trendLabels = [];
+        $trendData = [];
+        foreach($trends as $t) {
+            $trendLabels[] = $t->month_name;
+            $trendData[] = $t->present_count;
+        }
+
+        // 3. Server Performance (Top 5)
+        $this->db->query("
+            SELECT 
+                srv.name,
+                COUNT(a.id) as total_assigned,
+                SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) as present_count
+            FROM servers srv
+            JOIN attendance a ON srv.id = a.server_id
+            GROUP BY srv.id
+            ORDER BY present_count DESC
+            LIMIT 5
+        ");
+        $topServers = $this->db->resultSet();
+
         $this->view('reports/index', [
             'pageTitle' => 'Reports & Analytics',
-            'title' => 'Reports | ASMS'
+            'title' => 'Reports | ASMS',
+            'stats' => $stats,
+            'rates' => $rates,
+            'totalActivities' => $totalActivities,
+            'trendLabels' => json_encode($trendLabels),
+            'trendData' => json_encode($trendData),
+            'topServers' => $topServers
         ]);
     }
 

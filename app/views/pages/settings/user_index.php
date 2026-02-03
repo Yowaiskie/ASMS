@@ -79,7 +79,7 @@
 
                 <div>
                     <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Contact Number</label>
-                    <input type="text" name="phone" value="<?= h($profile->phone ?? '') ?>" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                    <input type="text" name="phone" value="<?= h($profile->phone ?? '') ?>" maxlength="11" pattern="\d{11}" oninput="this.value = this.value.replace(/[^0-9]/g, '')" placeholder="09xxxxxxxxx" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
                 </div>
 
                 <div class="md:col-span-2">

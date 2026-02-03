@@ -71,7 +71,7 @@
                         <span class="text-xs text-slate-400 font-medium"><?= date('M j, Y', strtotime($announcement->created_at)) ?></span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <a href="<?= URLROOT ?>/announcements/delete?id=<?= $announcement->id ?>" onclick="return confirm('Are you sure?')" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></a>
+                        <a href="<?= URLROOT ?>/announcements/delete?id=<?= $announcement->id ?>" data-loading onclick="return confirm('Are you sure?')" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></a>
                     </div>
                 </div>
                 <h3 class="text-lg font-bold text-slate-800 mb-2"><?= h($announcement->title) ?></h3>
@@ -83,3 +83,25 @@
         <p class="text-slate-500 text-center py-8">No announcements posted yet.</p>
     <?php endif; ?>
 </div>
+
+<!-- Pagination -->
+<?php if (isset($pagination) && $pagination['totalPages'] > 1): ?>
+<div class="mt-8 flex items-center justify-between border-t border-slate-100 pt-6">
+    <div class="text-xs text-slate-500">
+        Page <span class="font-bold"><?= $pagination['page'] ?></span> of <span class="font-bold"><?= $pagination['totalPages'] ?></span>
+    </div>
+    <div class="flex gap-2">
+        <?php if ($pagination['page'] > 1): ?>
+            <a href="<?= URLROOT ?>/announcements?page=<?= $pagination['page'] - 1 ?>" class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">Previous</a>
+        <?php else: ?>
+            <span class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-400 cursor-not-allowed">Previous</span>
+        <?php endif; ?>
+
+        <?php if ($pagination['page'] < $pagination['totalPages']): ?>
+            <a href="<?= URLROOT ?>/announcements?page=<?= $pagination['page'] + 1 ?>" class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">Next</a>
+        <?php else: ?>
+            <span class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-400 cursor-not-allowed">Next</span>
+        <?php endif; ?>
+    </div>
+</div>
+<?php endif; ?>

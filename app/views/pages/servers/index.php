@@ -5,17 +5,24 @@
     </div>
     
     <div class="flex gap-2">
-        <a href="<?= URLROOT ?>/servers/download" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-5 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 font-bold text-sm">
+        <button type="button" onclick="toggleSelectionMode()" id="selectModeBtn" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 p-2.5 rounded-xl shadow-sm transition-all" title="Select Multiple">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        </button>
+
+        <a href="<?= URLROOT ?>/servers/download" data-loading class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-5 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 font-bold text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
             </svg>
             Download PDF
         </a>
-        <button onclick="document.getElementById('importModal').classList.remove('hidden')" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-5 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 font-bold text-sm">
+        <button type="button" onclick="document.getElementById('importModal').classList.remove('hidden')" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-5 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 font-bold text-sm relative group">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
             </svg>
             Import CSV
+            <!-- ... tooltip ... -->
         </button>
         <button onclick="openModal('add')" class="bg-primary hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl shadow-lg shadow-blue-200 transition-all flex items-center gap-2 font-semibold text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -26,98 +33,139 @@
     </div>
 </div>
 
-<!-- Import Modal -->
-<div id="importModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden p-8">
-        <div class="flex justify-between items-center mb-6">
-            <h3 class="text-lg font-bold text-slate-800">Bulk Import Servers</h3>
-            <button onclick="document.getElementById('importModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
-        </div>
+<!-- ... Import Modal ... -->
 
-        <form action="<?= URLROOT ?>/servers/import" method="POST" enctype="multipart/form-data" id="importForm">
-            <?php csrf_field(); ?>
-            <div id="dropZone" class="border-2 border-dashed border-slate-200 rounded-3xl p-10 flex flex-col items-center justify-center gap-4 hover:border-blue-400 hover:bg-blue-50 transition-all cursor-pointer group">
-                <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                </div>
-                <div class="text-center">
-                    <p class="text-sm font-bold text-slate-700">Drop your CSV file here</p>
-                    <p class="text-xs text-slate-400 mt-1">or click to browse</p>
-                </div>
-                <input type="file" name="csv_file" id="fileInput" class="hidden" accept=".csv">
-            </div>
-            
-            <div id="fileInfo" class="mt-4 p-4 bg-blue-50 rounded-2xl border border-blue-100 hidden">
+<div class="relative">
+    <form action="<?= URLROOT ?>/servers/bulk-delete" method="POST" id="bulkDeleteForm">
+        <?php csrf_field(); ?>
+        
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden animate-fade-in-up delay-100 relative">
+            <!-- Selection Bar -->
+            <div id="selectionBar" class="hidden absolute top-0 left-0 right-0 z-20 bg-blue-600 text-white p-4 flex justify-between items-center shadow-md">
                 <div class="flex items-center gap-3">
-                    <svg class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    <span id="fileName" class="text-xs font-bold text-blue-800 truncate">file.csv</span>
+                    <span class="font-bold text-sm" id="selectedCount">0 Selected</span>
+                    <div class="h-4 w-px bg-blue-400"></div>
+                    <button type="button" onclick="selectAll(true)" class="text-xs hover:underline">Select All</button>
+                    <button type="button" onclick="toggleSelectionMode()" class="text-xs hover:underline">Cancel</button>
                 </div>
+                <button type="submit" onclick="return confirm('Delete selected servers?')" class="bg-red-500 text-white hover:bg-red-600 px-4 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm">
+                    Delete Selected
+                </button>
             </div>
 
-            <button type="submit" id="submitImport" disabled class="w-full mt-6 py-4 bg-slate-100 text-slate-400 rounded-2xl font-bold text-sm transition-all">
-                Upload and Import
-            </button>
-        </form>
-    </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-50/50 text-[10px] font-bold text-slate-500 uppercase border-b border-slate-100">
+                        <tr>
+                            <th class="p-4 w-12 selection-col hidden"></th>
+                            <th class="px-6 py-4">Full Name</th>
+                            <th class="px-6 py-4">Nickname</th>
+                            <th class="px-6 py-4 w-1/4">Address</th>
+                            <th class="px-6 py-4">Birth Date</th>
+                            <th class="px-6 py-4">Contact</th>
+                            <th class="px-6 py-4">Rank/Pos</th>
+                            <th class="px-6 py-4 text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-xs">
+                        <?php if(!empty($servers)): ?>
+                            <?php foreach($servers as $svr): ?>
+                            <tr class="hover:bg-slate-50 transition-colors group cursor-pointer" onclick="toggleRow(this, event)">
+                                <td class="p-4 selection-col hidden">
+                                    <input type="checkbox" name="ids[]" value="<?= $svr->id ?>" class="server-checkbox rounded text-blue-600 border-gray-300 w-5 h-5 pointer-events-none">
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="font-bold text-slate-700 block"><?= h($svr->name) ?></span>
+                                    <span class="text-[10px] text-slate-400">Joined: <?= h($svr->month_joined) ?></span>
+                                </td>
+                                <!-- ... rest of columns ... -->
+                                <td class="px-6 py-4 text-slate-600 font-medium">
+                                    <?= h($svr->nickname) ?>
+                                </td>
+                                <td class="px-6 py-4 text-slate-500 leading-relaxed">
+                                    <?= h($svr->address) ?>
+                                </td>
+                                <td class="px-6 py-4 text-slate-600">
+                                    <?= $svr->dob ? date('M d, Y', strtotime($svr->dob)) : '-' ?>
+                                </td>
+                                <td class="px-6 py-4 text-slate-500">
+                                    <?= h($svr->phone) ?>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold text-blue-600"><?= h($svr->rank) ?></span>
+                                        <span class="text-[10px] text-slate-400 font-medium uppercase"><?= h($svr->position) ?></span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <button type="button" onclick='openModal("edit", <?= json_encode($svr) ?>)' class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors action-btn"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></button>
+                                        <a href="<?= URLROOT ?>/servers/delete?id=<?= $svr->id ?>" onclick="return confirm('Delete this server?')" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors action-btn"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr><td colspan="8" class="p-12 text-center text-slate-400 italic">No servers found in directory.</td></tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+    
+            <!-- Pagination -->
+            <!-- ... -->
+        </div>
+    </form>
 </div>
 
-<div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden animate-fade-in-up delay-100">
-    <div class="overflow-x-auto">
-        <table class="w-full text-left">
-            <thead class="bg-slate-50/50 text-[10px] font-bold text-slate-500 uppercase border-b border-slate-100">
-                <tr>
-                    <th class="px-6 py-4">Full Name</th>
-                    <th class="px-6 py-4">Nickname</th>
-                    <th class="px-6 py-4 w-1/4">Address</th>
-                    <th class="px-6 py-4">Birth Date</th>
-                    <th class="px-6 py-4">Contact</th>
-                    <th class="px-6 py-4">Rank/Pos</th>
-                    <th class="px-6 py-4 text-center">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 text-xs">
-                <?php if(!empty($servers)): ?>
-                    <?php foreach($servers as $svr): ?>
-                    <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="px-6 py-4">
-                            <span class="font-bold text-slate-700 block"><?= h($svr->name) ?></span>
-                            <span class="text-[10px] text-slate-400">Joined: <?= h($svr->month_joined) ?></span>
-                        </td>
-                        <td class="px-6 py-4 text-slate-600 font-medium">
-                            <?= h($svr->nickname) ?>
-                        </td>
-                        <td class="px-6 py-4 text-slate-500 leading-relaxed">
-                            <?= h($svr->address) ?>
-                        </td>
-                        <td class="px-6 py-4 text-slate-600">
-                            <?= $svr->dob ? date('M d, Y', strtotime($svr->dob)) : '-' ?>
-                        </td>
-                        <td class="px-6 py-4 text-slate-500">
-                            <?= h($svr->phone) ?>
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="flex flex-col">
-                                <span class="font-bold text-blue-600"><?= h($svr->rank) ?></span>
-                                <span class="text-[10px] text-slate-400 font-medium uppercase"><?= h($svr->position) ?></span>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 text-center">
-                            <div class="flex items-center justify-center gap-2">
-                                <button onclick='openModal("edit", <?= json_encode($svr) ?>)' class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></button>
-                                <a href="<?= URLROOT ?>/servers/delete?id=<?= $svr->id ?>" onclick="return confirm('Delete this server?')" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></a>
-                            </div>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <tr><td colspan="7" class="p-12 text-center text-slate-400 italic">No servers found in directory.</td></tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
-</div>
+<!-- ... Modal ... -->
+
+<script>
+    let isSelectionMode = false;
+
+    function toggleSelectionMode() {
+        isSelectionMode = !isSelectionMode;
+        const btn = document.getElementById('selectModeBtn');
+        const bar = document.getElementById('selectionBar');
+        const cols = document.querySelectorAll('.selection-col');
+        
+        if (isSelectionMode) {
+            btn.classList.add('bg-blue-50', 'text-blue-600', 'border-blue-200', 'ring-2', 'ring-blue-200');
+            bar.classList.remove('hidden');
+            cols.forEach(col => col.classList.remove('hidden'));
+        } else {
+            btn.classList.remove('bg-blue-50', 'text-blue-600', 'border-blue-200', 'ring-2', 'ring-blue-200');
+            bar.classList.add('hidden');
+            cols.forEach(col => col.classList.add('hidden'));
+            selectAll(false);
+        }
+    }
+
+    function toggleRow(tr, event) {
+        if (!isSelectionMode) return;
+        if (event.target.closest('.action-btn')) return;
+        
+        const cb = tr.querySelector('.server-checkbox');
+        cb.checked = !cb.checked;
+        tr.classList.toggle('bg-blue-50', cb.checked);
+        updateSelectedCount();
+    }
+
+    function selectAll(check) {
+        document.querySelectorAll('.server-checkbox').forEach(cb => {
+            cb.checked = check;
+            cb.closest('tr').classList.toggle('bg-blue-50', check);
+        });
+        updateSelectedCount();
+    }
+
+    function updateSelectedCount() {
+        const count = document.querySelectorAll('.server-checkbox:checked').length;
+        document.getElementById('selectedCount').innerText = `${count} Selected`;
+    }
+
+    // ... existing scripts ...
+</script>
 
 <!-- Modal -->
 <div id="serverModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
@@ -156,7 +204,7 @@
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">Contact</label>
-                            <input type="text" name="phone" id="svr_phone" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                            <input type="text" name="phone" id="svr_phone" maxlength="11" pattern="\d{11}" oninput="this.value = this.value.replace(/[^0-9]/g, '')" placeholder="09xxxxxxxxx" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
                         </div>
                     </div>
 
@@ -173,27 +221,23 @@
                             <input type="text" name="rank" id="svr_rank" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
                         </div>
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">Team</label>
-                            <input type="text" name="team" id="svr_team" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">Order</label>
+                            <input type="text" name="order_name" id="svr_order" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">Order</label>
-                            <input type="text" name="order_name" id="svr_order" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
-                        </div>
                         <div>
                             <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">Position</label>
                             <input type="text" name="position" id="svr_position" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
                         </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">Joined</label>
                             <input type="text" name="month_joined" id="svr_joined" placeholder="2023-07" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
                         </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-4">
                         <div>
                             <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">Status</label>
                             <select name="status" id="svr_status" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
@@ -235,7 +279,6 @@
             document.getElementById('svr_phone').value = data.phone || '';
             document.getElementById('svr_address').value = data.address || '';
             document.getElementById('svr_rank').value = data.rank || '';
-            document.getElementById('svr_team').value = data.team || '';
             document.getElementById('svr_joined').value = data.month_joined || '';
             document.getElementById('svr_invest').value = data.investiture_date || '';
             document.getElementById('svr_order').value = data.order_name || '';

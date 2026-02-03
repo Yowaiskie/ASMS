@@ -28,11 +28,23 @@ class ExcuseController extends Controller {
         } else {
             // Admin View
             $this->excuseRepo->markAsSeen($_SESSION['user_id']);
-            $excuses = $this->excuseRepo->getAll();
+            
+            $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+            $limit = 10;
+            $offset = ($page - 1) * $limit;
+
+            $excuses = $this->excuseRepo->getAll($limit, $offset);
+            $totalRecords = $this->excuseRepo->countAll();
+            $totalPages = ceil($totalRecords / $limit);
+
             $this->view('excuses/index', [
                 'pageTitle' => 'Manage Excuse Letters',
                 'title' => 'Excuse Management | ASMS',
-                'excuses' => $excuses
+                'excuses' => $excuses,
+                'pagination' => [
+                    'page' => $page,
+                    'totalPages' => $totalPages
+                ]
             ]);
         }
     }
@@ -125,7 +137,7 @@ class ExcuseController extends Controller {
                         $admin->email,
                         'New Excuse Letter Filed',
                         'A server has filed an excuse letter',
-                        "User <b>{$_SESSION['username']}</b> has submitted a new excuse letter for <b>" . date('M d, Y', strtotime($data['absence_date'])) . "</b>. <br><br><b>Reason:</b> {$data['reason']}"
+                        "User <b>{$_SESSION['full_name']}</b> has submitted a new excuse letter for <b>" . date('M d, Y', strtotime($data['absence_date'])) . "</b>. <br><br><b>Reason:</b> {$data['reason']}"
                     );
                 }
 

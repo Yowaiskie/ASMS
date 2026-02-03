@@ -39,10 +39,11 @@ class AuthController extends Controller {
                 // Create Session
                 $_SESSION['user_id'] = $user->id;
                 $_SESSION['username'] = $user->username;
+                $_SESSION['full_name'] = $user->full_name ?? $user->username;
                 $_SESSION['role'] = $user->role;
                 $_SESSION['is_verified'] = $user->is_verified;
 
-                logAction('Login', 'Auth', 'User ' . $user->username . ' logged in.');
+                logAction('Login', 'Auth', 'User ' . $_SESSION['full_name'] . ' logged in.');
 
                 header('Location: ' . URLROOT . '/dashboard');
             } else {

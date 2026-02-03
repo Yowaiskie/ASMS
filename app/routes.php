@@ -55,6 +55,7 @@ $router->post('/users/import', [UserController::class, 'import']);
 // Attendance
 $router->get('/attendance', [AttendanceController::class, 'index']);
 $router->post('/attendance/update', [AttendanceController::class, 'update']);
+$router->get('/attendance/downloadReport', [AttendanceController::class, 'downloadReport']);
 
 // Announcements
 $router->get('/announcements', [AnnouncementController::class, 'index']);

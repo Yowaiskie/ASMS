@@ -117,7 +117,10 @@ $menu_items = [
         <!-- Role Badge -->
         <div class="px-6 mb-6">
             <span class="inline-block bg-fuchsia-100 text-fuchsia-600 text-xs font-bold px-3 py-1 rounded-full">
-                <?= $_SESSION['role'] ?? 'User' ?>
+                <?php 
+                    $displayRole = $_SESSION['role'] ?? 'Server';
+                    echo ($displayRole === 'User') ? 'Server' : $displayRole;
+                ?>
             </span>
         </div>
 

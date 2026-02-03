@@ -13,9 +13,16 @@ class AnnouncementRepository implements RepositoryInterface {
         $this->db = Database::getInstance();
     }
 
-    public function getAll() {
-        $this->db->query("SELECT * FROM announcements ORDER BY created_at DESC");
+    public function getAll($limit = 1000, $offset = 0) {
+        $this->db->query("SELECT * FROM announcements ORDER BY created_at DESC LIMIT :limit OFFSET :offset");
+        $this->db->bind(':limit', $limit);
+        $this->db->bind(':offset', $offset);
         return $this->db->resultSet();
+    }
+
+    public function countAll() {
+        $this->db->query("SELECT COUNT(*) as count FROM announcements");
+        return $this->db->single()->count;
     }
 
     public function getById($id) { return null; }

@@ -4,7 +4,7 @@
         <p class="text-slate-500 text-sm mt-1">Monitor system activities and user actions</p>
     </div>
     
-    <a href="<?= URLROOT ?>/logs?export=1&<?= http_build_query($filters) ?>" class="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl shadow-lg transition-all flex items-center gap-2 font-semibold text-sm">
+    <a href="<?= URLROOT ?>/logs?export=1&<?= http_build_query($filters) ?>" data-loading class="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl shadow-lg transition-all flex items-center gap-2 font-semibold text-sm">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
         </svg>
@@ -76,7 +76,7 @@
                                     <?= strtoupper(substr($log->username ?? '?', 0, 2)) ?>
                                 </div>
                                 <div>
-                                    <p class="font-bold text-slate-700 leading-tight"><?= h($log->username ?? 'System') ?></p>
+                                    <p class="font-bold text-slate-700 leading-tight"><?= h($log->real_name ?? ($log->username ?? 'System')) ?></p>
                                     <p class="text-[10px] text-slate-400"><?= h($log->user_role ?? 'N/A') ?></p>
                                 </div>
                             </div>
@@ -109,4 +109,27 @@
             </tbody>
         </table>
     </div>
+
+    <!-- Pagination -->
+    <?php if (isset($pagination) && $pagination['totalPages'] > 1): ?>
+        <?php $queryStr = http_build_query($filters); ?>
+        <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div class="text-xs text-slate-500">
+                Showing page <span class="font-bold"><?= $pagination['page'] ?></span> of <span class="font-bold"><?= $pagination['totalPages'] ?></span>
+            </div>
+            <div class="flex gap-2">
+                <?php if ($pagination['page'] > 1): ?>
+                    <a href="<?= URLROOT ?>/logs?page=<?= $pagination['page'] - 1 ?>&<?= $queryStr ?>" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">Previous</a>
+                <?php else: ?>
+                    <span class="px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs font-bold text-slate-400 cursor-not-allowed">Previous</span>
+                <?php endif; ?>
+
+                <?php if ($pagination['page'] < $pagination['totalPages']): ?>
+                    <a href="<?= URLROOT ?>/logs?page=<?= $pagination['page'] + 1 ?>&<?= $queryStr ?>" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">Next</a>
+                <?php else: ?>
+                    <span class="px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs font-bold text-slate-400 cursor-not-allowed">Next</span>
+                <?php endif; ?>
+            </div>
+        </div>
+    <?php endif; ?>
 </div>

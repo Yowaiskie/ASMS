@@ -12,10 +12,17 @@ class ExcuseRepository implements RepositoryInterface {
         $this->db = Database::getInstance();
     }
 
-    public function getAll() {
+    public function getAll($limit = 1000, $offset = 0) {
         // Admin use mainly
-        $this->db->query("SELECT e.*, s.name as server_name FROM excuses e JOIN servers s ON e.server_id = s.id ORDER BY e.created_at DESC");
+        $this->db->query("SELECT e.*, s.name as server_name FROM excuses e JOIN servers s ON e.server_id = s.id ORDER BY e.created_at DESC LIMIT :limit OFFSET :offset");
+        $this->db->bind(':limit', $limit);
+        $this->db->bind(':offset', $offset);
         return $this->db->resultSet();
+    }
+
+    public function countAll() {
+        $this->db->query("SELECT COUNT(*) as count FROM excuses");
+        return $this->db->single()->count;
     }
 
     public function getById($id) {

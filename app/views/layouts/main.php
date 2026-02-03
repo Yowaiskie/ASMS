@@ -23,6 +23,40 @@
             --color-primary: #1e63d4;
         }
         .bg-primary { background-color: #1e63d4 !important; }
+
+        /* Button Loading Spinner */
+        .btn-loading {
+            position: relative !important;
+            color: transparent !important;
+            pointer-events: none !important;
+        }
+        .btn-loading > * {
+            opacity: 0 !important;
+        }
+        .btn-loading::after {
+            content: "";
+            position: absolute;
+            width: 1.25rem;
+            height: 1.25rem;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            margin: auto;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: btn-spinner 0.6s linear infinite;
+        }
+        /* For light background buttons */
+        .bg-white.btn-loading::after, .bg-slate-50.btn-loading::after, .bg-slate-100.btn-loading::after {
+            border-color: #64748b;
+            border-top-color: transparent;
+        }
+        @keyframes btn-spinner {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="bg-[#f8fafc] font-sans text-slate-800 flex h-screen overflow-hidden">

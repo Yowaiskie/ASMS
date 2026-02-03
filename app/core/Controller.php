@@ -43,8 +43,9 @@ class Controller {
     }
 
     protected function checkVerification() {
-        // Only enforce for normal Users
-        if (($_SESSION['role'] ?? '') !== 'User') return;
+        // Enforce for Users and Admins (Superadmin is exempt)
+        $role = $_SESSION['role'] ?? '';
+        if (!in_array($role, ['User', 'Admin'])) return;
 
         $isVerified = $_SESSION['is_verified'] ?? 0;
         $current_path = rtrim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');

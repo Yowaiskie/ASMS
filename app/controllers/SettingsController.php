@@ -61,13 +61,38 @@ class SettingsController extends Controller {
             if ($action === 'update_profile') {
                 $data = [
                     'name' => trim($_POST['name']),
+                    'nickname' => trim($_POST['nickname'] ?? ''),
+                    'dob' => $_POST['dob'] ?? null,
                     'age' => trim($_POST['age']),
                     'address' => trim($_POST['address'] ?? ''),
                     'phone' => trim($_POST['phone']),
                     'email' => trim($_POST['email'] ?? '')
                 ];
 
+                // Handle Profile Image Upload
+                if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] === UPLOAD_ERR_OK) {
+                    $fileTmpPath = $_FILES['profile_image']['tmp_name'];
+                    $fileName = $_FILES['profile_image']['name'];
+                    $fileNameCmps = explode(".", $fileName);
+                    $fileExtension = strtolower(end($fileNameCmps));
+                    $allowedfileExtensions = array('jpg', 'gif', 'png', 'jpeg', 'webp');
+
+                    if (in_array($fileExtension, $allowedfileExtensions)) {
+                        $newFileName = md5(time() . $fileName) . '.' . $fileExtension;
+                        $uploadFileDir = '../public/uploads/profiles/';
+                        
+                        if (!is_dir($uploadFileDir)) {
+                            mkdir($uploadFileDir, 0755, true);
+                        }
+
+                        if(move_uploaded_file($fileTmpPath, $uploadFileDir . $newFileName)) {
+                            $data['profile_image'] = $newFileName;
+                        }
+                    }
+                }
+
                 if ($this->userRepo->updateProfile($_SESSION['user_id'], $data)) {
+                    $_SESSION['full_name'] = $data['name']; // Update session name
                     logAction('Update', 'Settings', 'Updated personal profile information.');
                     setFlash('msg_success', 'Profile updated successfully.');
                 } else {

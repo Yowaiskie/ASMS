@@ -65,22 +65,22 @@
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
     <div class="bg-green-500 rounded-2xl p-6 text-white shadow-lg shadow-green-200 animate-fade-in-up delay-200">
         <p class="text-white/80 text-sm font-medium mb-1">Total Present</p>
-        <h3 class="text-4xl font-bold mb-2">540</h3>
-        <p class="text-xs bg-white/20 inline-block px-2 py-1 rounded-lg">88.8% rate</p>
+        <h3 class="text-4xl font-bold mb-2"><?= $stats->total_present ?? 0 ?></h3>
+        <p class="text-xs bg-white/20 inline-block px-2 py-1 rounded-lg"><?= $rates['present'] ?>% rate</p>
     </div>
     <div class="bg-amber-500 rounded-2xl p-6 text-white shadow-lg shadow-amber-200 animate-fade-in-up delay-200">
         <p class="text-white/80 text-sm font-medium mb-1">Late</p>
-        <h3 class="text-4xl font-bold mb-2">38</h3>
-        <p class="text-xs bg-white/20 inline-block px-2 py-1 rounded-lg">6.3% rate</p>
+        <h3 class="text-4xl font-bold mb-2"><?= $stats->total_late ?? 0 ?></h3>
+        <p class="text-xs bg-white/20 inline-block px-2 py-1 rounded-lg"><?= $rates['late'] ?>% rate</p>
     </div>
     <div class="bg-red-600 rounded-2xl p-6 text-white shadow-lg shadow-red-200 animate-fade-in-up delay-200">
         <p class="text-white/80 text-sm font-medium mb-1">Absent</p>
-        <h3 class="text-4xl font-bold mb-2">30</h3>
-        <p class="text-xs bg-white/20 inline-block px-2 py-1 rounded-lg">4.9% rate</p>
+        <h3 class="text-4xl font-bold mb-2"><?= $stats->total_absent ?? 0 ?></h3>
+        <p class="text-xs bg-white/20 inline-block px-2 py-1 rounded-lg"><?= $rates['absent'] ?>% rate</p>
     </div>
     <div class="bg-blue-500 rounded-2xl p-6 text-white shadow-lg shadow-blue-200 animate-fade-in-up delay-200">
         <p class="text-white/80 text-sm font-medium mb-1">Total Activities</p>
-        <h3 class="text-4xl font-bold mb-2">24</h3>
+        <h3 class="text-4xl font-bold mb-2"><?= $totalActivities ?? 0 ?></h3>
         <p class="text-xs bg-white/20 inline-block px-2 py-1 rounded-lg">This month</p>
     </div>
 </div>
@@ -116,7 +116,7 @@
 
 <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
     <div class="p-6 border-b border-slate-50">
-        <h3 class="font-bold text-slate-700">Server Performance</h3>
+        <h3 class="font-bold text-slate-700">Top Performing Servers</h3>
     </div>
     <div class="overflow-x-auto">
         <table class="w-full text-left">
@@ -124,45 +124,39 @@
                 <tr class="text-xs font-bold text-slate-500 uppercase bg-slate-50/50">
                     <th class="px-6 py-4">Server Name</th>
                     <th class="px-6 py-4 w-1/3">Attendance Rate</th>
-                    <th class="px-6 py-4">Total Activities</th>
+                    <th class="px-6 py-4">Present / Assigned</th>
                     <th class="px-6 py-4">Status</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
-                
-                <tr class="hover:bg-slate-50 transition-colors">
-                    <td class="px-6 py-4 font-medium text-slate-700">John Doe</td>
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-3">
-                            <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                                <div class="h-full bg-emerald-500 rounded-full" style="width: 95%"></div>
-                            </div>
-                            <span class="text-xs font-bold text-emerald-600">95%</span>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 text-slate-500">20</td>
-                    <td class="px-6 py-4">
-                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">Excellent</span>
-                    </td>
-                </tr>
-                
-                <!-- More rows here (truncated for brevity but design is captured) -->
-                 <tr class="hover:bg-slate-50 transition-colors">
-                    <td class="px-6 py-4 font-medium text-slate-700">Jane Smith</td>
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-3">
-                            <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                                <div class="h-full bg-emerald-500 rounded-full" style="width: 92%"></div>
-                            </div>
-                            <span class="text-xs font-bold text-emerald-600">92%</span>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 text-slate-500">19</td>
-                    <td class="px-6 py-4">
-                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">Excellent</span>
-                    </td>
-                </tr>
-
+                <?php if(!empty($topServers)): ?>
+                    <?php foreach($topServers as $srv): ?>
+                        <?php 
+                            $rate = $srv->total_assigned > 0 ? round(($srv->present_count / $srv->total_assigned) * 100) : 0;
+                            $status = 'Good';
+                            $statusClass = 'bg-blue-100 text-blue-700';
+                            if ($rate >= 90) { $status = 'Excellent'; $statusClass = 'bg-green-100 text-green-700'; }
+                            elseif ($rate < 70) { $status = 'Needs Improvement'; $statusClass = 'bg-amber-100 text-amber-700'; }
+                        ?>
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="px-6 py-4 font-medium text-slate-700"><?= h($srv->name) ?></td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                        <div class="h-full bg-emerald-500 rounded-full" style="width: <?= $rate ?>%"></div>
+                                    </div>
+                                    <span class="text-xs font-bold text-emerald-600"><?= $rate ?>%</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-slate-500"><?= $srv->present_count ?> / <?= $srv->total_assigned ?></td>
+                            <td class="px-6 py-4">
+                                <span class="px-3 py-1 rounded-full text-xs font-bold <?= $statusClass ?>"><?= $status ?></span>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr><td colspan="4" class="p-6 text-center text-slate-400">No data available.</td></tr>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
@@ -174,11 +168,11 @@
     new Chart(ctxBar, {
         type: 'bar',
         data: {
-            labels: ['Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan'],
+            labels: <?= $trendLabels ?>,
             datasets: [
                 {
                     label: 'Present',
-                    data: [85, 90, 88, 92, 87, 90],
+                    data: <?= $trendData ?>,
                     backgroundColor: '#10b981', // Emerald 500
                     borderRadius: 4,
                     barPercentage: 0.6,
@@ -199,7 +193,7 @@
             scales: {
                 y: {
                     beginAtZero: true,
-                    max: 100,
+                    ticks: { precision: 0 },
                     grid: { 
                         color: '#f1f5f9',
                         drawBorder: false
@@ -219,7 +213,7 @@
         data: {
             labels: ['Present', 'Late', 'Absent'],
             datasets: [{
-                data: [88.8, 6.3, 4.9],
+                data: [<?= $rates['present'] ?>, <?= $rates['late'] ?>, <?= $rates['absent'] ?>],
                 backgroundColor: [
                     '#10b981', // Emerald 500
                     '#f59e0b', // Amber 500

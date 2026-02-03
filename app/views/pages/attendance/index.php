@@ -4,13 +4,33 @@
         <p class="text-slate-500 text-sm mt-1">Daily tracking for Mass and Meetings</p>
     </div>
     
-    <form action="" method="GET" class="flex items-center gap-2 bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
-        <input type="date" name="date" value="<?= $date ?>" class="px-4 py-2 bg-transparent text-sm font-bold text-slate-700 focus:outline-none" onchange="this.form.submit()">
-    </form>
+    <div class="flex items-center gap-2">
+        <a href="<?= URLROOT ?>/attendance/downloadReport?date=<?= $date ?>" data-loading class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-5 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 font-bold text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Download Report
+        </a>
+
+        <form action="<?= URLROOT ?>/attendance" method="GET" class="flex items-center gap-2">
+            <input type="hidden" name="date" value="<?= $date ?>">
+            <div class="relative">
+                <input type="text" name="search" value="<?= h($search ?? '') ?>" placeholder="Search server..." class="pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm w-64 transition-all">
+                <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2 bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
+                <input type="date" name="date" value="<?= $date ?>" class="px-4 py-2 bg-transparent text-sm font-bold text-slate-700 focus:outline-none" onchange="this.form.submit()">
+            </div>
+        </form>
+    </div>
 </div>
 
 <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
     <table class="w-full text-left border-collapse">
+        <!-- ... existing thead ... -->
         <thead>
             <tr class="bg-slate-50/50 text-slate-500 text-[10px] uppercase font-bold tracking-widest border-b border-slate-100">
                 <th class="p-6 w-1/3">Server Name</th>
@@ -20,6 +40,7 @@
         </thead>
         <tbody class="divide-y divide-slate-50 text-sm">
             <?php if (!empty($attendanceList)): ?>
+                <!-- ... existing rows ... -->
                 <?php foreach($attendanceList as $server): ?>
                 <tr class="hover:bg-slate-50/50 transition-colors group">
                     <td class="p-6">
@@ -36,7 +57,7 @@
                         <?php if ($server['mass']): ?>
                             <div class="flex flex-col items-center gap-3">
                                 <div class="flex justify-center gap-2 p-1 bg-slate-100 rounded-full w-fit">
-                                    <?php renderStatusButtons($server['mass']->attendance_id, $server['mass']->status, $date); ?>
+                                    <?php renderStatusButtons($server['mass']->attendance_id, $server['mass']->status, $date, $server['mass']->schedule_id, $server['id']); ?>
                                 </div>
                                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
                                     <?= date('h:i A', strtotime($server['mass']->mass_time)) ?> • <?= h($server['mass']->mass_type) ?>
@@ -54,7 +75,7 @@
                         <?php if ($server['meeting']): ?>
                             <div class="flex flex-col items-center gap-3">
                                 <div class="flex justify-center gap-2 p-1 bg-slate-100 rounded-full w-fit">
-                                    <?php renderStatusButtons($server['meeting']->attendance_id, $server['meeting']->status, $date); ?>
+                                    <?php renderStatusButtons($server['meeting']->attendance_id, $server['meeting']->status, $date, $server['meeting']->schedule_id, $server['id']); ?>
                                 </div>
                                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
                                     <?= h($server['meeting']->mass_type) ?>
@@ -75,15 +96,41 @@
             <?php endif; ?>
         </tbody>
     </table>
+
+    <!-- Pagination -->
+    <?php if (isset($pagination) && $pagination['totalPages'] > 1): ?>
+    <div class="px-6 py-4 border-t border-slate-50 flex items-center justify-between bg-slate-50/30">
+        <div class="text-xs text-slate-500">
+            Showing <span class="font-bold"><?= count($attendanceList) ?></span> servers on page <span class="font-bold"><?= $pagination['page'] ?></span>
+        </div>
+        <div class="flex gap-2">
+            <?php 
+                $baseUrl = URLROOT . "/attendance?date=$date&search=" . urlencode($search);
+            ?>
+            <?php if ($pagination['page'] > 1): ?>
+                <a href="<?= $baseUrl ?>&page=<?= $pagination['page'] - 1 ?>" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 shadow-sm transition-all">Previous</a>
+            <?php else: ?>
+                <span class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-300 cursor-not-allowed">Previous</span>
+            <?php endif; ?>
+
+            <?php if ($pagination['page'] < $pagination['totalPages']): ?>
+                <a href="<?= $baseUrl ?>&page=<?= $pagination['page'] + 1 ?>" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 shadow-sm transition-all">Next</a>
+            <?php else: ?>
+                <span class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-300 cursor-not-allowed">Next</span>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>
 
 <?php
-function renderStatusButtons($id, $currentStatus, $currentDate) {
+function renderStatusButtons($id, $currentStatus, $currentDate, $scheduleId = null, $serverId = null) {
     // Redesigned modern status selector
     $statuses = [
         'Present' => ['label' => 'P', 'color' => 'bg-emerald-500', 'hover' => 'hover:bg-emerald-500/20', 'text' => 'text-emerald-600'],
         'Late' =>    ['label' => 'L', 'color' => 'bg-amber-500', 'hover' => 'hover:bg-amber-500/20', 'text' => 'text-amber-600'],
-        'Absent' =>  ['label' => 'A', 'color' => 'bg-rose-500', 'hover' => 'hover:bg-rose-500/20', 'text' => 'text-rose-600']
+        'Absent' =>  ['label' => 'A', 'color' => 'bg-rose-500', 'hover' => 'hover:bg-rose-500/20', 'text' => 'text-rose-600'],
+        'Excused' => ['label' => 'E', 'color' => 'bg-blue-500', 'hover' => 'hover:bg-blue-500/20', 'text' => 'text-blue-600']
     ];
 
     foreach ($statuses as $status => $style) {
@@ -96,6 +143,8 @@ function renderStatusButtons($id, $currentStatus, $currentDate) {
         <form action='".URLROOT."/attendance/update' method='POST' class='inline'>
             " . csrf_field_inline() . "
             <input type='hidden' name='attendance_id' value='$id'>
+            <input type='hidden' name='schedule_id' value='$scheduleId'>
+            <input type='hidden' name='server_id' value='$serverId'>
             <input type='hidden' name='status' value='$status'>
             <input type='hidden' name='date' value='$currentDate'>
             <button type='submit' class='w-8 h-8 rounded-full font-extrabold text-xs transition-all duration-300 $btnClass transform active:scale-95' title='Mark as $status'>

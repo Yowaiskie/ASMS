@@ -14,25 +14,33 @@ class AnnouncementController extends Controller {
     }
 
     public function index() {
-        $announcements = $this->announcementRepo->getAll();
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = 10;
+        $offset = ($page - 1) * $limit;
+
+        $announcements = $this->announcementRepo->getAll($limit, $offset);
+        $totalRecords = $this->announcementRepo->countAll();
+        $totalPages = ceil($totalRecords / $limit);
         
         // Mark as read when ANY user views the list
         if (isset($_SESSION['user_id'])) {
             $this->announcementRepo->markAsRead($_SESSION['user_id']);
         }
 
+        $data = [
+            'pageTitle' => 'Announcements',
+            'title' => 'Announcements | ASMS',
+            'announcements' => $announcements,
+            'pagination' => [
+                'page' => $page,
+                'totalPages' => $totalPages
+            ]
+        ];
+
         if (isset($_SESSION['role']) && $_SESSION['role'] === 'User') {
-            $this->view('announcements/user_index', [
-                'pageTitle' => 'Announcements',
-                'title' => 'Announcements | ASMS',
-                'announcements' => $announcements
-            ]);
+            $this->view('announcements/user_index', $data);
         } else {
-            $this->view('announcements/index', [
-                'pageTitle' => 'Announcements',
-                'title' => 'Announcements | ASMS',
-                'announcements' => $announcements
-            ]);
+            $this->view('announcements/index', $data);
         }
     }
 

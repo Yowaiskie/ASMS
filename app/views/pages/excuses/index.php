@@ -88,6 +88,28 @@
     </table>
 </div>
 
+<!-- Pagination -->
+<?php if (isset($pagination) && $pagination['totalPages'] > 1): ?>
+<div class="mt-6 flex items-center justify-between">
+    <div class="text-xs text-slate-500">
+        Page <span class="font-bold"><?= $pagination['page'] ?></span> of <span class="font-bold"><?= $pagination['totalPages'] ?></span>
+    </div>
+    <div class="flex gap-2">
+        <?php if ($pagination['page'] > 1): ?>
+            <a href="<?= URLROOT ?>/excuses?page=<?= $pagination['page'] - 1 ?>" class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">Previous</a>
+        <?php else: ?>
+            <span class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-400 cursor-not-allowed">Previous</span>
+        <?php endif; ?>
+
+        <?php if ($pagination['page'] < $pagination['totalPages']): ?>
+            <a href="<?= URLROOT ?>/excuses?page=<?= $pagination['page'] + 1 ?>" class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">Next</a>
+        <?php else: ?>
+            <span class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-400 cursor-not-allowed">Next</span>
+        <?php endif; ?>
+    </div>
+</div>
+<?php endif; ?>
+
 <!-- View Excuse Modal -->
 <div id="viewModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-300 flex flex-col max-h-[85vh]" id="modalContent">

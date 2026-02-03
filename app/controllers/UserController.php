@@ -20,11 +20,22 @@ class UserController extends Controller {
     }
 
     public function index() {
-        $users = $this->userRepo->getAll();
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = 10;
+        $offset = ($page - 1) * $limit;
+
+        $users = $this->userRepo->getAll($limit, $offset);
+        $totalRecords = $this->userRepo->countAll();
+        $totalPages = ceil($totalRecords / $limit);
+
         $this->view('users/index', [
             'pageTitle' => 'User Management',
             'title' => 'Users | ASMS',
-            'users' => $users
+            'users' => $users,
+            'pagination' => [
+                'page' => $page,
+                'totalPages' => $totalPages
+            ]
         ]);
     }
 
@@ -41,6 +52,8 @@ class UserController extends Controller {
             $username = trim($_POST['username']);
             $fullName = trim($_POST['full_name']);
             $password = trim($_POST['password']);
+            $email = trim($_POST['email'] ?? '');
+            $phone = trim($_POST['phone'] ?? '');
             $role = $this->normalizeRole($_POST['role'] ?? 'User');
 
             // Check if user exists
@@ -56,10 +69,11 @@ class UserController extends Controller {
             // 1. Create Server Profile
             $serverData = [
                 'name' => $fullName,
+                'email' => $email,
+                'phone' => $phone,
                 'rank' => 'Server',
                 'team' => 'Unassigned',
-                'status' => 'Active',
-                'email' => ''
+                'status' => 'Active'
             ];
             
             if ($serverRepo->create($serverData)) {
