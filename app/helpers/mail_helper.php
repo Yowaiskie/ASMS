@@ -3,8 +3,6 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-require_once APPROOT . '/../vendor/autoload.php';
-
 function sendEmailNotification($to, $subject, $title, $message, $actionText = 'Go to Dashboard', $actionUrl = 'http://localhost/ASMS/public/login') {
     $mail = new PHPMailer(true);
 
