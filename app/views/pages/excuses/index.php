@@ -1,12 +1,46 @@
-<div class="mb-8 animate-fade-in-up">
-    <h2 class="text-2xl font-bold text-slate-800">Manage Excuse Letters</h2>
-    <p class="text-slate-500 text-sm mt-1">Review and action pending excuse requests</p>
+<div class="flex items-end justify-between mb-8 animate-fade-in-up">
+    <div>
+        <h2 class="text-2xl font-bold text-slate-800">Manage Excuse Letters</h2>
+        <p class="text-slate-500 text-sm mt-1">Review and action pending excuse requests</p>
+    </div>
+    
+    <div class="flex gap-2">
+        <button type="button" onclick="toggleSelectionMode()" id="selectModeBtn" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 p-2.5 rounded-xl shadow-sm transition-all" title="Select Multiple">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        </button>
+    </div>
 </div>
 
-<div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden animate-fade-in-up">
+<div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden animate-fade-in-up relative">
+    <!-- Selection Bar -->
+    <div id="selectionBar" class="hidden absolute top-0 left-0 right-0 z-20 bg-blue-600 text-white p-4 flex flex-col gap-2 shadow-md">
+        <div class="flex justify-between items-center w-full">
+            <div class="flex items-center gap-3">
+                <span class="font-bold text-sm" id="selectedCount">0 Selected</span>
+                <div class="h-4 w-px bg-blue-400"></div>
+                <button type="button" id="mainSelectAllBtn" onclick="selectAll(true)" class="text-xs hover:underline">Select All on Page</button>
+                <button type="button" onclick="toggleSelectionMode()" class="text-xs hover:underline">Cancel</button>
+            </div>
+            <button type="button" onclick="submitBulkDelete()" class="bg-red-500 text-white hover:bg-red-600 px-4 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm">
+                Delete Selected
+            </button>
+        </div>
+        <div id="allPagesPrompt" class="hidden bg-blue-700/50 -mx-4 -mb-4 p-2 text-center text-[10px] font-medium border-t border-blue-500">
+            All items on this page are selected. 
+            <button type="button" onclick="toggleAllPages(true)" class="underline font-bold ml-1">Select all <span id="totalCountText">0</span> items in the system</button>
+        </div>
+        <div id="clearSelectionBtn" class="hidden bg-blue-700/50 -mx-4 -mb-4 p-2 text-center text-[10px] font-medium border-t border-blue-500">
+            All <span id="totalSelectedText">0</span> items are selected.
+            <button type="button" onclick="selectAll(false)" class="underline font-bold ml-1">Clear selection</button>
+        </div>
+    </div>
+
     <table class="w-full text-left border-collapse">
         <thead>
             <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+                <th class="p-4 w-12 selection-col hidden"></th>
                 <th class="p-6 font-semibold">Server Name</th>
                 <th class="p-6 font-semibold">Activity & Date</th>
                 <th class="p-6 font-semibold">Reason</th>
@@ -18,7 +52,10 @@
         <tbody class="divide-y divide-slate-100 text-sm">
             <?php if(!empty($excuses)): ?>
                 <?php foreach($excuses as $exc): ?>
-                <tr class="hover:bg-slate-50 transition-colors">
+                <tr class="hover:bg-slate-50 transition-colors group cursor-pointer" onclick="toggleRow(this, event)">
+                    <td class="p-4 selection-col hidden">
+                        <input type="checkbox" name="ids[]" value="<?= $exc->id ?>" class="excuse-checkbox rounded text-blue-600 border-gray-300 w-5 h-5 pointer-events-none">
+                    </td>
                     <td class="p-6 font-bold text-slate-700">
                         <?= h($exc->server_name) ?>
                     </td>
@@ -123,6 +160,13 @@
 </div>
 <?php endif; ?>
 
+<!-- Bulk Delete Hidden Form -->
+<form action="<?= URLROOT ?>/excuses/bulk-delete" method="POST" id="hiddenBulkDeleteForm" class="hidden">
+    <?php csrf_field(); ?>
+    <input type="hidden" name="page" value="<?= $pagination['page'] ?? 1 ?>">
+    <div id="bulkIdInputs"></div>
+</form>
+
 <!-- View Excuse Modal -->
 <div id="viewModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-300 flex flex-col max-h-[85vh]" id="modalContent">
@@ -166,6 +210,115 @@
 <script>
     const modal = document.getElementById('viewModal');
     const content = document.getElementById('modalContent');
+
+    let isSelectionMode = false;
+    let allPagesSelected = false;
+    const totalRecords = <?= $pagination['totalRecords'] ?? 0 ?>;
+
+    function toggleSelectionMode() {
+        isSelectionMode = !isSelectionMode;
+        const btn = document.getElementById('selectModeBtn');
+        const bar = document.getElementById('selectionBar');
+        const cols = document.querySelectorAll('.selection-col');
+        
+        if (isSelectionMode) {
+            btn.classList.add('bg-blue-50', 'text-blue-600', 'border-blue-200', 'ring-2', 'ring-blue-200');
+            bar.classList.remove('hidden');
+            cols.forEach(col => col.classList.remove('hidden'));
+        } else {
+            btn.classList.remove('bg-blue-50', 'text-blue-600', 'border-blue-200', 'ring-2', 'ring-blue-200');
+            bar.classList.add('hidden');
+            cols.forEach(col => col.classList.add('hidden'));
+            selectAll(false);
+        }
+    }
+
+    function toggleRow(tr, event) {
+        if (!isSelectionMode) return;
+        if (event.target.closest('button') || event.target.closest('a') || event.target.closest('form')) return;
+        
+        const cb = tr.querySelector('.excuse-checkbox');
+        cb.checked = !cb.checked;
+        tr.classList.toggle('bg-blue-50', cb.checked);
+        
+        if (allPagesSelected) {
+            allPagesSelected = false; // Deselect "All Pages" if a single row is toggled
+        }
+        updateSelectedCount();
+    }
+
+    function selectAll(check) {
+        allPagesSelected = false; 
+        document.querySelectorAll('.excuse-checkbox').forEach(cb => {
+            cb.checked = check;
+            cb.closest('tr').classList.toggle('bg-blue-50', check);
+        });
+        updateSelectedCount();
+    }
+
+    function toggleAllPages(value) {
+        allPagesSelected = value;
+        updateSelectedCount();
+    }
+
+    function updateSelectedCount() {
+        const checkboxes = document.querySelectorAll('.excuse-checkbox:checked');
+        const count = checkboxes.length;
+        const countDisplay = document.getElementById('selectedCount');
+        const prompt = document.getElementById('allPagesPrompt');
+        const clearBtn = document.getElementById('clearSelectionBtn');
+        
+        if (allPagesSelected) {
+            countDisplay.innerText = `All ${totalRecords} items selected`;
+            prompt.classList.add('hidden');
+            clearBtn.classList.remove('hidden');
+            document.getElementById('totalSelectedText').innerText = totalRecords;
+        } else {
+            countDisplay.innerText = `${count} Selected`;
+            clearBtn.classList.add('hidden');
+            
+            const totalOnPage = document.querySelectorAll('.excuse-checkbox').length;
+            if (count === totalOnPage && totalRecords > totalOnPage) {
+                prompt.classList.remove('hidden');
+                document.getElementById('totalCountText').innerText = totalRecords;
+            } else {
+                prompt.classList.add('hidden');
+            }
+        }
+    }
+
+    function submitBulkDelete() {
+        const checkboxes = document.querySelectorAll('.excuse-checkbox:checked');
+        if (checkboxes.length === 0 && !allPagesSelected) {
+            alert('No letters selected.');
+            return;
+        }
+
+        const count = allPagesSelected ? totalRecords : checkboxes.length;
+        if (confirm(`Are you sure you want to delete ${count} selected excuse letters?`)) {
+            const form = document.getElementById('hiddenBulkDeleteForm');
+            const container = document.getElementById('bulkIdInputs');
+            container.innerHTML = ''; 
+            
+            if (allPagesSelected) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'all_selected';
+                input.value = '1';
+                container.appendChild(input);
+            } else {
+                checkboxes.forEach(cb => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'ids[]';
+                    input.value = cb.value;
+                    container.appendChild(input);
+                });
+            }
+
+            form.submit();
+        }
+    }
 
     function viewExcuse(data) {
         document.getElementById('modalName').innerText = data.server_name;

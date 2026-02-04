@@ -184,6 +184,54 @@
                     <div><label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">Date</label><input type="date" name="mass_date" id="mass_date" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"></div>
                     <div><label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">Time</label><input type="time" name="mass_time" id="mass_time" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"></div>
                 </div>
+
+                <!-- Recurring Options -->
+                <div id="recurringSection" class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                    <div class="flex items-center justify-between mb-3">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="is_recurring" id="is_recurring" class="rounded text-blue-600 border-gray-300 w-4 h-4 focus:ring-blue-500" onchange="toggleRecurringOptions()">
+                            <span class="text-xs font-bold text-slate-700">Recurring Schedule</span>
+                        </label>
+                    </div>
+
+                    <div id="recurringOptions" class="hidden space-y-3 pt-2 border-t border-slate-200">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Frequency</label>
+                                <select name="frequency" id="frequency" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="toggleFrequencyOptions()">
+                                    <option value="daily">Daily</option>
+                                    <option value="weekly">Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Repeat Every</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="number" name="interval" id="interval" value="1" min="1" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <span id="intervalUnit" class="text-[10px] font-bold text-slate-400">days</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="weeklyOptions" class="hidden">
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">On these days</label>
+                            <div class="flex flex-wrap gap-2">
+                                <?php $days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']; 
+                                foreach($days as $i => $d): ?>
+                                    <label class="cursor-pointer">
+                                        <input type="checkbox" name="recurring_days[]" value="<?= $i ?>" class="peer hidden">
+                                        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-white border border-slate-200 text-[10px] font-bold text-slate-500 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 transition-all uppercase tracking-tighter"><?= $d ?></span>
+                                    </label>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">End Recurrence</label>
+                            <input type="date" name="end_date" id="end_date" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                </div>
                 
                 <div>
                     <label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">Color Label</label>
@@ -270,25 +318,51 @@
         
         for(let day = 1; day <= daysInMonth; day++) {
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const today = new Date();
+            const isToday = dateStr === `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            
             const cell = document.createElement('div');
-            cell.className = "min-h-[100px] border border-slate-100 rounded-2xl p-2 transition-all hover:border-blue-300 hover:shadow-md cursor-pointer flex flex-col gap-1 relative group bg-slate-50/30";
+            cell.className = `min-h-[100px] border ${isToday ? 'border-blue-500 ring-2 ring-blue-100 bg-white' : 'border-slate-100 bg-slate-50/30'} rounded-2xl p-2 transition-all hover:border-blue-300 hover:shadow-md cursor-pointer flex flex-col gap-1 relative group`;
             
             // Add schedule
             cell.onclick = (e) => { 
-                if(!isSelectionMode && (e.target === cell || e.target.classList.contains('day-num'))) openModal('add', dateStr); 
+                if(!isSelectionMode && (e.target === cell || e.target.classList.contains('day-num') || e.target.classList.contains('today-label'))) openModal('add', dateStr); 
             };
             
+            const headerDiv = document.createElement('div');
+            headerDiv.className = "flex justify-between items-start mb-1";
+
             const dayNum = document.createElement('span');
-            dayNum.className = "text-sm font-bold text-slate-400 mb-1 day-num"; dayNum.innerText = day;
-            cell.appendChild(dayNum);
+            dayNum.className = `text-sm font-bold ${isToday ? 'text-blue-600' : 'text-slate-400'} day-num`; dayNum.innerText = day;
+            headerDiv.appendChild(dayNum);
+
+            if (isToday) {
+                const todayLabel = document.createElement('span');
+                todayLabel.className = "text-[9px] font-extrabold uppercase tracking-tighter text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded today-label";
+                todayLabel.innerText = "Today";
+                headerDiv.appendChild(todayLabel);
+            }
+
+            cell.appendChild(headerDiv);
             
             const dayEvents = schedules.filter(s => s.mass_date === dateStr);
             dayEvents.forEach(evt => {
                 const eventEl = document.createElement('div');
+                
+                // Check if past
+                const eventDateTime = new Date(`${evt.mass_date} ${evt.mass_time}`);
+                const isPast = eventDateTime < new Date();
+
                 let colorClass = 'bg-green-100 text-green-700 hover:bg-green-200';
-                if (evt.color) colorClass = `bg-${evt.color}-100 text-${evt.color}-700 hover:bg-${evt.color}-200`;
-                else if (evt.mass_type === 'Funeral') colorClass = 'bg-purple-100 text-purple-700 hover:bg-purple-200';
-                else if (evt.mass_type === 'Wedding') colorClass = 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200';
+                if (isPast) {
+                    colorClass = 'bg-slate-100 text-slate-400 hover:bg-slate-200 grayscale-[0.5] opacity-60';
+                } else if (evt.color) {
+                    colorClass = `bg-${evt.color}-100 text-${evt.color}-700 hover:bg-${evt.color}-200`;
+                } else if (evt.mass_type === 'Funeral') {
+                    colorClass = 'bg-purple-100 text-purple-700 hover:bg-purple-200';
+                } else if (evt.mass_type === 'Wedding') {
+                    colorClass = 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200';
+                }
                 
                 // Selection Style
                 const isSelected = selectedIds.includes(evt.id.toString());
@@ -308,7 +382,7 @@
                 if (isSelectionMode && isSelected) {
                     eventEl.className += ' ring-2 ring-blue-500 ring-offset-1 bg-white text-blue-600 relative';
                     eventEl.innerHTML += ' <span class="absolute right-1 top-1 text-blue-600">✓</span>';
-                } else if (currentServerId && evt.assigned_servers && evt.assigned_servers.includes(currentServerId)) {
+                } else if (currentServerId && evt.assigned_ids && evt.assigned_ids.includes(parseInt(currentServerId))) {
                     // Admin Assigned: Highlight and add star
                     eventEl.className += ' ring-2 ring-blue-600 ring-offset-1 z-10 shadow-sm';
                     eventEl.innerHTML = `<span class="flex items-center gap-1"><span>⭐</span> ${eventEl.innerText}</span>`;
@@ -416,11 +490,42 @@
         });
     }
 
+    function toggleRecurringOptions() {
+        const isRecurring = document.getElementById('is_recurring').checked;
+        const options = document.getElementById('recurringOptions');
+        if (isRecurring) {
+            options.classList.remove('hidden');
+            toggleFrequencyOptions();
+        } else {
+            options.classList.add('hidden');
+        }
+    }
+
+    function toggleFrequencyOptions() {
+        const freq = document.getElementById('frequency').value;
+        const weekly = document.getElementById('weeklyOptions');
+        const unit = document.getElementById('intervalUnit');
+        
+        if (freq === 'weekly') {
+            weekly.classList.remove('hidden');
+            unit.innerText = 'weeks';
+        } else {
+            weekly.classList.add('hidden');
+            unit.innerText = freq === 'daily' ? 'days' : 'months';
+        }
+    }
+
     function openModal(mode, date = null, event = null) {
         modal.classList.remove('hidden'); setTimeout(() => { modal.classList.remove('opacity-0'); modalContent.classList.remove('scale-95'); }, 10);
         document.querySelectorAll('.server-checkbox').forEach(cb => cb.checked = false);
         document.querySelectorAll('.color-radio').forEach(r => r.checked = false);
         
+        // Reset Recurring
+        document.getElementById('is_recurring').checked = false;
+        document.getElementById('recurringOptions').classList.add('hidden');
+        document.getElementById('recurringSection').classList.remove('hidden');
+        document.querySelectorAll('input[name="recurring_days[]"]').forEach(cb => cb.checked = false);
+
         const joinBtn = document.getElementById('joinBtnContainer');
         joinBtn.classList.add('hidden');
 
@@ -430,6 +535,9 @@
             if(date) document.getElementById('mass_date').value = date;
         } else {
             document.getElementById('modalTitle').innerText = 'Edit Schedule'; document.getElementById('scheduleId').value = event.id;
+            
+            // Hide recurring for edit mode for now to keep it simple (editing series is complex)
+            document.getElementById('recurringSection').classList.add('hidden');
             document.getElementById('mass_type').value = event.mass_type; document.getElementById('event_name').value = event.event_name || '';
             document.getElementById('mass_date').value = event.mass_date; document.getElementById('mass_time').value = event.mass_time;
             document.getElementById('status').value = event.status;
@@ -438,8 +546,12 @@
             document.getElementById('deleteBtnContainer').classList.remove('hidden');
             document.getElementById('deleteLink').href = `<?= URLROOT ?>/schedules/delete?id=${event.id}`;
 
-            // Self-Assign Logic for Admin
-            if (currentServerId && event.assigned_servers && !event.assigned_servers.includes(currentServerId)) {
+            // Check if past
+            const eventDateTime = new Date(`${event.mass_date} ${event.mass_time}`);
+            const isPast = eventDateTime < new Date();
+
+            // Self-Assign Logic for Admin (Only if not past)
+            if (!isPast && currentServerId && event.assigned_ids && !event.assigned_ids.includes(parseInt(currentServerId))) {
                 joinBtn.classList.remove('hidden');
                 document.getElementById('selfAssignId').value = event.id;
             }

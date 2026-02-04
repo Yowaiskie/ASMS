@@ -25,7 +25,14 @@ class UserRepository implements RepositoryInterface {
     }
 
     public function getAll($limit = 1000, $offset = 0) {
-        $this->db->query("SELECT * FROM users WHERE role != 'Superadmin' ORDER BY created_at DESC LIMIT :limit OFFSET :offset");
+        $this->db->query("
+            SELECT u.*, s.first_name, s.middle_name, s.last_name 
+            FROM users u 
+            LEFT JOIN servers s ON u.server_id = s.id 
+            WHERE u.role != 'Superadmin' 
+            ORDER BY s.last_name ASC, s.first_name ASC 
+            LIMIT :limit OFFSET :offset
+        ");
         $this->db->bind(':limit', $limit);
         $this->db->bind(':offset', $offset);
         return $this->db->resultSet();
@@ -33,7 +40,8 @@ class UserRepository implements RepositoryInterface {
 
     public function countAll() {
         $this->db->query("SELECT COUNT(*) as count FROM users WHERE role != 'Superadmin'");
-        return $this->db->single()->count;
+        $row = $this->db->single();
+        return $row ? (int)$row->count : 0;
     }
 
     public function getById($id) {

@@ -35,7 +35,7 @@ class ExcuseController extends Controller {
 
             $excuses = $this->excuseRepo->getAll($limit, $offset);
             $totalRecords = $this->excuseRepo->countAll();
-            $totalPages = ceil($totalRecords / $limit);
+            $totalPages = $totalRecords > 0 ? (int)ceil($totalRecords / $limit) : 0;
 
             $this->view('excuses/index', [
                 'pageTitle' => 'Manage Excuse Letters',
@@ -43,7 +43,8 @@ class ExcuseController extends Controller {
                 'excuses' => $excuses,
                 'pagination' => [
                     'page' => $page,
-                    'totalPages' => $totalPages
+                    'totalPages' => $totalPages,
+                    'totalRecords' => $totalRecords
                 ]
             ]);
         }
@@ -83,6 +84,36 @@ class ExcuseController extends Controller {
                 logAction('Update', 'Excuses', "Updated excuse status for $logName to $status");
             } else {
                 setFlash('msg_error', "Failed to update status.");
+            }
+            redirect('excuses?page=' . $page);
+        }
+    }
+
+    public function bulkDelete() {
+        $this->verifyCsrf();
+        $page = $_POST['page'] ?? 1;
+        $allSelected = isset($_POST['all_selected']) && $_POST['all_selected'] == '1';
+
+        if ($_SERVER['REQUEST_METHOD'] == 'POST' && ($_SESSION['role'] ?? '') !== 'User') {
+            if ($allSelected) {
+                if ($this->excuseRepo->deleteAll()) {
+                    logAction('Delete', 'Excuses', "Bulk deleted ALL excuse letters.");
+                    setFlash('msg_success', "Deleted all excuse letters successfully.");
+                } else {
+                    setFlash('msg_error', "Failed to delete all letters.");
+                }
+            } elseif (!empty($_POST['ids'])) {
+                $ids = $_POST['ids'];
+                $count = 0;
+                foreach ($ids as $id) {
+                    if ($this->excuseRepo->delete($id)) {
+                        $count++;
+                    }
+                }
+                logAction('Delete', 'Excuses', "Bulk deleted $count excuse letters.");
+                setFlash('msg_success', "Deleted $count excuse letters successfully.");
+            } else {
+                setFlash('msg_error', "No items selected.");
             }
             redirect('excuses?page=' . $page);
         }

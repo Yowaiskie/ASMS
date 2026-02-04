@@ -14,7 +14,7 @@ class ServerRepository implements RepositoryInterface {
     }
 
     public function getAll($limit = 1000, $offset = 0) {
-        $this->db->query("SELECT *, CONCAT_WS(' ', first_name, middle_name, last_name) as name FROM servers ORDER BY first_name ASC LIMIT :limit OFFSET :offset");
+        $this->db->query("SELECT *, CONCAT_WS(' ', first_name, middle_name, last_name) as name FROM servers ORDER BY last_name ASC, first_name ASC LIMIT :limit OFFSET :offset");
         $this->db->bind(':limit', $limit);
         $this->db->bind(':offset', $offset);
         return $this->db->resultSet();

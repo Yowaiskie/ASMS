@@ -18,7 +18,7 @@ define('URLROOT', '/ASMS/public');
 define('SITENAME', 'ASMS');
 
 // SMTP Config
-define('SMTP_HOST', $_ENV['SMTP_HOST'] ?? '');
+define('SMTP_HOST', $_ENV['SMTP_HOST'] ?? 'smtp.gmail.com');
 define('SMTP_PORT', $_ENV['SMTP_PORT'] ?? 587);
 define('SMTP_USER', $_ENV['SMTP_USER'] ?? '');
 define('SMTP_PASS', $_ENV['SMTP_PASS'] ?? '');

@@ -12,13 +12,15 @@ use App\Repositories\ScheduleRepository; // Add this import
 class AttendanceController extends Controller {
     private $attendanceRepo;
     private $serverRepo;
-    private $scheduleRepo; // Add property
+    private $scheduleRepo;
+    private $db;
 
     public function __construct() {
         $this->requireLogin();
         $this->attendanceRepo = new AttendanceRepository();
         $this->serverRepo = new ServerRepository();
-        $this->scheduleRepo = new ScheduleRepository(); // Initialize
+        $this->scheduleRepo = new ScheduleRepository();
+        $this->db = Database::getInstance();
     }
 
     public function index() {
@@ -148,9 +150,7 @@ class AttendanceController extends Controller {
             }
 
             if ($this->attendanceRepo->updateStatus($id, $status)) {
-                // ... (keep logic) ...
                 // Email Notification and Suspension Logic
-                $db = Database::getInstance();
                 $this->db->query("
                     SELECT s.id as server_id, s.email, CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) as name, sch.mass_type, sch.mass_date 
                     FROM attendance a 
@@ -158,8 +158,8 @@ class AttendanceController extends Controller {
                     JOIN schedules sch ON a.schedule_id = sch.id 
                     WHERE a.id = :id
                 ");
-                $db->bind(':id', $id);
-                $info = $db->single();
+                $this->db->bind(':id', $id);
+                $info = $this->db->single();
 
                 if ($info && $info->email) {
                     // ... (keep email logic) ...
@@ -179,10 +179,9 @@ class AttendanceController extends Controller {
                     );
 
                     // --- START SUSPENSION LOGIC ---
-                    // ... (keep suspension logic) ...
                     if ($status === 'Absent' && stripos($info->mass_type, 'Meeting') === false) {
                         // Count absences for this month (excluding meetings)
-                        $db->query("
+                        $this->db->query("
                             SELECT COUNT(*) as count 
                             FROM attendance a
                             JOIN schedules sch ON a.schedule_id = sch.id
@@ -192,8 +191,8 @@ class AttendanceController extends Controller {
                             AND YEAR(sch.mass_date) = YEAR(CURRENT_DATE())
                             AND sch.mass_type NOT LIKE '%Meeting%'
                         ");
-                        $db->bind(':sid', $info->server_id);
-                        $absenceCount = $db->single()->count;
+                        $this->db->bind(':sid', $info->server_id);
+                        $absenceCount = $this->db->single()->count;
 
                         if ($absenceCount == 2) {
                             // WARNING

@@ -26,7 +26,7 @@ class UserController extends Controller {
 
         $users = $this->userRepo->getAll($limit, $offset);
         $totalRecords = $this->userRepo->countAll();
-        $totalPages = ceil($totalRecords / $limit);
+        $totalPages = $totalRecords > 0 ? (int)ceil($totalRecords / $limit) : 0;
 
         $this->view('users/index', [
             'pageTitle' => 'User Management',
@@ -51,7 +51,9 @@ class UserController extends Controller {
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $username = trim($_POST['username']);
-            $fullName = trim($_POST['full_name']);
+            $firstName = trim($_POST['first_name']);
+            $middleName = trim($_POST['middle_name'] ?? '');
+            $lastName = trim($_POST['last_name']);
             $password = trim($_POST['password']);
             $email = trim($_POST['email'] ?? '');
             $phone = trim($_POST['phone'] ?? '');
@@ -69,12 +71,15 @@ class UserController extends Controller {
 
             // 1. Create Server Profile
             $serverData = [
-                'name' => $fullName,
+                'first_name' => $firstName,
+                'middle_name' => $middleName,
+                'last_name' => $lastName,
                 'email' => $email,
                 'phone' => $phone,
                 'rank' => 'Server',
                 'team' => 'Unassigned',
-                'status' => 'Active'
+                'status' => 'Active',
+                'month_joined' => date('Y-m') // Set default join date
             ];
             
             if ($serverRepo->create($serverData)) {
@@ -107,19 +112,39 @@ class UserController extends Controller {
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $id = $_POST['id'];
+            $firstName = trim($_POST['first_name']);
+            $middleName = trim($_POST['middle_name'] ?? '');
+            $lastName = trim($_POST['last_name']);
             $role = $this->normalizeRole($_POST['role']);
             $password = $_POST['password'] ?? '';
 
             $user = $this->userRepo->getById($id);
-            $username = $user ? $user->username : "ID: $id";
+            if (!$user) {
+                setFlash('msg_error', 'User not found.');
+                redirect('users?page=' . $page);
+                return;
+            }
 
+            $db = \App\Core\Database::getInstance();
+            
+            // 1. Update Server Info
+            if ($user->server_id) {
+                $db->query("UPDATE servers SET first_name = :fname, middle_name = :mname, last_name = :lname WHERE id = :sid");
+                $db->bind(':fname', $firstName);
+                $db->bind(':mname', $middleName);
+                $db->bind(':lname', $lastName);
+                $db->bind(':sid', $user->server_id);
+                $db->execute();
+            }
+
+            // 2. Update User Account
             $data = ['role' => $role];
             if (!empty($password)) {
                 $data['password'] = password_hash($password, PASSWORD_DEFAULT);
             }
 
             if ($this->userRepo->update($id, $data)) {
-                logAction('Update', 'Users', "Updated user account: $username");
+                logAction('Update', 'Users', "Updated user account: " . $user->username);
                 setFlash('msg_success', 'User updated successfully.');
             } else {
                 setFlash('msg_error', 'Failed to update user.');
@@ -200,12 +225,20 @@ class UserController extends Controller {
                     }
 
                     // 1. Create Server Profile
+                    $parts = explode(' ', $fullName);
+                    $lastName = (count($parts) > 1) ? array_pop($parts) : 'Server';
+                    $firstName = (count($parts) >= 1) ? array_shift($parts) : $fullName;
+                    $middleName = implode(' ', $parts);
+
                     $serverData = [
-                        'name' => $fullName,
+                        'first_name' => $firstName,
+                        'middle_name' => $middleName,
+                        'last_name' => $lastName,
                         'rank' => 'Server',
                         'team' => 'Unassigned',
                         'status' => 'Active',
-                        'email' => ''
+                        'email' => '',
+                        'month_joined' => date('Y-m')
                     ];
                     
                     if ($serverRepo->create($serverData)) {

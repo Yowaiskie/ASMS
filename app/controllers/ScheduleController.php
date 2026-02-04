@@ -46,7 +46,9 @@ class ScheduleController extends Controller {
 
             // Attach assignments to schedules
             foreach ($schedules as $s) {
-                $s->assigned_servers = $this->scheduleRepo->getAssignments($s->id);
+                $assignments = $this->scheduleRepo->getAssignments($s->id);
+                $s->assigned_servers = $assignments;
+                $s->assigned_ids = array_map(function($a) { return (int)$a->id; }, $assignments);
             }
 
             // Get Current Admin's Server ID
@@ -71,6 +73,8 @@ class ScheduleController extends Controller {
         $id = $_GET['id'] ?? null;
         if ($id) {
             $servers = $this->scheduleRepo->getFullAssignments($id);
+            if (ob_get_length()) ob_clean();
+            header('Content-Type: application/json');
             echo json_encode($servers);
         }
         exit;
@@ -113,8 +117,25 @@ class ScheduleController extends Controller {
             }
 
             $scheduleId = $_POST['schedule_id'];
+            $schedule = $this->scheduleRepo->getById($scheduleId);
+
+            if (!$schedule) {
+                setFlash('msg_error', 'Schedule not found.');
+                redirect('schedules');
+                return;
+            }
+
+            // Check if schedule is in the past
+            $scheduleDateTime = new \DateTime($schedule->mass_date . ' ' . $schedule->mass_time);
+            $now = new \DateTime();
+
+            if ($scheduleDateTime < $now) {
+                setFlash('msg_error', 'This schedule has already passed and cannot be joined.', 'bg-red-100 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm font-bold');
+                redirect('schedules');
+                return;
+            }
+
             if ($this->scheduleRepo->selfAssign($_SESSION['user_id'], $scheduleId)) {
-                $schedule = $this->scheduleRepo->getById($scheduleId);
                 
                 // Ensure full_name is available
                 if (empty($_SESSION['full_name'])) {
@@ -134,7 +155,7 @@ class ScheduleController extends Controller {
 
                 // Trigger Email to User
                 $this->db = \App\Core\Database::getInstance();
-                $this->db->query("SELECT email, name FROM servers WHERE id = (SELECT server_id FROM users WHERE id = :uid)");
+                $this->db->query("SELECT email, CONCAT_WS(' ', first_name, middle_name, last_name) as name FROM servers WHERE id = (SELECT server_id FROM users WHERE id = :uid)");
                 $this->db->bind(':uid', $_SESSION['user_id']);
                 $srv = $this->db->single();
                 
@@ -182,59 +203,116 @@ class ScheduleController extends Controller {
             ];
             
             $assignedServers = $_POST['assigned_servers'] ?? [];
+            $isRecurring = isset($_POST['is_recurring']);
 
             if (!empty($id)) {
-                // Update
+                // Update (Single)
                 if ($this->scheduleRepo->update($id, $data)) {
                     $this->scheduleRepo->syncAssignments($id, $assignedServers);
                     
                     // Email newly assigned servers
-                    if (!empty($assignedServers)) {
-                        $this->db = \App\Core\Database::getInstance();
-                        foreach ($assignedServers as $svid) {
-                            $this->db->query("SELECT email, name FROM servers WHERE id = :sid");
-                            $this->db->bind(':sid', $svid);
-                            $srv = $this->db->single();
-                            if ($srv && $srv->email) {
-                                sendEmailNotification(
-                                    $srv->email,
-                                    'New Schedule Assignment',
-                                    'You Have a New Assignment!',
-                                    "Hi {$srv->name}, you have been assigned to the schedule: <b>{$data['mass_type']}</b> on <b>" . date('M d, Y', strtotime($data['mass_date'])) . "</b> at <b>" . date('h:i A', strtotime($data['mass_time'])) . "</b>."
-                                );
-                            }
-                        }
-                    }
+                    $this->notifyAssignedServers($id, $data, $assignedServers);
 
                     logAction('Update', 'Schedules', "Updated schedule ID: $id (" . $data['mass_type'] . ")");
                     setFlash('msg_success', 'Schedule updated successfully!');
                 } else {
                     setFlash('msg_error', 'Failed to update schedule.');
                 }
+            } elseif ($isRecurring) {
+                // Create Recurring
+                $frequency = $_POST['frequency'] ?? 'daily';
+                $interval = (int)($_POST['interval'] ?? 1);
+                $endDate = $_POST['end_date'] ?? '';
+                $recurringDays = $_POST['recurring_days'] ?? []; // Indices 0-6
+
+                if (empty($endDate)) {
+                    setFlash('msg_error', 'End date is required for recurring schedules.');
+                    redirect('schedules');
+                    return;
+                }
+
+                $this->db->beginTransaction();
+                try {
+                    $startDate = new \DateTime($data['mass_date']);
+                    $end = new \DateTime($endDate);
+                    $current = clone $startDate;
+                    $count = 0;
+
+                    while ($current <= $end) {
+                        $shouldCreate = false;
+                        
+                        if ($frequency === 'daily') {
+                            $shouldCreate = true;
+                        } elseif ($frequency === 'weekly') {
+                            if (empty($recurringDays)) {
+                                $shouldCreate = true; // If no days selected, just repeat the start day
+                            } else {
+                                if (in_array($current->format('w'), $recurringDays)) {
+                                    $shouldCreate = true;
+                                }
+                            }
+                        } elseif ($frequency === 'monthly') {
+                            $shouldCreate = true;
+                        }
+
+                        if ($shouldCreate) {
+                            $data['mass_date'] = $current->format('Y-m-d');
+                            if ($this->scheduleRepo->create($data)) {
+                                $newId = $this->db->lastInsertId();
+                                if ($newId) {
+                                    $this->scheduleRepo->syncAssignments($newId, $assignedServers);
+                                    $this->notifyAssignedServers($newId, $data, $assignedServers);
+                                }
+                                $count++;
+                            }
+                        }
+
+                        // Increment based on frequency
+                        if ($frequency === 'daily') {
+                            $current->modify("+$interval day");
+                        } elseif ($frequency === 'weekly') {
+                            // If we are checking specific days, we go day by day, 
+                            // but if we hit the end of the week, we jump by interval weeks
+                            if (empty($recurringDays)) {
+                                $current->modify("+$interval week");
+                            } else {
+                                $current->modify("+1 day");
+                                if ($current->format('w') == $startDate->format('w')) {
+                                    if ($interval > 1) {
+                                        $skip = $interval - 1;
+                                        $current->modify("+$skip week");
+                                    }
+                                }
+                            }
+                        } elseif ($frequency === 'monthly') {
+                            $current->modify("+$interval month");
+                        }
+                    }
+
+                    $this->db->commit();
+                    
+                    // Trigger Announcement
+                    $this->announcementRepo->create([
+                        'title' => 'Recurring Schedules Added',
+                        'category' => 'Mass Schedule',
+                        'message' => $count . ' new schedules for ' . $data['mass_type'] . ' have been generated until ' . date('M d, Y', strtotime($endDate)) . '.',
+                        'author' => $_SESSION['full_name'] ?? 'Admin'
+                    ]);
+
+                    logAction('Create', 'Schedules', "Created $count recurring schedules for " . $data['mass_type']);
+                    setFlash('msg_success', "Successfully created $count recurring schedules!");
+                } catch (\Exception $e) {
+                    $this->db->rollBack();
+                    setFlash('msg_error', 'Error creating recurring schedules: ' . $e->getMessage());
+                }
             } else {
-                // Create
+                // Create (Single)
                 if ($this->scheduleRepo->create($data)) {
-                    $db = \App\Core\Database::getInstance();
-                    $newId = $db->lastInsertId();
+                    $newId = $this->db->lastInsertId();
                     
                     if ($newId) {
                         $this->scheduleRepo->syncAssignments($newId, $assignedServers);
-                        
-                        // Email assigned
-                        $this->db = \App\Core\Database::getInstance();
-                        foreach ($assignedServers as $svid) {
-                            $this->db->query("SELECT email, name FROM servers WHERE id = :sid");
-                            $this->db->bind(':sid', $svid);
-                            $srv = $this->db->single();
-                            if ($srv && $srv->email) {
-                                sendEmailNotification(
-                                    $srv->email,
-                                    'New Schedule Assignment',
-                                    'You Have a New Assignment!',
-                                    "Hi {$srv->name}, you have been assigned to the new schedule: <b>{$data['mass_type']}</b> on <b>" . date('M d, Y', strtotime($data['mass_date'])) . "</b> at <b>" . date('h:i A', strtotime($data['mass_time'])) . "</b>."
-                                );
-                            }
-                        }
+                        $this->notifyAssignedServers($newId, $data, $assignedServers);
                     }
                     
                     // Trigger Announcement
@@ -252,6 +330,24 @@ class ScheduleController extends Controller {
                 }
             }
             redirect('schedules');
+        }
+    }
+
+    private function notifyAssignedServers($scheduleId, $data, $assignedServers) {
+        if (empty($assignedServers)) return;
+        
+        foreach ($assignedServers as $svid) {
+            $this->db->query("SELECT email, CONCAT_WS(' ', first_name, middle_name, last_name) as name FROM servers WHERE id = :sid");
+            $this->db->bind(':sid', $svid);
+            $srv = $this->db->single();
+            if ($srv && $srv->email) {
+                sendEmailNotification(
+                    $srv->email,
+                    'Schedule Assignment',
+                    'You Have a New Assignment!',
+                    "Hi {$srv->name}, you have been assigned to: <b>{$data['mass_type']}</b> on <b>" . date('M d, Y', strtotime($data['mass_date'])) . "</b> at <b>" . date('h:i A', strtotime($data['mass_time'])) . "</b>."
+                );
+            }
         }
     }
 

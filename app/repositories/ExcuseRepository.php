@@ -16,7 +16,7 @@ class ExcuseRepository implements RepositoryInterface {
         // Admin use mainly
         $this->db->query("SELECT e.*, CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) as server_name 
                           FROM excuses e 
-                          JOIN servers s ON e.server_id = s.id 
+                          LEFT JOIN servers s ON e.server_id = s.id 
                           ORDER BY e.created_at DESC 
                           LIMIT :limit OFFSET :offset");
         $this->db->bind(':limit', $limit);
@@ -25,8 +25,9 @@ class ExcuseRepository implements RepositoryInterface {
     }
 
     public function countAll() {
-        $this->db->query("SELECT COUNT(*) as count FROM excuses");
-        return $this->db->single()->count;
+        $this->db->query("SELECT COUNT(*) as count FROM excuses e LEFT JOIN servers s ON e.server_id = s.id");
+        $row = $this->db->single();
+        return $row ? (int)$row->count : 0;
     }
 
     public function getById($id) {
@@ -86,6 +87,11 @@ class ExcuseRepository implements RepositoryInterface {
     public function markAsSeen($userId) {
         $this->db->query("UPDATE users SET last_viewed_excuses = NOW() WHERE id = :id");
         $this->db->bind(':id', $userId);
+        return $this->db->execute();
+    }
+
+    public function deleteAll() {
+        $this->db->query("DELETE FROM excuses");
         return $this->db->execute();
     }
 }
