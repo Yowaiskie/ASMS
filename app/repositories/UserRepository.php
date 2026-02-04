@@ -103,24 +103,31 @@ class UserRepository implements RepositoryInterface {
     }
 
     public function create(array $data) {
-        $this->db->query("INSERT INTO users (username, password, role, server_id) VALUES (:username, :password, :role, :server_id)");
+        $this->db->query("INSERT INTO users (username, password, role, server_id, force_password_reset) VALUES (:username, :password, :role, :server_id, :force_reset)");
         $this->db->bind(':username', $data['username']);
         $this->db->bind(':password', $data['password']); // Already hashed
         $this->db->bind(':role', $data['role']);
         $this->db->bind(':server_id', $data['server_id'] ?? null);
+        $this->db->bind(':force_reset', $data['force_password_reset'] ?? 0);
         return $this->db->execute();
     }
 
     public function update($id, array $data) {
-        if (isset($data['password'])) {
-            $this->db->query("UPDATE users SET password = :password, role = :role WHERE id = :id");
-            $this->db->bind(':password', $data['password']);
-        } else {
-            $this->db->query("UPDATE users SET role = :role WHERE id = :id");
-        }
-        
-        $this->db->bind(':role', $data['role']);
+        $fields = [];
+        if (isset($data['password'])) $fields[] = "password = :password";
+        if (isset($data['role'])) $fields[] = "role = :role";
+        if (isset($data['force_password_reset'])) $fields[] = "force_password_reset = :force_reset";
+
+        if (empty($fields)) return false;
+
+        $sql = "UPDATE users SET " . implode(', ', $fields) . " WHERE id = :id";
+        $this->db->query($sql);
+
+        if (isset($data['password'])) $this->db->bind(':password', $data['password']);
+        if (isset($data['role'])) $this->db->bind(':role', $data['role']);
+        if (isset($data['force_password_reset'])) $this->db->bind(':force_reset', $data['force_password_reset']);
         $this->db->bind(':id', $id);
+
         return $this->db->execute();
     }
 

@@ -93,6 +93,7 @@ try {
         password VARCHAR(255) NOT NULL,
         role VARCHAR(20) NOT NULL, -- User, Admin, Superadmin
         is_verified TINYINT(1) DEFAULT 0,
+        force_password_reset TINYINT(1) DEFAULT 1,
         last_read_announcements TIMESTAMP NULL,
         server_id INT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -103,16 +104,16 @@ try {
     // Seed Users
     $check = $pdo->query("SELECT count(*) FROM users")->fetchColumn();
     if ($check == 0) {
-        $password = password_hash('123', PASSWORD_DEFAULT); // Hash the password '123'
+        $password = password_hash(DEFAULT_USER_PASSWORD, PASSWORD_DEFAULT); // Use default password
         
-        $stmt = $pdo->prepare("INSERT INTO users (username, password, role) VALUES (?, ?, ?)");
+        $stmt = $pdo->prepare("INSERT INTO users (username, password, role, force_password_reset) VALUES (?, ?, ?, 1)");
         
         // Create the requested accounts
         $stmt->execute(['user', $password, 'User']);
         $stmt->execute(['admin', $password, 'Admin']);
         $stmt->execute(['superadmin', $password, 'Superadmin']);
         
-        echo "Sample accounts inserted (Pass: 123).<br>";
+        echo "Sample accounts inserted (Pass: " . DEFAULT_USER_PASSWORD . ").<br>";
     }
 
     // --- Table: announcements ---

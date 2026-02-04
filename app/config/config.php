@@ -13,6 +13,8 @@ define('DB_USER', $_ENV['DB_USER'] ?? 'root');
 define('DB_PASS', $_ENV['DB_PASS'] ?? '');
 define('DB_NAME', $_ENV['DB_NAME'] ?? 'asms_db');
 
+define('DEFAULT_USER_PASSWORD', $_ENV['DEFAULT_USER_PASSWORD'] ?? '12345');
+
 define('APPROOT', dirname(dirname(__FILE__)));
 define('URLROOT', '/ASMS/public');
 define('SITENAME', 'ASMS');

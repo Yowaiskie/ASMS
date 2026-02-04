@@ -91,7 +91,7 @@ class ServerController extends Controller {
 
                     $userData = [
                         'username' => $username,
-                        'password' => password_hash('12345', PASSWORD_DEFAULT),
+                        'password' => password_hash(DEFAULT_USER_PASSWORD, PASSWORD_DEFAULT),
                         'role' => 'User',
                         'server_id' => $serverId
                     ];
@@ -363,7 +363,7 @@ class ServerController extends Controller {
 
                         $userData = [
                             'username' => $username,
-                            'password' => password_hash('12345', PASSWORD_DEFAULT),
+                            'password' => password_hash(DEFAULT_USER_PASSWORD, PASSWORD_DEFAULT),
                             'role' => 'User',
                             'server_id' => $serverId
                         ];

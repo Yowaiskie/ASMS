@@ -258,21 +258,31 @@ class AttendanceController extends Controller {
         // 2. Map Attendance
         foreach($rawLogs as $row) {
             $sid = $row->server_id;
-            // Only process if server is still in the active list
             if (isset($serverNames[$sid])) {
                 $day = $row->day;
-                
                 $status = $row->status;
+                $type = (stripos($row->mass_type, 'Meeting') !== false) ? 'M' : 'S';
+                
                 $code = '';
-
-                // Only show finalized attendance statuses
                 if ($status === 'Present') $code = 'P';
                 elseif ($status === 'Late') $code = 'L';
                 elseif ($status === 'Absent') $code = 'A';
                 elseif ($status === 'Excused') $code = 'E';
 
                 if ($code) {
-                    $reportData[$sid][$day] = $code; 
+                    // Initialize if not set
+                    if (!isset($reportData[$sid][$day])) {
+                        $reportData[$sid][$day] = ['S' => '', 'M' => ''];
+                    }
+                    
+                    // For 'S', if multiple masses, prioritize 'P' over others
+                    if ($type === 'S') {
+                        if ($reportData[$sid][$day]['S'] !== 'P') {
+                            $reportData[$sid][$day]['S'] = $code;
+                        }
+                    } else {
+                        $reportData[$sid][$day]['M'] = $code;
+                    }
                 }
             }
         }
@@ -298,39 +308,45 @@ class AttendanceController extends Controller {
 
         $monthName = date('F Y', strtotime($dateInput));
 
+        // Pre-calculate Sundays for the month
+        $sundays = [];
+        for ($i = 1; $i <= $daysInMonth; $i++) {
+            if (date('w', strtotime("$year-$month-$i")) == 0) {
+                $sundays[$i] = true;
+            }
+        }
+
         $html = '
         <html>
         <head>
             <style>
-                @page { margin: 20px; }
-                body { font-family: Arial, sans-serif; font-size: 9px; color: #000; }
+                @page { margin: 15px; }
+                body { font-family: Arial, sans-serif; font-size: 8px; color: #000; }
                 
-                .header-table { width: 100%; border: none; margin-bottom: 10px; }
-                .header-side { width: 15%; text-align: center; vertical-align: middle; }
-                .header-center { width: 70%; text-align: center; vertical-align: middle; }
+                .header-table { width: 100%; border: none; margin-bottom: 5px; }
+                .header-side { width: 10%; text-align: center; vertical-align: middle; }
+                .header-center { width: 80%; text-align: center; vertical-align: middle; }
                 
-                h1 { margin: 0; font-size: 14px; font-weight: bold; text-transform: uppercase; }
-                h2 { margin: 2px 0; font-size: 11px; font-weight: normal; }
-                .sub-text { font-size: 9px; margin: 0; }
+                h1 { margin: 0; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+                .report-title { font-size: 13px; font-weight: bold; text-decoration: underline; text-transform: uppercase; margin-top: 3px; }
                 
-                .report-title { font-size: 14px; font-weight: bold; text-decoration: underline; text-transform: uppercase; margin-top: 5px; }
+                .logo { height: 45px; width: auto; }
                 
-                .logo { height: 55px; width: auto; }
+                table.data-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+                table.data-table th, table.data-table td { border: 1px solid #000; padding: 0; vertical-align: middle; text-align: center; }
+                table.data-table th { background-color: #f2f2f2; font-weight: bold; font-size: 6px; }
+                table.data-table td { height: 14px; font-size: 7px; }
                 
-                table.data-table { width: 100%; border-collapse: collapse; margin-top: 5px; table-layout: fixed; }
-                table.data-table th, table.data-table td { border: 1px solid #000; padding: 2px; vertical-align: middle; text-align: center; }
-                table.data-table th { background-color: #f2f2f2; font-weight: bold; height: 18px; font-size: 8px; }
-                table.data-table td { height: 16px; }
+                .col-name { text-align: left !important; padding-left: 3px !important; font-size: 7px; line-height: 1; word-wrap: break-word; font-weight: bold; }
                 
-                .col-name { text-align: left !important; padding-left: 5px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 8px; }
+                .status-P { color: #059669; }
+                .status-L { color: #d97706; }
+                .status-A { color: #dc2626; }
+                .status-E { color: #2563eb; }
                 
-                .status-P { color: #059669; font-weight: bold; }
-                .status-L { color: #d97706; font-weight: bold; }
-                .status-A { color: #dc2626; font-weight: bold; }
-                .status-E { color: #2563eb; font-weight: bold; }
-                
-                .footer { margin-top: 20px; width: 100%; }
-                .legend { margin-top: 8px; font-size: 8px; border: 1px solid #ddd; padding: 5px; width: fit-content; }
+                .sm-header { font-size: 5px; background-color: #fafafa; }
+                .day-col { width: 15px; }
+                .sunday-col { width: 12px; }
             </style>
         </head>
         <body>
@@ -340,11 +356,11 @@ class AttendanceController extends Controller {
                         ' . ($minLogoData ? '<img src="' . $minLogoData . '" class="logo">' : '') . '
                     </td>
                     <td class="header-center">
-                        <div style="font-weight: bold; font-size: 11px;">Ministry of Altar Servers</div>
-                        <div style="font-size: 10px;">SACRED HEART OF JESUS PARISH</div>
-                        <div style="font-size: 8px;">Sto. Niño, Marikina City</div>
+                        <div style="font-weight: bold; font-size: 10px;">Ministry of Altar Servers</div>
+                        <div style="font-size: 9px;">SACRED HEART OF JESUS PARISH</div>
+                        <div style="font-size: 7px;">Sto. Niño, Marikina City</div>
                         <div class="report-title">ATTENDANCE MONITORING RECORD</div>
-                        <div style="font-size: 10px; font-weight: bold; margin-top: 2px;">' . $monthName . '</div>
+                        <div style="font-size: 9px; font-weight: bold; margin-top: 1px;">' . $monthName . '</div>
                     </td>
                     <td class="header-side">
                         ' . ($parLogoData ? '<img src="' . $parLogoData . '" class="logo">' : '') . '
@@ -355,11 +371,24 @@ class AttendanceController extends Controller {
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th width="25">#</th>
-                        <th width="180">NAME</th>';
+                        <th rowspan="2" width="15">#</th>
+                        <th rowspan="2" width="120">NAME</th>';
         
         for ($i = 1; $i <= $daysInMonth; $i++) {
-            $html .= '<th>' . $i . '</th>';
+            if (isset($sundays[$i])) {
+                $html .= '<th colspan="2" style="background-color: #e2e8f0;">' . $i . '</th>';
+            } else {
+                $html .= '<th rowspan="2" class="day-col">' . $i . '</th>';
+            }
+        }
+
+        $html .= '  </tr>
+                    <tr>';
+        
+        for ($i = 1; $i <= $daysInMonth; $i++) {
+            if (isset($sundays[$i])) {
+                $html .= '<th class="sm-header sunday-col">S</th><th class="sm-header sunday-col">M</th>';
+            }
         }
 
         $html .= '  </tr>
@@ -367,40 +396,41 @@ class AttendanceController extends Controller {
                 <tbody>';
         
         if (empty($serverNames)) {
-            $html .= '<tr><td colspan="' . ($daysInMonth + 2) . '" style="padding: 20px;">No active servers found.</td></tr>';
+            $html .= '<tr><td colspan="40" style="padding: 20px;">No active servers found.</td></tr>';
         } else {
             $count = 1;
             foreach ($serverNames as $sid => $name) {
                 $html .= '<tr>
                     <td>' . $count++ . '</td>
-                    <td class="col-name"><b>' . htmlspecialchars(strtoupper($name)) . '</b></td>';
+                    <td class="col-name">' . htmlspecialchars(strtoupper($name)) . '</td>';
                 
                 for ($d = 1; $d <= $daysInMonth; $d++) {
-                    $status = $reportData[$sid][$d] ?? '';
-                    $class = $status ? 'status-' . $status : '';
-                    $html .= '<td class="' . $class . '">' . $status . '</td>';
+                    $sStatus = $reportData[$sid][$d]['S'] ?? '';
+                    $mStatus = $reportData[$sid][$d]['M'] ?? '';
+                    
+                    if (isset($sundays[$d])) {
+                        $sClass = $sStatus ? 'status-' . $sStatus : '';
+                        $mClass = $mStatus ? 'status-' . $mStatus : '';
+                        $html .= '<td class="' . $sClass . '">' . $sStatus . '</td>';
+                        $html .= '<td class="' . $mClass . '" style="background-color: #f8fafc;">' . $mStatus . '</td>';
+                    } else {
+                        $status = $sStatus ?: $mStatus;
+                        $class = $status ? 'status-' . $status : '';
+                        $html .= '<td class="' . $class . '">' . $status . '</td>';
+                    }
                 }
-                
                 $html .= '</tr>';
             }
         }
 
-        $html .= '
-                </tbody>
-            </table>
-            
-            <div class="legend">
-                <b>Legend:</b> &nbsp; 
-                <span class="status-P">P</span> Present &nbsp; 
-                <span class="status-L">L</span> Late &nbsp; 
-                <span class="status-A">A</span> Absent &nbsp; 
-                <span class="status-E">E</span> Excused
-            </div>
-
+        $html .= '</tbody></table>
             <div class="footer">
-                <table style="width: 100%; border: none;">
+                <div class="legend" style="margin-top: 10px; font-size: 8px;">
+                    <b>Legend:</b> P = Present | L = Late | A = Absent | E = Excused | <b>S</b> = Serve | <b>M</b> = Meeting
+                </div>
+                <table style="width: 100%; border: none; margin-top: 20px;">
                     <tr>
-                        <td style="width: 50%; border: none; vertical-align: top;">
+                        <td style="width: 50%; border: none; vertical-align: top; text-align: left;">
                             <div style="font-size: 8px; margin-bottom: 25px;">Prepared by:</div>
                             <div style="border-bottom: 1px solid #000; width: 180px; text-align: center; font-weight: bold; font-size: 9px;">Bro. BENAIKA LORENZO PARONABLE</div>
                             <div style="width: 180px; text-align: center; font-size: 8px;">Admin Officer, MAS-SHJP MBS</div>

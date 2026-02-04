@@ -39,7 +39,27 @@ class Controller {
             exit;
         }
         $this->checkMaintenanceMode();
+        $this->checkForceReset();
         $this->checkVerification();
+    }
+
+    protected function checkForceReset() {
+        $forceReset = $_SESSION['force_reset'] ?? 0;
+        if (!$forceReset) return;
+
+        $current_path = rtrim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
+        $allowed_paths = [
+            rtrim(URLROOT . '/settings', '/'),
+            rtrim(URLROOT . '/settings/store', '/'),
+            rtrim(URLROOT . '/logout', '/'),
+            rtrim(URLROOT . '/maintenance', '/')
+        ];
+
+        if (!in_array($current_path, $allowed_paths)) {
+            setFlash('msg_info', 'You must change your password before you can proceed.', 'bg-blue-100 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg mb-4 text-sm font-bold');
+            header('Location: ' . URLROOT . '/settings');
+            exit;
+        }
     }
 
     protected function checkVerification() {

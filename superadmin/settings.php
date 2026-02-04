@@ -150,7 +150,7 @@
                             <div class="space-y-6">
                                 <div>
                                     <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Default Password for New Users</label>
-                                    <input type="text" name="default_password" value="Church@123" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                                    <input type="text" name="default_password" value="<?php echo DEFAULT_USER_PASSWORD; ?>" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
                                 </div>
                                 
                                 <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">

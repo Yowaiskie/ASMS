@@ -42,10 +42,16 @@ class AuthController extends Controller {
                 $_SESSION['full_name'] = $user->full_name ?? $user->username;
                 $_SESSION['role'] = $user->role;
                 $_SESSION['is_verified'] = $user->is_verified;
+                $_SESSION['force_reset'] = $user->force_password_reset;
 
                 logAction('Login', 'Auth', 'User ' . $_SESSION['full_name'] . ' logged in.');
 
-                header('Location: ' . URLROOT . '/dashboard');
+                if ($user->force_password_reset) {
+                    setFlash('msg_info', 'Please change your password to continue.');
+                    header('Location: ' . URLROOT . '/settings');
+                } else {
+                    header('Location: ' . URLROOT . '/dashboard');
+                }
             } else {
                 $error = "Invalid username or password.";
                 require_once '../app/views/auth/login.php';

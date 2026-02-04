@@ -114,7 +114,12 @@ class SettingsController extends Controller {
                     $user = $this->userRepo->getById($_SESSION['user_id']);
                     if ($user && password_verify($current, $user->password)) {
                         $hashed = password_hash($new, PASSWORD_DEFAULT);
-                        if ($this->userRepo->update($_SESSION['user_id'], ['password' => $hashed, 'role' => $role])) {
+                        if ($this->userRepo->update($_SESSION['user_id'], [
+                            'password' => $hashed, 
+                            'role' => $role,
+                            'force_password_reset' => 0
+                        ])) {
+                            $_SESSION['force_reset'] = 0;
                             logAction('Update', 'Settings', 'Changed account password.');
                             setFlash('msg_success', 'Password updated successfully.');
                         }

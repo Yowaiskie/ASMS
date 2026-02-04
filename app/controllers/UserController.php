@@ -90,7 +90,8 @@ class UserController extends Controller {
                     'username' => $username,
                     'password' => password_hash($password, PASSWORD_DEFAULT),
                     'role' => $role,
-                    'server_id' => $serverId
+                    'server_id' => $serverId,
+                    'force_password_reset' => 1
                 ];
                 
                 if ($this->userRepo->create($userData)) {
@@ -247,9 +248,10 @@ class UserController extends Controller {
                         // 2. Create User Account
                         $userData = [
                             'username' => $username,
-                            'password' => password_hash('12345', PASSWORD_DEFAULT),
+                            'password' => password_hash(DEFAULT_USER_PASSWORD, PASSWORD_DEFAULT),
                             'role' => $role,
-                            'server_id' => $serverId
+                            'server_id' => $serverId,
+                            'force_password_reset' => 1
                         ];
                         
                         if ($this->userRepo->create($userData)) {
@@ -261,7 +263,7 @@ class UserController extends Controller {
                 fclose($file);
                 
                 logAction('Create', 'Users', "Imported $count users via CSV.");
-                $msg = "Imported $count users successfully. (Default Pass: 12345)";
+                $msg = "Imported $count users successfully. (Default Pass: " . DEFAULT_USER_PASSWORD . ")";
                 if ($duplicates > 0) $msg .= " ($duplicates skipped as duplicates).";
                 
                 setFlash('msg_success', $msg);

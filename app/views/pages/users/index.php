@@ -55,7 +55,7 @@
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Password</label>
-                <input type="password" name="password" value="12345" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                <input type="password" name="password" value="<?php echo DEFAULT_USER_PASSWORD; ?>" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Role</label>

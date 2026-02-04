@@ -19,6 +19,12 @@
 .env.test.local
 .env.production.local
 
+# Documents & Utilities
+*.pdf
+*.docx
+update_db_*.php
+migrate_users.php
+
 # IDE
 .vscode/
 .idea/
