@@ -52,7 +52,7 @@ class UserRepository implements RepositoryInterface {
 
     public function getUserProfile($userId) {
         $this->db->query("
-            SELECT u.id as user_id, u.username, u.role, u.server_id, u.is_verified,
+            SELECT u.id as user_id, u.username, u.role, u.server_id, u.is_verified, u.can_edit_profile, u.has_edited_profile,
                    s.first_name, s.middle_name, s.last_name, s.nickname, s.dob, s.email, s.phone, s.age, s.address, s.profile_image
             FROM users u
             LEFT JOIN servers s ON u.server_id = s.id
@@ -60,6 +60,20 @@ class UserRepository implements RepositoryInterface {
         ");
         $this->db->bind(':id', $userId);
         return $this->db->single();
+    }
+
+    public function toggleEditPermission($userId, $canEdit) {
+        $this->db->query("UPDATE users SET can_edit_profile = :can_edit WHERE id = :id");
+        $this->db->bind(':can_edit', $canEdit);
+        $this->db->bind(':id', $userId);
+        return $this->db->execute();
+    }
+
+    public function updateEditRestriction($userId, $hasEdited) {
+        $this->db->query("UPDATE users SET can_edit_profile = 0, has_edited_profile = :has_edited WHERE id = :id");
+        $this->db->bind(':has_edited', $hasEdited);
+        $this->db->bind(':id', $userId);
+        return $this->db->execute();
     }
 
     public function updateProfile($userId, $data) {

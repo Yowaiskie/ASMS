@@ -55,7 +55,12 @@
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Password</label>
-                <input type="password" name="password" value="<?php echo DEFAULT_USER_PASSWORD; ?>" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                <div class="relative">
+                    <input type="password" name="password" value="<?php echo DEFAULT_USER_PASSWORD; ?>" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all pr-12">
+                    <button type="button" onclick="toggleFieldPassword(this)" class="absolute right-3 top-2.5 text-slate-400 hover:text-blue-600 transition-colors">
+                        <i class="ph ph-eye text-base"></i>
+                    </button>
+                </div>
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Role</label>
@@ -129,12 +134,23 @@
                             </td>
                             <td class="px-6 py-4 text-center">
                                 <div class="flex items-center justify-center gap-2">
+                                    <?php if($user->role === 'User'): ?>
+                                        <a href="<?= URLROOT ?>/settings/toggle_edit/<?= $user->id ?>" 
+                                           class="p-2 <?= $user->can_edit_profile ? 'text-amber-500 hover:bg-amber-50' : 'text-slate-400 hover:bg-slate-50' ?> rounded-lg transition-colors action-btn"
+                                           title="<?= $user->can_edit_profile ? 'Lock Profile Edit' : 'Allow Profile Edit' ?>">
+                                            <?php if($user->can_edit_profile): ?>
+                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" /></svg>
+                                            <?php else: ?>
+                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                                            <?php endif; ?>
+                                        </a>
+                                    <?php endif; ?>
                                     <button type="button" onclick='openEditModal(<?= htmlspecialchars(json_encode($user), ENT_QUOTES, 'UTF-8') ?>)' class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors action-btn"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></button>
-                                    <form action="<?= URLROOT ?>/users/delete" method="POST" onsubmit="return confirm('Are you sure?')" class="inline action-btn">
+                                    <form action="<?= URLROOT ?>/users/delete" method="POST" id="delete-user-<?= $user->id ?>" class="inline action-btn">
                                         <?php csrf_field(); ?>
                                         <input type="hidden" name="id" value="<?= $user->id ?>">
                                         <input type="hidden" name="page" value="<?= $pagination['page'] ?? 1 ?>">
-                                        <button type="submit" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+                                        <button type="button" onclick="showConfirm('Are you sure you want to delete this user?', 'Delete User', () => document.getElementById('delete-user-<?= $user->id ?>').submit())" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
                                     </form>
                                 </div>
                             </td>
@@ -226,7 +242,12 @@
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">New Password (Optional)</label>
-                <input type="password" name="password" placeholder="Leave blank to keep current" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl">
+                <div class="relative">
+                    <input type="password" name="password" placeholder="Leave blank to keep current" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl pr-12">
+                    <button type="button" onclick="toggleFieldPassword(this)" class="absolute right-3 top-2.5 text-slate-400 hover:text-blue-600 transition-colors">
+                        <i class="ph ph-eye text-base"></i>
+                    </button>
+                </div>
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Role</label>
@@ -291,11 +312,11 @@
     function submitBulkDelete() {
         const checkboxes = document.querySelectorAll('.user-checkbox:checked');
         if (checkboxes.length === 0) {
-            alert('No users selected.');
+            showAlert('No users selected.');
             return;
         }
 
-        if (confirm(`Are you sure you want to delete ${checkboxes.length} selected users?`)) {
+        showConfirm(`Are you sure you want to delete ${checkboxes.length} selected users?`, 'Bulk Delete', function() {
             const container = document.getElementById('bulkIdInputs');
             container.innerHTML = ''; 
             
@@ -308,29 +329,39 @@
             });
 
             document.getElementById('hiddenBulkDeleteForm').submit();
-        }
+        });
     }
-
-    function toggleForm() {
-        document.getElementById('createUserForm').classList.toggle('hidden');
-    }
-
     function openEditModal(user) {
-        document.getElementById('editUserId').value = user.id;
-        document.getElementById('editUsername').value = user.username;
-        document.getElementById('editUserRole').value = user.role;
-        document.getElementById('editFirstName').value = user.first_name || '';
-        document.getElementById('editMiddleName').value = user.middle_name || '';
-        document.getElementById('editLastName').value = user.last_name || '';
-        const modal = document.getElementById('editUserModal');
-        modal.classList.remove('hidden');
-        setTimeout(() => { modal.classList.remove('opacity-0'); document.getElementById('editModalContent').classList.remove('scale-95'); }, 10);
+        document.getElementById("editUserId").value = user.id;
+        document.getElementById("editUsername").value = user.username;
+        document.getElementById("editUserRole").value = user.role;
+        document.getElementById("editFirstName").value = user.first_name || "";
+        document.getElementById("editMiddleName").value = user.middle_name || "";
+        document.getElementById("editLastName").value = user.last_name || "";
+        const modal = document.getElementById("editUserModal");
+        modal.classList.remove("hidden");
+        setTimeout(() => { modal.classList.remove("opacity-0"); document.getElementById("editModalContent").classList.remove("scale-95"); }, 10);
     }
 
     function closeEditModal() {
-        const modal = document.getElementById('editUserModal');
-        modal.classList.add('opacity-0');
-        document.getElementById('editModalContent').classList.add('scale-95');
-        setTimeout(() => modal.classList.add('hidden'), 300);
+        const modal = document.getElementById("editUserModal");
+        modal.classList.add("opacity-0");
+        document.getElementById("editModalContent").classList.add("scale-95");
+        setTimeout(() => modal.classList.add("hidden"), 300);
+    }
+
+    function toggleFieldPassword(btn) {
+        const input = btn.parentElement.querySelector("input");
+        const icon = btn.querySelector("i");
+        
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.remove("ph-eye");
+            icon.classList.add("ph-eye-closed");
+        } else {
+            input.type = "password";
+            icon.classList.remove("ph-eye-closed");
+            icon.classList.add("ph-eye");
+        }
     }
 </script>

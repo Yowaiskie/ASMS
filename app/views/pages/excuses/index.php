@@ -290,12 +290,12 @@
     function submitBulkDelete() {
         const checkboxes = document.querySelectorAll('.excuse-checkbox:checked');
         if (checkboxes.length === 0 && !allPagesSelected) {
-            alert('No letters selected.');
+            showAlert('No letters selected.');
             return;
         }
 
         const count = allPagesSelected ? totalRecords : checkboxes.length;
-        if (confirm(`Are you sure you want to delete ${count} selected excuse letters?`)) {
+        showConfirm(`Are you sure you want to delete ${count} selected excuse letters?`, 'Bulk Delete', function() {
             const form = document.getElementById('hiddenBulkDeleteForm');
             const container = document.getElementById('bulkIdInputs');
             container.innerHTML = ''; 
@@ -317,7 +317,7 @@
             }
 
             form.submit();
-        }
+        });
     }
 
     function viewExcuse(data) {

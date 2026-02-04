@@ -51,9 +51,12 @@
                     <span class="absolute left-3 top-2.5 text-slate-400">
                         <i class="ph ph-lock-key text-xl"></i>
                     </span>
-                    <input type="password" name="password" required 
-                        class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
+                    <input type="password" id="password" name="password" required 
+                        class="w-full pl-10 pr-12 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
                         placeholder="Enter your password">
+                    <button type="button" onclick="togglePassword()" class="absolute right-3 top-2 text-slate-400 hover:text-blue-600 transition-colors">
+                        <i id="eye-icon" class="ph ph-eye text-lg"></i>
+                    </button>
                 </div>
             </div>
 
@@ -61,12 +64,24 @@
                 Sign In
             </button>
         </form>
-
-        <div class="mt-6 text-center text-sm text-slate-500">
-            Don't have an account? 
-            <a href="<?= URLROOT ?>/register" class="text-blue-600 hover:underline font-medium">Create one</a>
-        </div>
     </div>
+
+    <script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const eyeIcon = document.getElementById('eye-icon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.classList.remove('ph-eye');
+                eyeIcon.classList.add('ph-eye-closed');
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.classList.remove('ph-eye-closed');
+                eyeIcon.classList.add('ph-eye');
+            }
+        }
+    </script>
 
 </body>
 </html>

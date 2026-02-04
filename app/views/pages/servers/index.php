@@ -143,18 +143,18 @@
                                                                             </button>
                                                                         </form>
                                                                     <?php else: ?>
-                                                                        <form action="<?= URLROOT ?>/servers/update-status" method="POST" class="inline action-btn" onsubmit="return confirm('Suspend this server for 30 days?')">
+                                                                        <form action="<?= URLROOT ?>/servers/update-status" method="POST" id="suspend-server-<?= $svr->id ?>" class="inline action-btn">
                                                                             <?php csrf_field(); ?>
                                                                             <input type="hidden" name="id" value="<?= $svr->id ?>">
                                                                             <input type="hidden" name="action" value="suspend">
                                                                             <input type="hidden" name="page" value="<?= $pagination['page'] ?? 1 ?>">
-                                                                            <button type="submit" data-loading title="Suspend Server" class="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors">
+                                                                            <button type="button" onclick="showConfirm('Suspend this server for 30 days?', 'Suspend Server', () => document.getElementById('suspend-server-<?= $svr->id ?>').submit())" data-loading title="Suspend Server" class="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors">
                                                                                 <i class="ph ph-hand-palm text-lg"></i>
                                                                             </button>
                                                                         </form>
                                                                     <?php endif; ?>
                                     
-                                                                    <a href="<?= URLROOT ?>/servers/delete?id=<?= $svr->id ?>&page=<?= $pagination['page'] ?? 1 ?>" onclick="return confirm('Delete this server?')" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors action-btn" title="Delete Server"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></a>
+                                                                    <button type="button" onclick="showConfirm('Are you sure you want to delete this server profile?', 'Delete Server', () => window.location.href='<?= URLROOT ?>/servers/delete?id=<?= $svr->id ?>&page=<?= $pagination['page'] ?? 1 ?>')" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors action-btn" title="Delete Server"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
                                                                 </div>
                                                             </td>                        </tr>
                         <?php endforeach; ?>
@@ -354,11 +354,11 @@
     function submitBulkDelete() {
         const checkboxes = document.querySelectorAll('.server-checkbox:checked');
         if (checkboxes.length === 0) {
-            alert('No servers selected.');
+            showAlert('No servers selected.');
             return;
         }
 
-        if (confirm(`Are you sure you want to delete ${checkboxes.length} selected servers?`)) {
+        showConfirm(`Are you sure you want to delete ${checkboxes.length} selected servers?`, 'Bulk Delete', function() {
             const container = document.getElementById('bulkIdInputs');
             container.innerHTML = ''; 
             
@@ -371,82 +371,5 @@
             });
 
             document.getElementById('hiddenBulkDeleteForm').submit();
-        }
-    }
-
-    const modal = document.getElementById('serverModal');
-    const content = document.getElementById('modalContent');
-
-    function openModal(mode, data = null) {
-        modal.classList.remove('hidden');
-        setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); }, 10);
-        
-        if (mode === 'add') {
-            document.getElementById('modalTitle').innerText = 'Register New Server';
-            document.getElementById('serverForm').reset();
-            document.getElementById('serverId').value = '';
-        } else {
-            document.getElementById('modalTitle').innerText = 'Edit Server Profile';
-            document.getElementById('serverId').value = data.id;
-            document.getElementById('svr_fname').value = data.first_name || '';
-            document.getElementById('svr_mname').value = data.middle_name || '';
-            document.getElementById('svr_lname').value = data.last_name || '';
-            document.getElementById('svr_nickname').value = data.nickname || '';
-            document.getElementById('svr_dob').value = data.dob || '';
-            document.getElementById('svr_age').value = data.age || '';
-            document.getElementById('svr_phone').value = data.phone || '';
-            document.getElementById('svr_address').value = data.address || '';
-            document.getElementById('svr_rank').value = data.rank || '';
-            document.getElementById('svr_joined').value = data.month_joined || '';
-            document.getElementById('svr_order').value = data.order_name || '';
-            document.getElementById('svr_position').value = data.position || '';
-            document.getElementById('svr_status').value = data.status;
-        }
-    }
-
-    function closeModal() {
-        modal.classList.add('opacity-0');
-        content.classList.add('scale-95');
-        setTimeout(() => modal.classList.add('hidden'), 300);
-    }
-
-    // Drag and Drop Logic
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('fileInput');
-    const fileInfo = document.getElementById('fileInfo');
-    const fileNameDisplay = document.getElementById('fileName');
-    const submitBtn = document.getElementById('submitImport');
-
-    dropZone.addEventListener('click', () => fileInput.click());
-
-    dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.classList.add('border-blue-400', 'bg-blue-50');
-    });
-
-    ['dragleave', 'drop'].forEach(event => {
-        dropZone.addEventListener(event, () => {
-            dropZone.classList.remove('border-blue-400', 'bg-blue-50');
         });
-    });
-
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        if (e.dataTransfer.files.length) {
-            fileInput.files = e.dataTransfer.files;
-            handleFileSelect();
-        }
-    });
-
-    fileInput.addEventListener('change', handleFileSelect);
-
-    function handleFileSelect() {
-        if (fileInput.files.length) {
-            fileNameDisplay.textContent = fileInput.files[0].name;
-            fileInfo.classList.remove('hidden');
-            submitBtn.disabled = false;
-            submitBtn.classList.remove('bg-slate-100', 'text-slate-400');
-            submitBtn.classList.add('bg-blue-600', 'text-white', 'shadow-lg', 'shadow-blue-200');
-        }
     }
-</script>

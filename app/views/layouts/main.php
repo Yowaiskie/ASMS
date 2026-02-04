@@ -93,5 +93,111 @@
     </main>
 
     <script src="<?= URLROOT ?>/js/app.js"></script>
+
+    <!-- Global Confirmation Modal -->
+    <div id="globalConfirmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[150] hidden items-center justify-center p-4 transition-opacity duration-200 opacity-0">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-200" id="globalConfirmContent">
+            <div class="p-6 text-center">
+                <div class="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="ph-bold ph-warning text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 mb-2" id="globalConfirmTitle">Confirm Action</h3>
+                <p class="text-slate-500 text-sm leading-relaxed mb-6" id="globalConfirmMessage">
+                    Are you sure you want to proceed?
+                </p>
+                <div class="flex gap-3">
+                    <button id="globalConfirmYesBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-200 transition-all active:scale-[0.98]">Yes, Proceed</button>
+                    <button onclick="closeGlobalConfirm()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3 rounded-xl transition-all">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Alert Modal -->
+    <div id="globalAlertModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[150] hidden items-center justify-center p-4 transition-opacity duration-200 opacity-0">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-200" id="globalAlertContent">
+            <div class="p-6 text-center">
+                <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="ph-bold ph-info text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 mb-2" id="globalAlertTitle">Notice</h3>
+                <p class="text-slate-500 text-sm leading-relaxed mb-6" id="globalAlertMessage">
+                    This is an alert message.
+                </p>
+                <button onclick="closeGlobalAlert()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3 rounded-xl transition-all">Okay, Got it</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global Modal Helpers
+        const globalConfirmModal = document.getElementById('globalConfirmModal');
+        const globalConfirmContent = document.getElementById('globalConfirmContent');
+        const globalConfirmTitle = document.getElementById('globalConfirmTitle');
+        const globalConfirmMessage = document.getElementById('globalConfirmMessage');
+        const globalConfirmYesBtn = document.getElementById('globalConfirmYesBtn');
+
+        const globalAlertModal = document.getElementById('globalAlertModal');
+        const globalAlertContent = document.getElementById('globalAlertContent');
+        const globalAlertTitle = document.getElementById('globalAlertTitle');
+        const globalAlertMessage = document.getElementById('globalAlertMessage');
+
+        let confirmCallback = null;
+
+        window.showConfirm = function(message, title = 'Confirm Action', callback) {
+            globalConfirmMessage.innerText = message;
+            globalConfirmTitle.innerText = title;
+            confirmCallback = callback;
+            
+            globalConfirmModal.classList.remove('hidden');
+            globalConfirmModal.classList.add('flex');
+            // Animate in
+            setTimeout(() => {
+                globalConfirmModal.classList.remove('opacity-0');
+                globalConfirmContent.classList.remove('scale-95');
+                globalConfirmContent.classList.add('scale-100');
+            }, 10);
+        };
+
+        window.closeGlobalConfirm = function() {
+            globalConfirmModal.classList.add('opacity-0');
+            globalConfirmContent.classList.remove('scale-100');
+            globalConfirmContent.classList.add('scale-95');
+            setTimeout(() => {
+                globalConfirmModal.classList.add('hidden');
+                globalConfirmModal.classList.remove('flex');
+                confirmCallback = null;
+            }, 200);
+        };
+
+        globalConfirmYesBtn.onclick = function() {
+            if (confirmCallback) confirmCallback();
+            closeGlobalConfirm();
+        };
+
+        window.showAlert = function(message, title = 'Notice') {
+            globalAlertMessage.innerText = message;
+            globalAlertTitle.innerText = title;
+            
+            globalAlertModal.classList.remove('hidden');
+            globalAlertModal.classList.add('flex');
+            // Animate in
+            setTimeout(() => {
+                globalAlertModal.classList.remove('opacity-0');
+                globalAlertContent.classList.remove('scale-95');
+                globalAlertContent.classList.add('scale-100');
+            }, 10);
+        };
+
+        window.closeGlobalAlert = function() {
+            globalAlertModal.classList.add('opacity-0');
+            globalAlertContent.classList.remove('scale-100');
+            globalAlertContent.classList.add('scale-95');
+            setTimeout(() => {
+                globalAlertModal.classList.add('hidden');
+                globalAlertModal.classList.remove('flex');
+            }, 200);
+        };
+    </script>
 </body>
 </html>

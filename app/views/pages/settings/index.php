@@ -151,15 +151,30 @@
                 <div class="space-y-4">
                     <div>
                         <label class="block text-[10px] font-bold text-slate-400 mb-1 ml-1 uppercase">Current Password</label>
-                        <input type="password" name="current_password" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none">
+                        <div class="relative">
+                            <input type="password" name="current_password" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none pr-12">
+                            <button type="button" onclick="toggleFieldPassword(this)" class="absolute right-3 top-2.5 text-slate-400 hover:text-blue-600 transition-colors">
+                                <i class="ph ph-eye text-base"></i>
+                            </button>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-slate-400 mb-1 ml-1 uppercase">New Password</label>
-                        <input type="password" name="new_password" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none">
+                        <div class="relative">
+                            <input type="password" name="new_password" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none pr-12">
+                            <button type="button" onclick="toggleFieldPassword(this)" class="absolute right-3 top-2.5 text-slate-400 hover:text-blue-600 transition-colors">
+                                <i class="ph ph-eye text-base"></i>
+                            </button>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-slate-400 mb-1 ml-1 uppercase">Confirm New</label>
-                        <input type="password" name="confirm_password" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none">
+                        <div class="relative">
+                            <input type="password" name="confirm_password" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none pr-12">
+                            <button type="button" onclick="toggleFieldPassword(this)" class="absolute right-3 top-2.5 text-slate-400 hover:text-blue-600 transition-colors">
+                                <i class="ph ph-eye text-base"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -199,3 +214,20 @@
     </div>
 
 </form>
+
+<script>
+    function toggleFieldPassword(btn) {
+        const input = btn.parentElement.querySelector('input');
+        const icon = btn.querySelector('i');
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('ph-eye');
+            icon.classList.add('ph-eye-closed');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('ph-eye-closed');
+            icon.classList.add('ph-eye');
+        }
+    }
+</script>

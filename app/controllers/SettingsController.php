@@ -57,51 +57,94 @@ class SettingsController extends Controller {
             $action = $_POST['action'] ?? '';
             $role = $_SESSION['role'] ?? 'User';
 
-            // 1. Update Profile (Both Admin & User)
-            if ($action === 'update_profile') {
-                $data = [
-                    'first_name' => trim($_POST['first_name']),
-                    'middle_name' => trim($_POST['middle_name'] ?? ''),
-                    'last_name' => trim($_POST['last_name']),
-                    'nickname' => trim($_POST['nickname'] ?? ''),
-                    'dob' => $_POST['dob'] ?? null,
-                    'age' => trim($_POST['age']),
-                    'address' => trim($_POST['address'] ?? ''),
-                    'phone' => trim($_POST['phone']),
-                    'email' => trim($_POST['email'] ?? '')
-                ];
-
-                // Handle Profile Image Upload
-                if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] === UPLOAD_ERR_OK) {
-                    $fileTmpPath = $_FILES['profile_image']['tmp_name'];
-                    $fileName = $_FILES['profile_image']['name'];
-                    $fileNameCmps = explode(".", $fileName);
-                    $fileExtension = strtolower(end($fileNameCmps));
-                    $allowedfileExtensions = array('jpg', 'gif', 'png', 'jpeg', 'webp');
-
-                    if (in_array($fileExtension, $allowedfileExtensions)) {
-                        $newFileName = md5(time() . $fileName) . '.' . $fileExtension;
-                        $uploadFileDir = '../public/uploads/profiles/';
-                        
-                        if (!is_dir($uploadFileDir)) {
-                            mkdir($uploadFileDir, 0755, true);
+                        // 1. Update Profile (Both Admin & User)
+                        if ($action === 'update_profile') {
+                            $userProfile = $this->userRepo->getUserProfile($_SESSION['user_id']);
+                            
+                            // Restriction: Regular Users can only edit once unless allowed
+                            if ($role === 'User' && !$userProfile->can_edit_profile) {
+                                setFlash('msg_error', 'Profile editing is locked. Please contact an admin to allow changes.');
+                                redirect('settings');
+                            }
+            
+                            $data = [
+                                'first_name' => trim($_POST['first_name']),
+                                'middle_name' => trim($_POST['middle_name'] ?? ''),
+                                'last_name' => trim($_POST['last_name']),
+                                'nickname' => trim($_POST['nickname'] ?? ''),
+                                'dob' => $_POST['dob'] ?? null,
+                                'age' => trim($_POST['age']),
+                                'address' => trim($_POST['address'] ?? ''),
+                                'phone' => trim($_POST['phone']),
+                                'email' => trim($_POST['email'] ?? '')
+                            ];
+            
+                            // Handle Cropped Profile Image (Base64)
+                            if (!empty($_POST['cropped_image'])) {
+                                $imgData = $_POST['cropped_image'];
+                                if (preg_match('/^data:image\/(\w+);base64,/', $imgData, $type)) {
+                                    $imgData = substr($imgData, strpos($imgData, ',') + 1);
+                                    $type = strtolower($type[1]); // jpg, png, etc
+            
+                                    if (in_array($type, ['jpg', 'jpeg', 'gif', 'png', 'webp'])) {
+                                        $imgData = base64_decode($imgData);
+            
+                                        if ($imgData !== false) {
+                                            $newFileName = md5(time() . uniqid()) . '.' . $type;
+                                            $uploadFileDir = '../public/uploads/profiles/';
+            
+                                            if (!is_dir($uploadFileDir)) {
+                                                mkdir($uploadFileDir, 0755, true);
+                                            }
+            
+                                            if (file_put_contents($uploadFileDir . $newFileName, $imgData)) {
+                                                $data['profile_image'] = $newFileName;
+                                            }
+                                        }
+                                    }
+                                }
+                            } elseif (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] === UPLOAD_ERR_OK) {
+                                // Fallback for non-cropped uploads
+                                $fileTmpPath = $_FILES['profile_image']['tmp_name'];
+                                $fileName = $_FILES['profile_image']['name'];
+                                $fileNameCmps = explode(".", $fileName);
+                                $fileExtension = strtolower(end($fileNameCmps));
+                                $allowedfileExtensions = array('jpg', 'gif', 'png', 'jpeg', 'webp');
+            
+                                if (in_array($fileExtension, $allowedfileExtensions)) {
+                                    $newFileName = md5(time() . $fileName) . '.' . $fileExtension;
+                                    $uploadFileDir = '../public/uploads/profiles/';
+            
+                                    if (!is_dir($uploadFileDir)) {
+                                        mkdir($uploadFileDir, 0755, true);
+                                    }
+            
+                                    if(move_uploaded_file($fileTmpPath, $uploadFileDir . $newFileName)) {
+                                        $data['profile_image'] = $newFileName;
+                                    }
+                                }
+                            }
+            
+                            // Validation: Check if image is provided OR already exists
+                            if (empty($data['profile_image']) && empty($userProfile->profile_image)) {
+                                setFlash('msg_error', 'Profile photo is required. Please upload and crop a photo.');
+                                redirect('settings');
+                            }
+            
+                            if ($this->userRepo->updateProfile($_SESSION['user_id'], $data)) {
+                                $_SESSION['full_name'] = $data['first_name'] . ' ' . $data['last_name']; 
+                                
+                                // If it's a regular user, lock their profile after first edit
+                                if ($role === 'User') {
+                                    $this->userRepo->updateEditRestriction($_SESSION['user_id'], 1);
+                                }
+            
+                                logAction('Update', 'Settings', 'Updated personal profile information.');
+                                setFlash('msg_success', 'Profile updated successfully.');
+                            } else {
+                                setFlash('msg_error', 'Failed to update profile.');
+                            }
                         }
-
-                        if(move_uploaded_file($fileTmpPath, $uploadFileDir . $newFileName)) {
-                            $data['profile_image'] = $newFileName;
-                        }
-                    }
-                }
-
-                if ($this->userRepo->updateProfile($_SESSION['user_id'], $data)) {
-                    $_SESSION['full_name'] = $data['name']; // Update session name
-                    logAction('Update', 'Settings', 'Updated personal profile information.');
-                    setFlash('msg_success', 'Profile updated successfully.');
-                } else {
-                    setFlash('msg_error', 'Failed to update profile.');
-                }
-            }
-
             // 2. Update Password (Both Admin & User)
             if (!empty($_POST['new_password'])) {
                 $current = $_POST['current_password'];
@@ -148,6 +191,31 @@ class SettingsController extends Controller {
 
             redirect('settings');
         }
+    }
+
+    public function toggle_edit($userId) {
+        $role = $_SESSION['role'] ?? '';
+        if ($role !== 'Admin' && $role !== 'Superadmin') {
+            setFlash('msg_error', 'Unauthorized.');
+            redirect('users');
+        }
+
+        $user = $this->userRepo->getById($userId);
+        if (!$user) {
+            setFlash('msg_error', 'User not found.');
+            redirect('users');
+        }
+
+        $newStatus = $user->can_edit_profile ? 0 : 1;
+        if ($this->userRepo->toggleEditPermission($userId, $newStatus)) {
+            $msg = $newStatus ? "Profile editing enabled for " . $user->username : "Profile editing disabled for " . $user->username;
+            logAction('Update', 'Users', $msg);
+            setFlash('msg_success', $msg);
+        } else {
+            setFlash('msg_error', 'Failed to update permission.');
+        }
+
+        redirect('users');
     }
 
     public function backup() {

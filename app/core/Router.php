@@ -40,10 +40,22 @@ class Router {
         $method = $_SERVER['REQUEST_METHOD'];
         $callback = $this->routes[$method][$path] ?? false;
 
-        // Debugging (Uncomment if still having issues)
-        // echo "Path: " . $path . "<br>";
-        // echo "ScriptDir: " . $scriptDir . "<br>";
-        // echo "Method: " . $method . "<br>";
+        // If no direct match, check for dynamic routes (e.g., /path/:id)
+        $params = [];
+        if ($callback === false) {
+            foreach ($this->routes[$method] as $routePath => $routeCallback) {
+                // Replace :param with a regex group
+                $pattern = preg_replace('/:[a-zA-Z0-9_]+/', '([a-zA-Z0-9_]+)', $routePath);
+                $pattern = "@^" . $pattern . "$@";
+
+                if (preg_match($pattern, $path, $matches)) {
+                    array_shift($matches); // Remove the full match
+                    $params = $matches;
+                    $callback = $routeCallback;
+                    break;
+                }
+            }
+        }
 
         if ($callback === false) {
             http_response_code(404);
@@ -54,9 +66,9 @@ class Router {
         if (is_array($callback)) {
             $controller = new $callback[0]();
             $action = $callback[1];
-            call_user_func([$controller, $action]);
+            call_user_func_array([$controller, $action], $params);
         } else {
-            call_user_func($callback);
+            call_user_func_array($callback, $params);
         }
     }
 }

@@ -260,7 +260,7 @@
                 </div>
                 <button type="submit" class="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">Save Schedule</button>
             </div>
-            <div id="deleteBtnContainer" class="hidden mt-4 pt-3 border-t border-slate-100 text-center"><a href="#" id="deleteLink" data-loading onclick="return confirm('Delete this schedule?')" class="text-xs text-red-500 font-bold hover:underline">Delete Schedule</a></div>
+            <div id="deleteBtnContainer" class="hidden mt-4 pt-3 border-t border-slate-100 text-center"><button type="button" id="deleteLink" data-loading class="text-xs text-red-500 font-bold hover:underline">Delete Schedule</button></div>
         </form>
     </div>
 </div>
@@ -445,27 +445,15 @@
     }
 
     function submitBulk(action) {
-        if (selectedIds.length === 0) return alert('No items selected');
+        if (selectedIds.length === 0) return showAlert('No items selected');
 
         if (action === 'delete') {
-            if (confirm(`Delete ${selectedIds.length} selected schedules?`)) {
+            showConfirm(`Delete ${selectedIds.length} selected schedules?`, 'Confirm Bulk Delete', function() {
                 const form = document.getElementById('bulkForm');
                 form.action = "<?= URLROOT ?>/schedules/bulk-delete";
-                // Create inputs for ids
-                const container = document.getElementById('bulkIds'); 
-                // Wait, I can't put array in value easily for standard POST without JSON or multiple inputs.
-                // Reusing the form structure from list view:
-                
-                // Let's dynamically create inputs inside the form
-                const formEl = document.getElementById('bulkForm');
-                // Remove old inputs if any except tokens
-                
-                // Actually easier: Put JSON in a hidden input
-                // ScheduleController needs to handle JSON or array.
-                // List view used `ids[]`. 
-                // Controller `bulkDelete` uses `$_POST['ids']` (array).
                 
                 // Let's create inputs:
+                const formEl = document.getElementById('bulkForm');
                 formEl.innerHTML = '<?php csrf_field(); ?>'; // Reset form content to token
                 selectedIds.forEach(id => {
                     const input = document.createElement('input');
@@ -476,7 +464,7 @@
                 });
                 
                 formEl.submit();
-            }
+            });
         } else if (action === 'edit') {
             document.getElementById('bulkEditIds').value = JSON.stringify(selectedIds);
             document.getElementById('bulkEditModal').classList.remove('hidden');
@@ -544,7 +532,7 @@
             if (event.color) { const r = document.querySelector(`.color-radio[value="${event.color}"]`); if (r) r.checked = true; }
             if (event.assigned_servers) event.assigned_servers.forEach(id => { const cb = document.querySelector(`.server-checkbox[value="${id}"]`); if (cb) cb.checked = true; });
             document.getElementById('deleteBtnContainer').classList.remove('hidden');
-            document.getElementById('deleteLink').href = `<?= URLROOT ?>/schedules/delete?id=${event.id}`;
+            document.getElementById('deleteLink').onclick = () => showConfirm('Delete this schedule?', 'Delete Schedule', () => window.location.href=`<?= URLROOT ?>/schedules/delete?id=${event.id}`);
 
             // Check if past
             const eventDateTime = new Date(`${event.mass_date} ${event.mass_time}`);

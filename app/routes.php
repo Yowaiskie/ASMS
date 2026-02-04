@@ -84,3 +84,4 @@ $router->get('/trainings', [TrainingController::class, 'index']);
 $router->get('/settings', [SettingsController::class, 'index']);
 $router->post('/settings/store', [SettingsController::class, 'store']);
 $router->get('/settings/backup', [SettingsController::class, 'backup']);
+$router->get('/settings/toggle_edit/:id', [SettingsController::class, 'toggle_edit']);
