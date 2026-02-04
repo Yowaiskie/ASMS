@@ -68,6 +68,7 @@ $router->get('/announcements/delete', [AnnouncementController::class, 'delete'])
 $router->get('/excuses', [ExcuseController::class, 'index']);
 $router->post('/excuses/store', [ExcuseController::class, 'store']);
 $router->post('/excuses/update-status', [ExcuseController::class, 'updateStatus']);
+$router->post('/excuses/bulk-delete', [ExcuseController::class, 'bulkDelete']);
 
 // Reports
 $router->get('/reports', [ReportController::class, 'index']);

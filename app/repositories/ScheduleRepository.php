@@ -15,7 +15,15 @@ class ScheduleRepository implements RepositoryInterface {
 
     public function getAll() {
         $this->db->query("SELECT * FROM schedules ORDER BY mass_date ASC, mass_time ASC");
-        return $this->db->resultSet();
+        $results = $this->db->resultSet();
+        
+        // Populate assigned_ids for each schedule
+        foreach ($results as $row) {
+            $assignments = $this->getAssignments($row->id);
+            $row->assigned_ids = array_map(function($a) { return (int)$a->id; }, $assignments);
+        }
+        
+        return $results;
     }
 
     public function getById($id) {
@@ -104,17 +112,22 @@ class ScheduleRepository implements RepositoryInterface {
         $this->db->query("SELECT s.id, CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) as name, s.rank, a.status 
                           FROM attendance a 
                           JOIN servers s ON a.server_id = s.id 
-                          WHERE a.schedule_id = :sid");
+                          WHERE a.schedule_id = :sid
+                          ORDER BY s.last_name ASC, s.first_name ASC");
         $this->db->bind(':sid', $scheduleId);
         return $this->db->resultSet();
     }
 
     public function getFullAssignments($scheduleId) {
         $this->db->query("
-            SELECT s.name, s.rank, a.status 
+            SELECT 
+                CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) as name,
+                s.rank, 
+                a.status 
             FROM attendance a 
             JOIN servers s ON a.server_id = s.id 
             WHERE a.schedule_id = :id
+            ORDER BY s.last_name ASC, s.first_name ASC
         ");
         $this->db->bind(':id', $scheduleId);
         return $this->db->resultSet();
@@ -141,46 +154,28 @@ class ScheduleRepository implements RepositoryInterface {
     }
 
     public function syncAssignments($scheduleId, array $serverIds) {
-        // 1. Remove assignments not in the list
-        if (empty($serverIds)) {
-            $this->db->query("DELETE FROM attendance WHERE schedule_id = :id");
-            $this->db->bind(':id', $scheduleId);
+        // 1. Get current assigned server IDs
+        $currentAssignments = $this->getAssignments($scheduleId);
+        $currentIds = array_map(function($a) { return $a->id; }, $currentAssignments);
+        
+        // 2. To Delete: IDs in current but not in new list
+        $toDelete = array_diff($currentIds, $serverIds);
+        foreach($toDelete as $sid) {
+            $this->db->query("DELETE FROM attendance WHERE schedule_id = :sid AND server_id = :uid");
+            $this->db->bind(':sid', $scheduleId);
+            $this->db->bind(':uid', $sid);
             $this->db->execute();
-        } else {
-            // Create placeholders for NOT IN clause
-            $placeholders = implode(',', array_fill(0, count($serverIds), '?'));
-            $sql = "DELETE FROM attendance WHERE schedule_id = ? AND server_id NOT IN ($placeholders)";
-            
-            // params: scheduleId, ...serverIds
-            $params = array_merge([$scheduleId], $serverIds);
-            
-            // Execute raw PDO for variable args if needed, or use a loop. 
-            // Since Core\Database might not support variable binds easily in one go with IN clause properly without abstraction:
-            // Simpler approach: Fetch current, compare in PHP.
-            
-            // Actually, let's just do it cleanly:
-            
-            // Get current
-            $current = $this->getAssignments($scheduleId);
-            
-            // To Delete
-            $toDelete = array_diff($current, $serverIds);
-            foreach($toDelete as $sid) {
-                $this->db->query("DELETE FROM attendance WHERE schedule_id = :sid AND server_id = :uid");
-                $this->db->bind(':sid', $scheduleId);
-                $this->db->bind(':uid', $sid);
-                $this->db->execute();
-            }
-            
-            // To Add
-            $toAdd = array_diff($serverIds, $current);
-            foreach($toAdd as $sid) {
-                $this->db->query("INSERT INTO attendance (schedule_id, server_id, status) VALUES (:sid, :uid, 'Pending')");
-                $this->db->bind(':sid', $scheduleId);
-                $this->db->bind(':uid', $sid);
-                $this->db->execute();
-            }
         }
+        
+        // 3. To Add: IDs in new list but not in current
+        $toAdd = array_diff($serverIds, $currentIds);
+        foreach($toAdd as $sid) {
+            $this->db->query("INSERT INTO attendance (schedule_id, server_id, status) VALUES (:sid, :uid, 'Pending')");
+            $this->db->bind(':sid', $scheduleId);
+            $this->db->bind(':uid', $sid);
+            $this->db->execute();
+        }
+        
         return true;
     }
 }

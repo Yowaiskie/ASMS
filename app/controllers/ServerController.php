@@ -20,7 +20,7 @@ class ServerController extends Controller {
 
         $servers = $this->serverRepo->getAll($limit, $offset);
         $totalRecords = $this->serverRepo->countAll();
-        $totalPages = ceil($totalRecords / $limit);
+        $totalPages = $totalRecords > 0 ? (int)ceil($totalRecords / $limit) : 0;
 
         $this->view('servers/index', [
             'pageTitle' => 'Altar Servers Directory',
@@ -68,8 +68,38 @@ class ServerController extends Controller {
                 }
             } else {
                 if ($this->serverRepo->create($data)) {
-                    logAction('Create', 'Servers', 'Registered new server: ' . $data['first_name'] . ' ' . $data['last_name']);
-                    setFlash('msg_success', 'Server registered successfully!');
+                    $db = \App\Core\Database::getInstance();
+                    $serverId = $db->lastInsertId();
+                    
+                    // Create User Account automatically
+                    $userRepo = new \App\Repositories\UserRepository();
+                    
+                    // Username Generation: Primary source is First Name
+                    $baseUsername = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $data['first_name']));
+                    $username = $baseUsername;
+                    
+                    // Check if username exists
+                    if ($userRepo->findByUsername($username)) {
+                        // Try First + Last Name
+                        $username = $baseUsername . '.' . strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $data['last_name']));
+                        
+                        // If still exists, append unique ID
+                        if ($userRepo->findByUsername($username)) {
+                            $username .= $serverId;
+                        }
+                    }
+
+                    $userData = [
+                        'username' => $username,
+                        'password' => password_hash('12345', PASSWORD_DEFAULT),
+                        'role' => 'User',
+                        'server_id' => $serverId
+                    ];
+                    
+                    $userRepo->create($userData);
+
+                    logAction('Create', 'Servers', 'Registered new server and user account: ' . $data['first_name'] . ' ' . $data['last_name']);
+                    setFlash('msg_success', 'Server registered and user account created! (Pass: 12345)');
                 } else {
                     setFlash('msg_error', 'Registration failed.');
                 }

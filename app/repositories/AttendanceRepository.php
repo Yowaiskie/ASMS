@@ -92,12 +92,12 @@ class AttendanceRepository implements RepositoryInterface {
                 SELECT id, first_name, middle_name, last_name FROM servers 
                 WHERE status = 'Active' 
                 " . (!empty($search) ? "AND (first_name LIKE :search OR last_name LIKE :search)" : "") . "
-                ORDER BY first_name ASC 
+                ORDER BY last_name ASC, first_name ASC 
                 LIMIT :limit OFFSET :offset
             ) s
             LEFT JOIN attendance a ON s.id = a.server_id
             LEFT JOIN schedules sch ON a.schedule_id = sch.id AND sch.mass_date = :date
-            ORDER BY s.first_name ASC
+            ORDER BY s.last_name ASC, s.first_name ASC
         ";
         
         $this->db->query($sql);
@@ -120,7 +120,8 @@ class AttendanceRepository implements RepositoryInterface {
         if (!empty($search)) {
             $this->db->bind(':search', "%$search%");
         }
-        return $this->db->single()->count;
+        $row = $this->db->single();
+        return $row ? (int)$row->count : 0;
     }
 
     public function getMonthlyAttendance($month, $year) {
@@ -137,7 +138,7 @@ class AttendanceRepository implements RepositoryInterface {
             WHERE MONTH(sch.mass_date) = :month 
             AND YEAR(sch.mass_date) = :year
             AND s.status = 'Active'
-            ORDER BY s.first_name ASC, sch.mass_date ASC
+            ORDER BY s.last_name ASC, s.first_name ASC, sch.mass_date ASC
         ");
         $this->db->bind(':month', $month);
         $this->db->bind(':year', $year);

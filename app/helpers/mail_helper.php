@@ -8,8 +8,17 @@ require_once APPROOT . '/../vendor/autoload.php';
 function sendEmailNotification($to, $subject, $title, $message, $actionText = 'Go to Dashboard', $actionUrl = 'http://localhost/ASMS/public/login') {
     $mail = new PHPMailer(true);
 
+    if (empty($to)) {
+        error_log("PHPMailer Error: No recipient email provided.");
+        return false;
+    }
+
     try {
         // Server settings
+        $mail->SMTPDebug = 2; // Enable verbose debug output
+        $mail->Debugoutput = function($str, $level) {
+            error_log("SMTP Debug: $str");
+        };
         $mail->isSMTP();
         $mail->Host       = SMTP_HOST;
         $mail->SMTPAuth   = true;
@@ -17,6 +26,9 @@ function sendEmailNotification($to, $subject, $title, $message, $actionText = 'G
         $mail->Password   = SMTP_PASS;
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = SMTP_PORT;
+
+        // Force UTF-8
+        $mail->CharSet = 'UTF-8';
 
         // Recipients
         $mail->setFrom(SMTP_FROM, SMTP_FROM_NAME);
