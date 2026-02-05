@@ -24,6 +24,36 @@
         }
         .bg-primary { background-color: #1e63d4 !important; }
 
+        /* Global Loading Overlay */
+        #global-loader {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 200;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .loader-spinner {
+            width: 48px;
+            height: 48px;
+            border: 5px solid #fff;
+            border-bottom-color: var(--primary);
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         /* Button Loading Spinner */
         .btn-loading {
             position: relative !important;
@@ -63,6 +93,13 @@
 
     <!-- Sidebar -->
     <?php include __DIR__ . '/../partials/sidebar.php'; ?>
+
+    <!-- Loading Overlay -->
+    <div id="global-loader">
+        <span class="loader-spinner"></span>
+        <p class="font-bold text-sm tracking-widest uppercase animate-pulse">Generating PDF...</p>
+        <p class="text-[10px] text-slate-300 mt-2">Please wait a moment</p>
+    </div>
 
     <!-- Main Content Wrapper -->
     <main class="flex-1 flex flex-col transition-all duration-300 w-full overflow-hidden">
@@ -198,6 +235,24 @@
                 globalAlertModal.classList.remove('flex');
             }, 200);
         };
+
+        // Loading Handler
+        document.addEventListener('click', function(e) {
+            const loadingEl = e.target.closest('[data-loading]');
+            if (loadingEl) {
+                const loader = document.getElementById('global-loader');
+                loader.style.display = 'flex';
+                
+                // Also add button spinner if it's a button or link
+                loadingEl.classList.add('btn-loading');
+                
+                // Hide after 3.5 seconds (fallback since download finished is hard to detect)
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    loadingEl.classList.remove('btn-loading');
+                }, 3500);
+            }
+        });
     </script>
 </body>
 </html>

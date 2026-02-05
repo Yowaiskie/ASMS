@@ -74,7 +74,8 @@ class AuthController extends Controller {
             $data = [
                 'username' => trim($_POST['username']),
                 'password' => password_hash(trim($_POST['password']), PASSWORD_DEFAULT),
-                'role' => 'User' // Default role
+                'role' => 'User',
+                'force_password_reset' => 0
             ];
 
             // Check if user exists

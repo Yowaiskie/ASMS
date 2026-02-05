@@ -12,9 +12,7 @@ class UserController extends Controller {
         $this->requireLogin();
         // Restrict to Superadmin
         if (($_SESSION['role'] ?? '') !== 'Superadmin') {
-            setFlash('msg_error', 'Unauthorized access.');
-            redirect('dashboard');
-            exit;
+            $this->forbidden();
         }
         $this->userRepo = new UserRepository();
     }
@@ -24,14 +22,20 @@ class UserController extends Controller {
         $limit = 10;
         $offset = ($page - 1) * $limit;
 
-        $users = $this->userRepo->getAll($limit, $offset);
-        $totalRecords = $this->userRepo->countAll();
+        $filters = [
+            'search' => $_GET['search'] ?? '',
+            'role' => $_GET['role'] ?? ''
+        ];
+
+        $users = $this->userRepo->search($filters, $limit, $offset);
+        $totalRecords = $this->userRepo->countSearch($filters);
         $totalPages = $totalRecords > 0 ? (int)ceil($totalRecords / $limit) : 0;
 
         $this->view('users/index', [
             'pageTitle' => 'User Management',
             'title' => 'Users | ASMS',
             'users' => $users,
+            'filters' => $filters,
             'pagination' => [
                 'page' => $page,
                 'totalPages' => $totalPages
@@ -51,13 +55,27 @@ class UserController extends Controller {
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $username = trim($_POST['username']);
-            $firstName = trim($_POST['first_name']);
+            $firstName = trim($_POST['first_name'] ?? '');
             $middleName = trim($_POST['middle_name'] ?? '');
-            $lastName = trim($_POST['last_name']);
-            $password = trim($_POST['password']);
+            $lastName = trim($_POST['last_name'] ?? '');
+            $password = trim($_POST['password'] ?? DEFAULT_USER_PASSWORD);
             $email = trim($_POST['email'] ?? '');
             $phone = trim($_POST['phone'] ?? '');
             $role = $this->normalizeRole($_POST['role'] ?? 'User');
+
+            // Block Superadmin creation via UI
+            if ($role === 'Superadmin') {
+                setFlash('msg_error', 'Cannot create Superadmin accounts.');
+                redirect('users?page=' . $page);
+                return;
+            }
+
+            // Validation: Only username is strictly required now
+            if (empty($username)) {
+                setFlash('msg_error', 'Username is required.');
+                redirect('users?page=' . $page);
+                return;
+            }
 
             // Check if user exists
             if ($this->userRepo->findByUsername($username)) {
@@ -69,17 +87,17 @@ class UserController extends Controller {
             $serverRepo = new \App\Repositories\ServerRepository();
             $db = \App\Core\Database::getInstance();
 
-            // 1. Create Server Profile
+            // 1. Create Server Profile (Use username parts if names are missing)
             $serverData = [
-                'first_name' => $firstName,
+                'first_name' => !empty($firstName) ? $firstName : $username,
                 'middle_name' => $middleName,
-                'last_name' => $lastName,
+                'last_name' => !empty($lastName) ? $lastName : 'User',
                 'email' => $email,
                 'phone' => $phone,
                 'rank' => 'Server',
                 'team' => 'Unassigned',
                 'status' => 'Active',
-                'month_joined' => date('Y-m') // Set default join date
+                'month_joined' => date('Y-m')
             ];
             
             if ($serverRepo->create($serverData)) {
@@ -118,6 +136,13 @@ class UserController extends Controller {
             $lastName = trim($_POST['last_name']);
             $role = $this->normalizeRole($_POST['role']);
             $password = $_POST['password'] ?? '';
+
+            // Block Superadmin promotion via UI
+            if ($role === 'Superadmin') {
+                setFlash('msg_error', 'Cannot promote to Superadmin role.');
+                redirect('users?page=' . $page);
+                return;
+            }
 
             $user = $this->userRepo->getById($id);
             if (!$user) {

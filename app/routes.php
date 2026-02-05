@@ -85,3 +85,8 @@ $router->get('/settings', [SettingsController::class, 'index']);
 $router->post('/settings/store', [SettingsController::class, 'store']);
 $router->get('/settings/backup', [SettingsController::class, 'backup']);
 $router->get('/settings/toggle_edit/:id', [SettingsController::class, 'toggle_edit']);
+
+// Archives (Superadmin only)
+$router->get('/archives', [\App\Controllers\ArchiveController::class, 'index']);
+$router->get('/archives/restore/:id', [\App\Controllers\ArchiveController::class, 'restore']);
+$router->get('/archives/delete/:id', [\App\Controllers\ArchiveController::class, 'delete']);

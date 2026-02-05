@@ -10,16 +10,14 @@ class LogController extends Controller {
 
     public function __construct() {
         $this->requireLogin();
+        // Restrict to Superadmin
+        if (($_SESSION['role'] ?? '') !== 'Superadmin') {
+            $this->forbidden();
+        }
         $this->db = Database::getInstance();
     }
 
     public function index() {
-        if (($_SESSION['role'] ?? '') !== 'Superadmin') {
-            setFlash('msg_error', 'Unauthorized access to Audit Logs.');
-            redirect('dashboard');
-            return;
-        }
-
         $search = trim($_GET['search'] ?? '');
         $role = trim($_GET['role'] ?? '');
         $action = trim($_GET['action'] ?? '');

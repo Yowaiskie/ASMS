@@ -1,6 +1,19 @@
-<div class="mb-8 animate-fade-in-up">
-    <h2 class="text-2xl font-bold text-slate-800">My Attendance</h2>
-    <p class="text-slate-500 text-sm mt-1">View your attendance history</p>
+<div class="mb-8 animate-fade-in-up flex items-end justify-between">
+    <div>
+        <h2 class="text-2xl font-bold text-slate-800"><?= ($isAdmin ?? false) ? 'My Personal History' : 'My Attendance' ?></h2>
+        <p class="text-slate-500 text-sm mt-1">Review your service records and performance</p>
+    </div>
+
+    <?php if($isAdmin ?? false): ?>
+        <div class="bg-white p-1 rounded-xl border border-slate-200 shadow-sm flex mb-1">
+            <a href="<?= URLROOT ?>/attendance?view=manage" class="px-4 py-2 rounded-lg text-xs font-bold text-slate-500 hover:bg-slate-50 transition-all">
+                Management
+            </a>
+            <a href="<?= URLROOT ?>/attendance?view=personal" class="px-4 py-2 rounded-lg text-xs font-bold bg-slate-800 text-white shadow-md transition-all">
+                My History
+            </a>
+        </div>
+    <?php endif; ?>
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -72,8 +85,10 @@
                         <td class="p-6">
                             <?php 
                                 $color = 'bg-green-50 text-green-700';
+                                if($row->status == 'Assigned') $color = 'bg-blue-50 text-blue-700';
                                 if($row->status == 'Late') $color = 'bg-yellow-50 text-yellow-700';
                                 if($row->status == 'Absent') $color = 'bg-red-50 text-red-700';
+                                if($row->status == 'Excused') $color = 'bg-slate-50 text-slate-700';
                             ?>
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold <?= $color ?>">
                                 <?= h($row->status) ?>
@@ -110,8 +125,10 @@
                         <td class="p-6">
                             <?php 
                                 $color = 'bg-green-50 text-green-700';
+                                if($row->status == 'Assigned') $color = 'bg-blue-50 text-blue-700';
                                 if($row->status == 'Late') $color = 'bg-yellow-50 text-yellow-700';
                                 if($row->status == 'Absent') $color = 'bg-red-50 text-red-700';
+                                if($row->status == 'Excused') $color = 'bg-slate-50 text-slate-700';
                             ?>
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold <?= $color ?>">
                                 <?= h($row->status) ?>

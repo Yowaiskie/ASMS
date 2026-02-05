@@ -49,9 +49,7 @@ class AnnouncementController extends Controller {
         $page = $_POST['page'] ?? 1;
 
         if (($_SESSION['role'] ?? '') === 'User') {
-            setFlash('msg_error', 'Unauthorized access.');
-            redirect('announcements?page=' . $page);
-            return;
+            $this->forbidden();
         }
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -76,9 +74,7 @@ class AnnouncementController extends Controller {
     public function delete() {
         $page = $_GET['page'] ?? 1;
         if (($_SESSION['role'] ?? '') === 'User') {
-            setFlash('msg_error', 'Unauthorized access to Audit Logs.');
-            redirect('announcements?page=' . $page);
-            return;
+            $this->forbidden();
         }
 
         $id = $_GET['id'] ?? null;

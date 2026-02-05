@@ -15,6 +15,11 @@ class ReportController extends Controller {
 
     public function __construct() {
         $this->requireLogin();
+        // Restrict to Admin and Superadmin
+        $role = $_SESSION['role'] ?? 'User';
+        if ($role !== 'Admin' && $role !== 'Superadmin') {
+            $this->forbidden();
+        }
         $this->attendanceRepo = new AttendanceRepository();
         $this->serverRepo = new ServerRepository();
         $this->db = Database::getInstance();
@@ -70,12 +75,12 @@ class ReportController extends Controller {
         $this->db->query("
             SELECT 
                 CONCAT_WS(' ', srv.first_name, srv.middle_name, srv.last_name) as name, 
-                COUNT(*) as total,
-                SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) as present
+                COUNT(*) as total_assigned,
+                SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) as present_count
             FROM attendance a
             JOIN servers srv ON a.server_id = srv.id
             GROUP BY srv.id
-            ORDER BY present DESC
+            ORDER BY present_count DESC
             LIMIT 5
         ");
         $topServers = $this->db->resultSet();
@@ -101,27 +106,82 @@ class ReportController extends Controller {
             die("Error: 'vendor/autoload.php' not found. Please run 'composer require dompdf/dompdf'.");
         }
 
-        // --- FETCH DATA (Mock for now, replace with Repository calls later) ---
+        // --- FETCH REAL DATA (Current Month) ---
+        $currentMonth = date('m');
+        $currentYear = date('Y');
+
+        // 1. Stats Summary
+        $this->db->query("SELECT COUNT(*) as total FROM servers WHERE status = 'Active'");
+        $activeServersCount = $this->db->single()->total;
+
+        $this->db->query("
+            SELECT 
+                SUM(CASE WHEN status = 'Present' THEN 1 ELSE 0 END) as total_present,
+                SUM(CASE WHEN status = 'Absent' THEN 1 ELSE 0 END) as total_absent,
+                COUNT(*) as total_records
+            FROM attendance 
+            WHERE MONTH(created_at) = :m AND YEAR(created_at) = :y
+        ");
+        $this->db->bind(':m', $currentMonth);
+        $this->db->bind(':y', $currentYear);
+        $monthStats = $this->db->single();
+
+        $overallRate = $monthStats->total_records > 0 
+            ? round(($monthStats->total_present / $monthStats->total_records) * 100, 1) . '%' 
+            : '0%';
+
         $stats = [
-            'active_servers' => 24,
-            'rate' => '88.8%',
-            'absences' => 30
+            'active_servers' => $activeServersCount,
+            'rate' => $overallRate,
+            'absences' => $monthStats->total_absent ?? 0
         ];
         
-        $data = [
-            ['name' => 'John Doe', 'present' => 18, 'late' => 1, 'absent' => 1, 'rate' => '90%'],
-            ['name' => 'Jane Smith', 'present' => 19, 'late' => 0, 'absent' => 0, 'rate' => '100%'],
-            ['name' => 'Michael Brown', 'present' => 15, 'late' => 2, 'absent' => 3, 'rate' => '75%'],
-        ];
+        // 2. Performance Breakdown per Server
+        $this->db->query("
+            SELECT 
+                CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) as name,
+                SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) as present,
+                SUM(CASE WHEN a.status = 'Late' THEN 1 ELSE 0 END) as late,
+                SUM(CASE WHEN a.status = 'Absent' THEN 1 ELSE 0 END) as absent,
+                COUNT(*) as total
+            FROM servers s
+            JOIN attendance a ON s.id = a.server_id
+            JOIN schedules sch ON a.schedule_id = sch.id
+            WHERE MONTH(sch.mass_date) = :m AND YEAR(sch.mass_date) = :y
+            GROUP BY s.id
+            ORDER BY s.last_name ASC, s.first_name ASC
+        ");
+        $this->db->bind(':m', $currentMonth);
+        $this->db->bind(':y', $currentYear);
+        $rawPerformance = $this->db->resultSet();
+
+        $data = [];
+        foreach ($rawPerformance as $row) {
+            $rate = $row->total > 0 ? round(($row->present / $row->total) * 100) . '%' : '0%';
+            $data[] = [
+                'name' => $row->name,
+                'present' => $row->present,
+                'late' => $row->late,
+                'absent' => $row->absent,
+                'rate' => $rate
+            ];
+        }
         // ---------------------------------------------------------------------
 
         // Prepare Logo
         $logoPath = __DIR__ . '/../../public/images/logo.png';
+        $parishLogoPath = __DIR__ . '/../../public/images/parish-logo.png';
+        
         $logoData = '';
         if (file_exists($logoPath)) {
             $type = pathinfo($logoPath, PATHINFO_EXTENSION);
-            $dataImg = file_get_contents($logoPath);
-            $logoData = 'data:image/' . $type . ';base64,' . base64_encode($dataImg);
+            $logoData = 'data:image/' . $type . ';base64,' . base64_encode(file_get_contents($logoPath));
+        }
+
+        $parLogoData = '';
+        if (file_exists($parishLogoPath)) {
+            $type = pathinfo($parishLogoPath, PATHINFO_EXTENSION);
+            $parLogoData = 'data:image/' . $type . ';base64,' . base64_encode(file_get_contents($parishLogoPath));
         }
 
         // HTML Content
@@ -129,48 +189,58 @@ class ReportController extends Controller {
         <html>
         <head>
             <style>
-                body { font-family: Helvetica, sans-serif; color: #333; margin: 20px; }
-                .header { border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
-                h1 { text-transform: uppercase; font-size: 18px; margin: 0 0 5px 0; color: #1a202c; }
-                p { font-size: 12px; color: #666; margin: 2px 0; }
+                body { font-family: Helvetica, sans-serif; color: #333; margin: 10px; }
+                .header { border-bottom: 2px solid #1e63d4; padding-bottom: 15px; margin-bottom: 20px; }
+                .logo { width: 55px; height: auto; }
                 
-                .logo { width: 60px; height: auto; margin-right: 15px; }
-                .header-content { display: inline-block; vertical-align: middle; }
+                .header-table { width: 100%; border: none; border-collapse: collapse; }
+                .header-side { width: 20%; text-align: center; border: none; }
+                .header-center { width: 60%; text-align: center; border: none; }
                 
-                h3 { border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 30px; font-size: 14px; text-transform: uppercase; color: #4a5568; }
+                .parish-name { font-size: 14px; font-weight: bold; color: #1e63d4; text-transform: uppercase; margin: 0; }
+                .ministry-name { font-size: 11px; font-weight: bold; color: #444; margin: 2px 0; }
+                .report-title { font-size: 18px; font-weight: 900; color: #1a202c; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px; }
+                .report-subtitle { font-size: 10px; color: #666; margin-top: 2px; }
+
+                h3 { border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-top: 25px; font-size: 12px; text-transform: uppercase; color: #1e63d4; font-weight: bold; }
                 
-                table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
-                th { background-color: #f3f4f6; text-align: left; padding: 10px; border: 1px solid #e5e7eb; font-weight: bold; color: #374151; }
-                td { padding: 10px; border: 1px solid #e5e7eb; color: #4b5563; }
+                table.stats-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                table.stats-table th { background-color: #f8fafc; text-align: left; padding: 10px; border: 1px solid #e2e8f0; font-weight: bold; color: #475569; font-size: 10px; }
+                table.stats-table td { padding: 10px; border: 1px solid #e2e8f0; color: #334155; font-size: 10px; }
+
+                table.data-table { width: 100%; border-collapse: collapse; font-size: 9px; margin-top: 10px; }
+                table.data-table th { background-color: #f8fafc; color: #1e293b; font-weight: bold; text-transform: uppercase; padding: 8px; border: 1px solid #e2e8f0; text-align: left; }
+                table.data-table td { padding: 8px; border: 1px solid #e2e8f0; color: #334155; }
+                
                 .text-center { text-align: center; }
-                .text-right { text-align: right; }
                 .text-red { color: #dc2626; font-weight: bold; }
                 .text-green { color: #059669; font-weight: bold; }
                 
-                .footer { position: fixed; bottom: 0; left: 0; right: 0; text-align: center; font-size: 10px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 10px; }
+                .footer { position: fixed; bottom: 0; left: 0; right: 0; text-align: center; font-size: 8px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 10px; }
             </style>
         </head>
         <body>
             <div class="header">
-                <table style="border: none; margin: 0; width: 100%;">
-                    <tr style="border: none;">
-                        <td style="border: none; width: 70%; vertical-align: middle;">
-                            ' . ($logoData ? '<img src="' . $logoData . '" class="logo" style="vertical-align: middle;">' : '') . '
-                            <div class="header-content">
-                                <h1>Monthly Attendance Report</h1>
-                                <p>Altar Servers Management System</p>
-                            </div>
+                <table class="header-table">
+                    <tr>
+                        <td class="header-side">
+                            ' . ($logoData ? '<img src="' . $logoData . '" class="logo">' : '') . '
                         </td>
-                        <td style="border: none; text-align: right; vertical-align: middle;">
-                            <p><strong>Date Generated</strong></p>
-                            <p>' . date('F d, Y') . '</p>
+                        <td class="header-center">
+                            <div class="parish-name">Sacred Heart of Jesus Parish</div>
+                            <div class="ministry-name">Ministry of Altar Servers (MAS-SHJP MBS)</div>
+                            <div class="report-title">Monthly Attendance Report</div>
+                            <div class="report-subtitle">Generated on ' . date('F d, Y') . '</div>
+                        </td>
+                        <td class="header-side">
+                            ' . ($parLogoData ? '<img src="' . $parLogoData . '" class="logo">' : '') . '
                         </td>
                     </tr>
                 </table>
             </div>
 
             <h3>Executive Summary</h3>
-            <table>
+            <table class="stats-table">
                 <tr>
                     <th width="70%">Metric</th>
                     <th>Value</th>
@@ -190,7 +260,7 @@ class ReportController extends Controller {
             </table>
 
             <h3>Performance Breakdown</h3>
-            <table>
+            <table class="data-table">
                 <thead>
                     <tr>
                         <th>Server Name</th>
@@ -204,11 +274,11 @@ class ReportController extends Controller {
         
         foreach ($data as $row) {
             $html .= '<tr>
-                <td>' . $row['name'] . '</td>
+                <td style="font-weight: bold;">' . h(strtoupper($row['name'])) . '</td>
                 <td class="text-center">' . $row['present'] . '</td>
                 <td class="text-center">' . $row['late'] . '</td>
                 <td class="text-center">' . $row['absent'] . '</td>
-                <td class="text-center">' . $row['rate'] . '</td>
+                <td class="text-center" style="font-weight: bold; color: #1e63d4;">' . $row['rate'] . '</td>
             </tr>';
         }
 
@@ -217,7 +287,7 @@ class ReportController extends Controller {
             </table>
 
             <div class="footer">
-                Confidential Document • Generated by System Administrator
+                ASMS System Generated Document • Generated by ' . ($_SESSION['full_name'] ?? 'Administrator') . '
             </div>
         </body>
         </html>';

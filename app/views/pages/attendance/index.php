@@ -4,7 +4,17 @@
         <p class="text-slate-500 text-sm mt-1">Daily tracking for Mass and Meetings</p>
     </div>
     
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-3">
+        <!-- View Toggle -->
+        <div class="bg-white p-1 rounded-xl border border-slate-200 shadow-sm flex mr-2">
+            <a href="<?= URLROOT ?>/attendance?view=manage" class="px-4 py-2 rounded-lg text-xs font-bold transition-all <?= (!isset($_GET['view']) || $_GET['view'] === 'manage') ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50' ?>">
+                Management
+            </a>
+            <a href="<?= URLROOT ?>/attendance?view=personal" class="px-4 py-2 rounded-lg text-xs font-bold transition-all <?= (isset($_GET['view']) && $_GET['view'] === 'personal') ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50' ?>">
+                My History
+            </a>
+        </div>
+
         <a href="<?= URLROOT ?>/attendance/downloadReport?date=<?= $date ?>" data-loading class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-5 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 font-bold text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -99,11 +109,11 @@
 
     <!-- Pagination -->
     <?php if (isset($pagination) && $pagination['totalPages'] > 1): ?>
-    <div class="px-6 py-4 border-t border-slate-50 flex items-center justify-between bg-slate-50/30">
-        <div class="text-xs text-slate-500">
+    <div class="px-6 py-4 border-t border-slate-50 flex flex-col md:flex-row items-center justify-center gap-4 bg-slate-50/30">
+        <div class="text-[10px] text-slate-500 order-2 md:order-1">
             Page <span class="font-bold"><?= $pagination['page'] ?></span> of <span class="font-bold"><?= $pagination['totalPages'] ?></span>
         </div>
-        <div class="flex items-center gap-1.5">
+        <div class="flex items-center gap-1.5 order-1 md:order-2">
             <?php 
                 $baseUrl = URLROOT . "/attendance?date=$date&search=" . urlencode($search);
             ?>

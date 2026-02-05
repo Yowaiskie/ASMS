@@ -17,6 +17,7 @@ class ExcuseRepository implements RepositoryInterface {
         $this->db->query("SELECT e.*, CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) as server_name 
                           FROM excuses e 
                           LEFT JOIN servers s ON e.server_id = s.id 
+                          WHERE s.deleted_at IS NULL
                           ORDER BY e.created_at DESC 
                           LIMIT :limit OFFSET :offset");
         $this->db->bind(':limit', $limit);
@@ -25,7 +26,7 @@ class ExcuseRepository implements RepositoryInterface {
     }
 
     public function countAll() {
-        $this->db->query("SELECT COUNT(*) as count FROM excuses e LEFT JOIN servers s ON e.server_id = s.id");
+        $this->db->query("SELECT COUNT(*) as count FROM excuses e LEFT JOIN servers s ON e.server_id = s.id WHERE s.deleted_at IS NULL");
         $row = $this->db->single();
         return $row ? (int)$row->count : 0;
     }
@@ -38,7 +39,7 @@ class ExcuseRepository implements RepositoryInterface {
 
     public function getByUserId($userId) {
         // Get server_id
-        $this->db->query("SELECT server_id FROM users WHERE id = :user_id");
+        $this->db->query("SELECT server_id FROM users WHERE id = :user_id AND deleted_at IS NULL");
         $this->db->bind(':user_id', $userId);
         $user = $this->db->single();
 
@@ -46,7 +47,7 @@ class ExcuseRepository implements RepositoryInterface {
             return [];
         }
 
-        $this->db->query("SELECT * FROM excuses WHERE server_id = :server_id ORDER BY created_at DESC");
+        $this->db->query("SELECT e.* FROM excuses e JOIN servers s ON e.server_id = s.id WHERE e.server_id = :server_id AND s.deleted_at IS NULL ORDER BY e.created_at DESC");
         $this->db->bind(':server_id', $user->server_id);
         return $this->db->resultSet();
     }

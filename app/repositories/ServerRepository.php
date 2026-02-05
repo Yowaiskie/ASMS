@@ -13,21 +13,80 @@ class ServerRepository implements RepositoryInterface {
         $this->db = Database::getInstance();
     }
 
+    public function search($filters = [], $limit = 10, $offset = 0) {
+        $sql = "SELECT *, CONCAT_WS(' ', first_name, middle_name, last_name) as name FROM servers WHERE deleted_at IS NULL";
+        $params = [];
+
+        if (!empty($filters['search'])) {
+            $sql .= " AND (first_name LIKE :search OR last_name LIKE :search OR nickname LIKE :search)";
+            $params[':search'] = '%' . $filters['search'] . '%';
+        }
+
+        if (!empty($filters['rank'])) {
+            $sql .= " AND rank = :rank";
+            $params[':rank'] = $filters['rank'];
+        }
+
+        if (!empty($filters['status'])) {
+            $sql .= " AND status = :status";
+            $params[':status'] = $filters['status'];
+        }
+
+        $sql .= " ORDER BY last_name ASC, first_name ASC LIMIT :limit OFFSET :offset";
+        
+        $this->db->query($sql);
+        foreach ($params as $key => $val) {
+            $this->db->bind($key, $val);
+        }
+        $this->db->bind(':limit', $limit);
+        $this->db->bind(':offset', $offset);
+        
+        return $this->db->resultSet();
+    }
+
+    public function countSearch($filters = []) {
+        $sql = "SELECT COUNT(*) as count FROM servers WHERE deleted_at IS NULL";
+        $params = [];
+
+        if (!empty($filters['search'])) {
+            $sql .= " AND (first_name LIKE :search OR last_name LIKE :search OR nickname LIKE :search)";
+            $params[':search'] = '%' . $filters['search'] . '%';
+        }
+
+        if (!empty($filters['rank'])) {
+            $sql .= " AND rank = :rank";
+            $params[':rank'] = $filters['rank'];
+        }
+
+        if (!empty($filters['status'])) {
+            $sql .= " AND status = :status";
+            $params[':status'] = $filters['status'];
+        }
+
+        $this->db->query($sql);
+        foreach ($params as $key => $val) {
+            $this->db->bind($key, $val);
+        }
+        
+        $row = $this->db->single();
+        return $row ? $row->count : 0;
+    }
+
     public function getAll($limit = 1000, $offset = 0) {
-        $this->db->query("SELECT *, CONCAT_WS(' ', first_name, middle_name, last_name) as name FROM servers ORDER BY last_name ASC, first_name ASC LIMIT :limit OFFSET :offset");
+        $this->db->query("SELECT *, CONCAT_WS(' ', first_name, middle_name, last_name) as name FROM servers WHERE deleted_at IS NULL ORDER BY last_name ASC, first_name ASC LIMIT :limit OFFSET :offset");
         $this->db->bind(':limit', $limit);
         $this->db->bind(':offset', $offset);
         return $this->db->resultSet();
     }
 
     public function countAll() {
-        $this->db->query("SELECT COUNT(*) as count FROM servers");
+        $this->db->query("SELECT COUNT(*) as count FROM servers WHERE deleted_at IS NULL");
         $row = $this->db->single();
         return $row ? $row->count : 0;
     }
 
     public function getById($id) {
-        $this->db->query("SELECT *, CONCAT_WS(' ', first_name, middle_name, last_name) as name FROM servers WHERE id = :id");
+        $this->db->query("SELECT *, CONCAT_WS(' ', first_name, middle_name, last_name) as name FROM servers WHERE id = :id AND deleted_at IS NULL");
         $this->db->bind(':id', $id);
         return $this->db->single();
     }
@@ -77,9 +136,47 @@ class ServerRepository implements RepositoryInterface {
     }
 
     public function delete($id) {
+        // Soft Delete: Just update deleted_at
+        $this->db->query("UPDATE users SET deleted_at = NOW() WHERE server_id = :id");
+        $this->db->bind(':id', $id);
+        $this->db->execute();
+
+        $this->db->query("UPDATE servers SET deleted_at = NOW() WHERE id = :id");
+        $this->db->bind(':id', $id);
+        return $this->db->execute();
+    }
+
+    public function restore($id) {
+        $this->db->query("UPDATE users SET deleted_at = NULL WHERE server_id = :id");
+        $this->db->bind(':id', $id);
+        $this->db->execute();
+
+        $this->db->query("UPDATE servers SET deleted_at = NULL WHERE id = :id");
+        $this->db->bind(':id', $id);
+        return $this->db->execute();
+    }
+
+    public function deletePermanently($id) {
+        $this->db->query("DELETE FROM users WHERE server_id = :id");
+        $this->db->bind(':id', $id);
+        $this->db->execute();
+
+        $this->db->query("DELETE FROM attendance WHERE server_id = :id");
+        $this->db->bind(':id', $id);
+        $this->db->execute();
+
+        $this->db->query("DELETE FROM excuses WHERE server_id = :id");
+        $this->db->bind(':id', $id);
+        $this->db->execute();
+
         $this->db->query("DELETE FROM servers WHERE id = :id");
         $this->db->bind(':id', $id);
         return $this->db->execute();
+    }
+
+    public function getArchived() {
+        $this->db->query("SELECT *, CONCAT_WS(' ', first_name, middle_name, last_name) as name FROM servers WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC");
+        return $this->db->resultSet();
     }
 
     public function suspendServer($id, $untilDate) {

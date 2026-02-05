@@ -78,6 +78,12 @@ class SettingsController extends Controller {
                                 'phone' => trim($_POST['phone']),
                                 'email' => trim($_POST['email'] ?? '')
                             ];
+
+                            // Server-side Validation
+                            if (empty($data['first_name']) || empty($data['last_name']) || empty($data['age']) || empty($data['phone']) || empty($data['address']) || empty($data['email'])) {
+                                setFlash('msg_error', 'All fields marked as required must be filled out.');
+                                redirect('settings');
+                            }
             
                             // Handle Cropped Profile Image (Base64)
                             if (!empty($_POST['cropped_image'])) {

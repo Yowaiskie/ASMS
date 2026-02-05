@@ -113,11 +113,11 @@
     <!-- Pagination -->
     <?php if (isset($pagination) && $pagination['totalPages'] > 1): ?>
         <?php $queryStr = http_build_query($filters); ?>
-        <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
-            <div class="text-xs text-slate-500">
+        <div class="px-6 py-4 border-t border-slate-100 flex flex-col md:flex-row items-center justify-center gap-4 bg-slate-50/50">
+            <div class="text-[10px] text-slate-500 order-2 md:order-1">
                 Page <span class="font-bold"><?= $pagination['page'] ?></span> of <span class="font-bold"><?= $pagination['totalPages'] ?></span>
             </div>
-            <div class="flex items-center gap-1.5">
+            <div class="flex items-center gap-1.5 order-1 md:order-2">
                 <?php if ($pagination['page'] > 1): ?>
                     <a href="<?= URLROOT ?>/logs?page=<?= $pagination['page'] - 1 ?>&<?= $queryStr ?>" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 shadow-sm transition-all">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7" /></svg>

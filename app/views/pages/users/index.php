@@ -20,6 +20,31 @@
     </div>
 </div>
 
+<!-- Search and Filters -->
+<div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 mb-6 animate-fade-in-up">
+    <form action="<?= URLROOT ?>/users" method="GET" class="flex flex-wrap items-end gap-3">
+        <div class="flex-1 min-w-[200px]">
+            <div class="relative">
+                <input type="text" name="search" value="<?= h($filters['search'] ?? '') ?>" placeholder="Search user..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 transition-all">
+                <svg class="h-3.5 w-3.5 text-slate-400 absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            </div>
+        </div>
+        <div class="w-32">
+            <select name="role" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 transition-all">
+                <option value="">All Roles</option>
+                <option value="User" <?= ($filters['role'] ?? '') === 'User' ? 'selected' : '' ?>>User</option>
+                <option value="Admin" <?= ($filters['role'] ?? '') === 'Admin' ? 'selected' : '' ?>>Admin</option>
+            </select>
+        </div>
+        <div class="flex gap-2">
+            <button type="submit" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-xl transition-all text-xs font-bold">Filter</button>
+            <a href="<?= URLROOT ?>/users" class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-all flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            </a>
+        </div>
+    </form>
+</div>
+
 <!-- Create User Form -->
 <div id="createUserForm" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 mb-8 hidden animate-fade-in-up">
     <h3 class="text-lg font-bold text-slate-800 mb-6">Create New User</h3>
@@ -29,15 +54,15 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
                 <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">First Name</label>
-                <input type="text" name="first_name" required placeholder="First Name" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                <input type="text" name="first_name" placeholder="First Name (Optional)" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Middle Name</label>
-                <input type="text" name="middle_name" placeholder="Middle Name" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none">
+                <input type="text" name="middle_name" placeholder="Middle Name (Optional)" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none">
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Last Name</label>
-                <input type="text" name="last_name" required placeholder="Last Name" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none">
+                <input type="text" name="last_name" placeholder="Last Name (Optional)" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none">
             </div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -56,7 +81,7 @@
             <div>
                 <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Password</label>
                 <div class="relative">
-                    <input type="password" name="password" value="<?php echo DEFAULT_USER_PASSWORD; ?>" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all pr-12">
+                    <input type="password" name="password" value="<?php echo DEFAULT_USER_PASSWORD; ?>" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all pr-12">
                     <button type="button" onclick="toggleFieldPassword(this)" class="absolute right-3 top-2.5 text-slate-400 hover:text-blue-600 transition-colors">
                         <i class="ph ph-eye text-base"></i>
                     </button>
@@ -67,7 +92,6 @@
                 <select name="role" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
                     <option value="User">User</option>
                     <option value="Admin">Admin</option>
-                    <option value="Superadmin">Superadmin</option>
                 </select>
             </div>
         </div>
@@ -167,13 +191,13 @@
         
         <!-- Pagination -->
         <?php if (isset($pagination) && $pagination['totalPages'] > 1): ?>
-        <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
-            <div class="text-xs text-slate-500">
+        <div class="px-6 py-4 border-t border-slate-100 flex flex-col md:flex-row items-center justify-center gap-4 bg-slate-50/50">
+            <div class="text-[10px] text-slate-500 order-2 md:order-1">
                 Page <span class="font-bold"><?= $pagination['page'] ?></span> of <span class="font-bold"><?= $pagination['totalPages'] ?></span>
             </div>
-            <div class="flex items-center gap-1.5">
+            <div class="flex items-center gap-1.5 order-1 md:order-2">
                 <?php if ($pagination['page'] > 1): ?>
-                    <a href="<?= URLROOT ?>/users?page=<?= $pagination['page'] - 1 ?>" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 shadow-sm transition-all">
+                    <a href="<?= build_url('users', ['page' => $pagination['page'] - 1]) ?>" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 shadow-sm transition-all">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7" /></svg>
                     </a>
                 <?php endif; ?>
@@ -186,11 +210,11 @@
                     for($i = $start; $i <= $end; $i++): 
                         $active = ($i == $pagination['page']) ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-100' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 shadow-sm';
                 ?>
-                    <a href="<?= URLROOT ?>/users?page=<?= $i ?>" class="w-8 h-8 flex items-center justify-center border rounded-lg text-xs font-bold transition-all <?= $active ?>"><?= $i ?></a>
+                    <a href="<?= build_url('users', ['page' => $i]) ?>" class="w-8 h-8 flex items-center justify-center border rounded-lg text-xs font-bold transition-all <?= $active ?>"><?= $i ?></a>
                 <?php endfor; ?>
 
                 <?php if ($pagination['page'] < $pagination['totalPages']): ?>
-                    <a href="<?= URLROOT ?>/users?page=<?= $pagination['page'] + 1 ?>" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 shadow-sm transition-all">
+                    <a href="<?= build_url('users', ['page' => $pagination['page'] + 1]) ?>" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 shadow-sm transition-all">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7" /></svg>
                     </a>
                 <?php endif; ?>
@@ -254,7 +278,6 @@
                 <select name="role" id="editUserRole" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl">
                     <option value="User">User</option>
                     <option value="Admin">Admin</option>
-                    <option value="Superadmin">Superadmin</option>
                 </select>
             </div>
             <div class="flex gap-3 pt-2">
@@ -331,6 +354,15 @@
             document.getElementById('hiddenBulkDeleteForm').submit();
         });
     }
+
+    function toggleForm() {
+        const form = document.getElementById('createUserForm');
+        form.classList.toggle('hidden');
+        if (!form.classList.contains('hidden')) {
+            form.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
     function openEditModal(user) {
         document.getElementById("editUserId").value = user.id;
         document.getElementById("editUsername").value = user.username;

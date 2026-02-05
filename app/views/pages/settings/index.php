@@ -1,10 +1,14 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
 <div class="mb-8 animate-fade-in-up">
     <h2 class="text-2xl font-bold text-slate-800">System & Account Settings</h2>
     <p class="text-slate-500 text-sm mt-1">Configure global application settings and manage your profile</p>
 </div>
 
-<form action="<?= URLROOT ?>/settings/store" method="POST" enctype="multipart/form-data">
+<form action="<?= URLROOT ?>/settings/store" method="POST" enctype="multipart/form-data" id="profileForm">
     <?php csrf_field(); ?>
+    <input type="hidden" name="cropped_image" id="cropped_image_input">
     
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
@@ -23,18 +27,18 @@
                 
                 <div class="flex items-center gap-6 mb-6">
                     <div class="relative group">
-                        <div class="w-20 h-20 rounded-full bg-slate-100 overflow-hidden border-2 border-slate-200">
+                        <div id="profile-preview-container" class="w-20 h-20 rounded-full bg-slate-100 overflow-hidden border-2 border-slate-200">
                             <?php if(!empty($profile->profile_image)): ?>
-                                <img src="<?= URLROOT ?>/uploads/profiles/<?= h($profile->profile_image) ?>" class="w-full h-full object-cover">
+                                <img src="<?= URLROOT ?>/uploads/profiles/<?= h($profile->profile_image) ?>" id="current-profile-img" class="w-full h-full object-cover">
                             <?php else: ?>
-                                <div class="w-full h-full flex items-center justify-center text-slate-400">
+                                <div id="initials-avatar" class="w-full h-full flex items-center justify-center text-slate-400">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                                 </div>
                             <?php endif; ?>
                         </div>
                         <label for="profile_image" class="absolute bottom-0 right-0 bg-white border border-slate-200 p-1.5 rounded-full shadow-sm cursor-pointer hover:bg-slate-50">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                            <input type="file" name="profile_image" id="profile_image" class="hidden" accept="image/*">
+                            <input type="file" name="profile_image" id="profile_image" class="hidden" accept="image/*" onchange="handleImageSelect(this)">
                         </label>
                     </div>
                     <div>
@@ -215,7 +219,112 @@
 
 </form>
 
+<!-- Cropping Modal -->
+<div id="cropperModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-fade-in-up">
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+            <h3 class="font-bold text-slate-800">Crop Profile Photo</h3>
+            <button type="button" onclick="closeCropper()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+        </div>
+        <div class="p-6">
+            <div class="w-full aspect-square bg-slate-100 rounded-2xl overflow-hidden mb-6">
+                <img id="cropperImage" class="max-w-full block">
+            </div>
+            <div class="flex gap-3">
+                <button type="button" onclick="applyCrop()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition-all">Apply & Save</button>
+                <button type="button" onclick="closeCropper()" class="px-8 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition-all">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+    let cropper;
+    const profileInput = document.getElementById('profile_image');
+    const cropperModal = document.getElementById('cropperModal');
+    const cropperImage = document.getElementById('cropperImage');
+    const croppedInput = document.getElementById('cropped_image_input');
+    const currentImg = document.getElementById('current-profile-img');
+    const profileForm = document.getElementById('profileForm');
+
+    function handleImageSelect(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                cropperImage.src = e.target.result;
+                cropperModal.classList.remove('hidden');
+                cropperModal.classList.add('flex');
+                
+                if (cropper) cropper.destroy();
+                
+                cropper = new Cropper(cropperImage, {
+                    aspectRatio: 1,
+                    viewMode: 2,
+                    background: false,
+                    autoCropArea: 1
+                });
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function closeCropper() {
+        cropperModal.classList.add('hidden');
+        cropperModal.classList.remove('flex');
+        profileInput.value = '';
+        if (cropper) cropper.destroy();
+    }
+
+    function applyCrop() {
+        const canvas = cropper.getCroppedCanvas({
+            width: 400,
+            height: 400
+        });
+        
+        const dataURL = canvas.toDataURL('image/jpeg', 0.8);
+        croppedInput.value = dataURL;
+        
+        // Update preview
+        const previewContainer = document.getElementById('profile-preview-container');
+        if (previewContainer) {
+            previewContainer.innerHTML = `<img src="${dataURL}" id="current-profile-img" alt="Profile" class="w-full h-full object-cover border-4 border-slate-50">`;
+        }
+        
+        cropperModal.classList.add('hidden');
+        cropperModal.classList.remove('flex');
+    }
+
+    // Form Validation and Global Confirmation Modal
+    profileForm.addEventListener('submit', function(e) {
+        // Only run validation if the clicked button wasn't just a regular click (handled by save button)
+        // Actually we want all submits to be confirmed
+        e.preventDefault(); 
+
+        // Reset previous errors
+        this.querySelectorAll('.border-red-500').forEach(el => {
+            el.classList.remove('border-red-500', 'ring-2', 'ring-red-100');
+        });
+
+        let hasError = false;
+        // Optional: Add specific field validation for admin if needed
+        // For now let's just do the confirmation
+
+        showConfirm(
+            'Are you sure you want to save all changes to system and profile settings?', 
+            'Save All Changes?', 
+            function() {
+                const submitBtn = profileForm.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.classList.add('btn-loading');
+                    // submitBtn.disabled = true; // Disabled to prevent double submit
+                }
+                profileForm.submit();
+            }
+        );
+    });
+
     function toggleFieldPassword(btn) {
         const input = btn.parentElement.querySelector('input');
         const icon = btn.querySelector('i');

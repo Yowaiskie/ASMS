@@ -9,6 +9,46 @@
     <p class="text-slate-500 text-sm mt-1">Here is your performance overview</p>
 </div>
 
+<?php if (!$_SESSION['is_verified']): ?>
+    <!-- INCOMPLETE PROFILE ALERT -->
+    <div class="mb-8 bg-amber-50 border-2 border-amber-200 p-6 rounded-3xl animate-fade-in-up flex items-center gap-5 shadow-sm">
+        <div class="w-14 h-14 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-amber-200">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+        </div>
+        <div>
+            <h3 class="text-lg font-bold text-amber-900">Profile Incomplete</h3>
+            <p class="text-sm text-amber-700 leading-relaxed mb-4">
+                Your profile information is still missing. Please complete your details (Name, Contact, Email, Address, and Profile Photo) to verify your account and start joining mass schedules.
+            </p>
+            <a href="<?= URLROOT ?>/settings" class="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-xl text-xs font-bold hover:bg-amber-700 transition-all shadow-sm">
+                Complete My Profile Now
+            </a>
+        </div>
+    </div>
+<?php endif; ?>
+
+<?php if (isset($_SESSION['force_reset']) && $_SESSION['force_reset'] == 1): ?>
+    <!-- TEMP PASSWORD ALERT -->
+    <div class="mb-8 bg-blue-50 border-2 border-blue-200 p-6 rounded-3xl animate-fade-in-up flex items-center gap-5 shadow-sm">
+        <div class="w-14 h-14 rounded-2xl bg-blue-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-blue-200">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+        </div>
+        <div>
+            <h3 class="text-lg font-bold text-blue-900">Security Recommendation</h3>
+            <p class="text-sm text-blue-700 leading-relaxed mb-4">
+                You are currently using a temporary password. We highly recommend changing your password to a more secure one to keep your account safe.
+            </p>
+            <a href="<?= URLROOT ?>/settings" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-all shadow-sm">
+                Change My Password
+            </a>
+        </div>
+    </div>
+<?php endif; ?>
+
 <?php if (isset($server) && $server->status === 'Suspended'): ?>
     <!-- SUSPENSION ALERT -->
     <div class="mb-8 bg-red-50 border-2 border-red-200 p-6 rounded-3xl animate-fade-in-up flex items-center gap-5 shadow-sm">

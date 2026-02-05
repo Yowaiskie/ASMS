@@ -24,26 +24,56 @@
 
 <?php 
     $isLocked = ($_SESSION['role'] === 'User' && !$profile->can_edit_profile);
+    $mustResetPassword = ($_SESSION['force_reset'] == 1);
+    $isUnverified = !$_SESSION['is_verified'];
 ?>
 
-<?php if($isLocked): ?>
-    <div class="bg-slate-800 text-white p-6 rounded-3xl mb-8 animate-fade-in-up flex items-start gap-4 shadow-xl">
-        <div class="p-3 bg-slate-700 rounded-2xl text-amber-400">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+<?php if($mustResetPassword || $isLocked || $isUnverified): ?>
+    <div class="bg-white rounded-3xl p-6 mb-8 border border-slate-100 shadow-sm animate-fade-in-up">
+        <div class="flex items-center gap-3 mb-4 border-b border-slate-50 pb-4">
+            <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                <i class="ph-bold ph-info text-base"></i>
+            </div>
+            <h4 class="font-bold text-slate-800">Account Action Items</h4>
         </div>
-        <div>
-            <h4 class="font-bold">Profile Editing Locked</h4>
-            <p class="text-sm text-slate-300 mt-1">You have already completed your one-time profile setup. To make further changes, please contact the <b>Admin</b> or <b>Superadmin</b> to unlock your account editing permission.</p>
-        </div>
-    </div>
-<?php elseif(!$_SESSION['is_verified']): ?>
-    <div class="bg-amber-50 border border-amber-100 p-6 rounded-3xl mb-8 animate-fade-in-up flex items-start gap-4">
-        <div class="p-3 bg-white rounded-2xl shadow-sm text-amber-600">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-        </div>
-        <div>
-            <h4 class="font-bold text-amber-900">Complete Your Profile</h4>
-            <p class="text-sm text-amber-700 mt-1">Please provide your <b>First Name</b>, <b>Last Name</b>, <b>Contact Number</b>, and <b>Email Address</b> to verify your account. Once verified, you can start joining mass schedules.</p>
+        
+        <div class="space-y-4">
+            <?php if($mustResetPassword): ?>
+                <div class="flex items-start gap-4 p-4 bg-blue-50 rounded-2xl border border-blue-100 ring-2 ring-blue-500/10">
+                    <div class="p-2 bg-blue-600 text-white rounded-xl">
+                        <i class="ph-bold ph-lock-key text-lg"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h5 class="font-bold text-blue-900 text-sm">Mandatory Password Change</h5>
+                        <p class="text-blue-700 text-xs mt-0.5">You are using a temporary password. You <b>must</b> change it to unlock system access.</p>
+                        <button onclick="document.getElementById('password-section').scrollIntoView({behavior: 'smooth'})" class="mt-2 text-[10px] font-extrabold uppercase tracking-wider text-blue-600 hover:text-blue-800 transition-colors">Go to security form ↓</button>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <?php if($isUnverified && !$isLocked): ?>
+                <div class="flex items-start gap-4 p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                    <div class="p-2 bg-amber-500 text-white rounded-xl">
+                        <i class="ph-bold ph-user-focus text-lg"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h5 class="font-bold text-amber-900 text-sm">Profile Completion</h5>
+                        <p class="text-amber-700 text-xs mt-0.5">Please fill out all required fields and upload a photo to verify your account.</p>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <?php if($isLocked): ?>
+                <div class="flex items-start gap-4 p-4 bg-slate-800 rounded-2xl shadow-lg">
+                    <div class="p-2 bg-slate-700 text-amber-400 rounded-xl">
+                        <i class="ph-bold ph-shield-check text-lg"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h5 class="font-bold text-white text-sm">Editing Locked</h5>
+                        <p class="text-slate-400 text-xs mt-0.5">Profile setup is complete and verified. Contact Admin to request changes.</p>
+                    </div>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 <?php endif; ?>
@@ -99,7 +129,7 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">First Name</label>
                         <input type="text" name="first_name" value="<?= h($profile->first_name ?? '') ?>" <?= $isLocked ? 'disabled' : 'required' ?> class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all disabled:opacity-70">
@@ -112,26 +142,36 @@
                         <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Last Name</label> 
                         <input type="text" name="last_name" value="<?= h($profile->last_name ?? '') ?>" <?= $isLocked ? 'disabled' : 'required' ?> class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none disabled:opacity-70">
                     </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Nickname</label>
+                        <input type="text" name="nickname" value="<?= h($profile->nickname ?? '') ?>" <?= $isLocked ? 'disabled' : 'required' ?> placeholder="Optional" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none disabled:opacity-70">
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Age</label>
-                    <input type="text" name="age" value="<?= h($profile->age ?? '') ?>" maxlength="2" <?= $isLocked ? 'disabled' : '' ?> oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0,2)" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-70">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:col-span-2">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Date of Birth</label>
+                        <input type="date" name="dob" value="<?= h($profile->dob ?? '') ?>" <?= $isLocked ? 'disabled' : 'required' ?> class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none transition-all disabled:opacity-70">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Age</label>
+                        <input type="text" name="age" value="<?= h($profile->age ?? '') ?>" maxlength="2" <?= $isLocked ? 'disabled' : 'required' ?> oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0,2)" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-70">
+                    </div>
                 </div>
 
                 <div>
                     <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Contact Number</label>
-                    <input type="text" name="phone" value="<?= h($profile->phone ?? '') ?>" maxlength="11" pattern="\d{11}" <?= $isLocked ? 'disabled' : '' ?> oninput="this.value = this.value.replace(/[^0-9]/g, '')" placeholder="09xxxxxxxxx" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-70">
+                    <input type="text" name="phone" value="<?= h($profile->phone ?? '') ?>" maxlength="11" pattern="\d{11}" <?= $isLocked ? 'disabled' : 'required' ?> oninput="this.value = this.value.replace(/[^0-9]/g, '')" placeholder="09xxxxxxxxx" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-70">
                 </div>
 
                 <div class="md:col-span-2">
                     <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Address</label>       
-                    <textarea name="address" rows="2" <?= $isLocked ? 'disabled' : '' ?> class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-70"><?= h($profile->address ?? '') ?></textarea>
+                    <textarea name="address" rows="2" <?= $isLocked ? 'disabled' : 'required' ?> class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-70"><?= h($profile->address ?? '') ?></textarea>
                 </div>
 
                  <div class="md:col-span-2">
                     <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Email Address</label>
-                    <input type="email" name="email" value="<?= h($profile->email ?? '') ?>" <?= $isLocked ? 'disabled' : '' ?> class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-70">
+                    <input type="email" name="email" value="<?= h($profile->email ?? '') ?>" <?= $isLocked ? 'disabled' : 'required' ?> class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-70">
                 </div>
             </div>
 
@@ -218,10 +258,9 @@
                 croppedInput.value = dataURL;
                 
                 // Update preview
-                if (currentImg) {
-                    currentImg.src = dataURL;
-                } else if (initialsAvatar) {
-                    initialsAvatar.parentElement.innerHTML = `<img src="${dataURL}" id="current-profile-img" alt="Profile" class="w-24 h-24 rounded-full object-cover border-4 border-slate-50">`;
+                const previewContainer = document.getElementById('profile-preview-container');
+                if (previewContainer) {
+                    previewContainer.innerHTML = `<img src="${dataURL}" id="current-profile-img" alt="Profile" class="w-24 h-24 rounded-full object-cover border-4 border-slate-50">`;
                 }
                 
                 cropperModal.classList.add('hidden');
@@ -229,22 +268,49 @@
             }
 
             // Form Validation and Global Confirmation Modal
-            const profileForm = document.getElementById('profileForm');
             profileForm.addEventListener('submit', function(e) {
-                e.preventDefault(); // Stop form from submitting immediately
+                e.preventDefault(); 
+
+                // Reset previous errors
+                this.querySelectorAll('.border-red-500').forEach(el => {
+                    el.classList.remove('border-red-500', 'ring-2', 'ring-red-100');
+                });
+
+                let hasError = false;
+                const requiredFields = ['first_name', 'last_name', 'nickname', 'dob', 'age', 'phone', 'address', 'email'];
+                let firstErrorField = null;
+
+                requiredFields.forEach(fieldName => {
+                    const field = this.querySelector(`[name="${fieldName}"]`);
+                    if (field && !field.value.trim()) {
+                        field.classList.add('border-red-500', 'ring-2', 'ring-red-100');
+                        hasError = true;
+                        if (!firstErrorField) firstErrorField = field;
+                    }
+                });
 
                 const hasExistingImage = <?= !empty($profile->profile_image) ? 'true' : 'false' ?>;
                 const hasNewImage = document.getElementById('cropped_image_input').value !== '';
 
                 if (!hasExistingImage && !hasNewImage) {
-                    showAlert('Profile photo is required. Please upload and crop a photo first.');
+                    showAlert('Profile photo is required. Please upload and crop a photo first.', 'Photo Required');
+                    hasError = true;
+                }
+
+                if (hasError) {
+                    if (firstErrorField) firstErrorField.focus();
                     return false;
                 }
 
                 showConfirm(
-                    'Regular users are only allowed to edit their profile ONCE. After saving, your profile will be locked for editing. Are you sure you want to proceed?', 
-                    'Save Profile Changes?', 
+                    'IMPORTANT REMINDER: Regular users can only edit their profile ONCE for security and verification. After saving, your profile will be locked. Please double check all details before proceeding. Continue?', 
+                    'Finalize Profile Setup?', 
                     function() {
+                        const submitBtn = profileForm.querySelector('button[type="submit"]');
+                        if (submitBtn) {
+                            submitBtn.classList.add('btn-loading');
+                            submitBtn.disabled = true;
+                        }
                         profileForm.submit();
                     }
                 );
@@ -278,7 +344,7 @@
         </div>
 
         <!-- Change Password -->
-        <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 animate-fade-in-up delay-200">
+        <div id="password-section" class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 animate-fade-in-up delay-200 <?= $mustResetPassword ? 'ring-2 ring-blue-500 shadow-blue-100' : '' ?>">
             <div class="flex items-center gap-3 mb-6">
                 <div class="p-2 bg-slate-100 text-slate-600 rounded-lg">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

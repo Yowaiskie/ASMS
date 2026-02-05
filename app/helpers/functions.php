@@ -78,3 +78,14 @@ function dd($value) {
     echo "</pre>";
     die();
 }
+
+/**
+ * Build URL with preserved query parameters
+ */
+function build_url($base, $new_params = []) {
+    $current_params = $_GET;
+    // Remove page from current params if it's being replaced or we want to reset it
+    // Usually when filtering we reset to page 1
+    $merged_params = array_merge($current_params, $new_params);
+    return URLROOT . '/' . $base . '?' . http_build_query($merged_params);
+}

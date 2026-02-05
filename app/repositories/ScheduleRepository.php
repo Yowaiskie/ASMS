@@ -112,8 +112,8 @@ class ScheduleRepository implements RepositoryInterface {
         $this->db->query("SELECT s.id, CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) as name, s.rank, a.status 
                           FROM attendance a 
                           JOIN servers s ON a.server_id = s.id 
-                          WHERE a.schedule_id = :sid
-                          ORDER BY s.last_name ASC, s.first_name ASC");
+                          WHERE a.schedule_id = :sid AND s.deleted_at IS NULL
+                          ORDER BY s.last_name ASC, first_name ASC");
         $this->db->bind(':sid', $scheduleId);
         return $this->db->resultSet();
     }
@@ -126,7 +126,7 @@ class ScheduleRepository implements RepositoryInterface {
                 a.status 
             FROM attendance a 
             JOIN servers s ON a.server_id = s.id 
-            WHERE a.schedule_id = :id
+            WHERE a.schedule_id = :id AND s.deleted_at IS NULL
             ORDER BY s.last_name ASC, s.first_name ASC
         ");
         $this->db->bind(':id', $scheduleId);
@@ -147,7 +147,7 @@ class ScheduleRepository implements RepositoryInterface {
         if ($this->db->single()) return true; // Already assigned
 
         // 3. Assign
-        $this->db->query("INSERT INTO attendance (schedule_id, server_id, status) VALUES (:sid, :svid, 'Confirmed')");
+        $this->db->query("INSERT INTO attendance (schedule_id, server_id, status) VALUES (:sid, :svid, 'Assigned')");
         $this->db->bind(':sid', $scheduleId);
         $this->db->bind(':svid', $user->server_id);
         return $this->db->execute();
@@ -170,7 +170,7 @@ class ScheduleRepository implements RepositoryInterface {
         // 3. To Add: IDs in new list but not in current
         $toAdd = array_diff($serverIds, $currentIds);
         foreach($toAdd as $sid) {
-            $this->db->query("INSERT INTO attendance (schedule_id, server_id, status) VALUES (:sid, :uid, 'Pending')");
+            $this->db->query("INSERT INTO attendance (schedule_id, server_id, status) VALUES (:sid, :uid, 'Assigned')");
             $this->db->bind(':sid', $scheduleId);
             $this->db->bind(':uid', $sid);
             $this->db->execute();

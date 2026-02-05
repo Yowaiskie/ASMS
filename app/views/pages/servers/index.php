@@ -1,7 +1,7 @@
 <div class="flex items-end justify-between mb-8 animate-fade-in-up">
     <div>
         <h2 class="text-2xl font-bold text-slate-800">Altar Servers Directory</h2>
-        <p class="text-slate-500 text-sm mt-1">Manage server profiles and master list</p>
+        <p class="text-slate-500 text-sm mt-1">Manage altar server profiles and records</p>
     </div>
     
     <div class="flex gap-2">
@@ -32,6 +32,32 @@
     </div>
 </div>
 
+<!-- Search and Filters -->
+<div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 mb-6 animate-fade-in-up">
+    <form action="<?= URLROOT ?>/servers" method="GET" class="flex flex-wrap items-end gap-3">
+        <div class="flex-1 min-w-[200px]">
+            <div class="relative">
+                <input type="text" name="search" value="<?= h($filters['search'] ?? '') ?>" placeholder="Search name..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 transition-all">
+                <svg class="h-3.5 w-3.5 text-slate-400 absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            </div>
+        </div>
+        <div class="w-32">
+            <select name="rank" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 transition-all">
+                <option value="">All Ranks</option>
+                <option value="Senior" <?= ($filters['rank'] ?? '') === 'Senior' ? 'selected' : '' ?>>Senior</option>
+                <option value="Junior" <?= ($filters['rank'] ?? '') === 'Junior' ? 'selected' : '' ?>>Junior</option>
+                <option value="Aspirant" <?= ($filters['rank'] ?? '') === 'Aspirant' ? 'selected' : '' ?>>Aspirant</option>
+            </select>
+        </div>
+        <div class="flex gap-2">
+            <button type="submit" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-xl transition-all text-xs font-bold">Filter</button>
+            <a href="<?= URLROOT ?>/servers" class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-all flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            </a>
+        </div>
+    </form>
+</div>
+
 <!-- Import Modal -->
 <div id="importModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden p-8">
@@ -46,7 +72,7 @@
             <div class="mb-6 p-4 bg-slate-50 rounded-2xl border border-slate-100 text-[10px] text-slate-600">
                 <strong class="block mb-2 text-slate-700 uppercase tracking-widest text-[9px]">Required CSV Format (In Order):</strong>
                 <code class="block bg-white p-2 rounded border border-slate-200 leading-relaxed break-all">
-                    First Name, Middle Name, Last Name, Nickname, Address, DOB (YYYY-MM-DD), Age, Phone, Joined (YYYY-MM), Investiture (YYYY-MM-DD), Order, Position, Rank, Team, Status, Email
+                    First Name, Middle Name, Last Name, Nickname, Address, Date of Birth (YYYY-MM-DD), Age, Phone, Joined (YYYY-MM), Investiture (YYYY-MM-DD), Order, Position, Rank, Team, Status, Email
                 </code>
                 <p class="mt-2 text-slate-400 italic font-medium">* 16 columns total. Ensure the column order is exact.</p>
             </div>
@@ -101,7 +127,7 @@
                         <th class="px-6 py-4">Full Name</th>
                         <th class="px-6 py-4">Nickname</th>
                         <th class="px-6 py-4 w-1/4">Address</th>
-                        <th class="px-6 py-4">Birth Date</th>
+                        <th class="px-6 py-4">Date of Birth</th>
                         <th class="px-6 py-4">Contact</th>
                         <th class="px-6 py-4">Rank/Pos</th>
                         <th class="px-6 py-4 text-center">Actions</th>
@@ -120,7 +146,7 @@
                             </td>
                             <td class="px-6 py-4 text-slate-600 font-medium"><?= h($svr->nickname) ?></td>
                             <td class="px-6 py-4 text-slate-500 leading-relaxed"><?= h($svr->address) ?></td>
-                            <td class="px-6 py-4 text-slate-600"><?= $svr->dob ? date('M d, Y', strtotime($svr->dob)) : '-' ?></td>
+                            <td class="px-6 py-4 text-slate-600 whitespace-nowrap"><?= $svr->dob ? date('F d, Y', strtotime($svr->dob)) : '-' ?></td>
                             <td class="px-6 py-4 text-slate-500"><?= h($svr->phone) ?></td>
                             <td class="px-6 py-4">
                                 <div class="flex flex-col">
@@ -167,13 +193,13 @@
         
         <!-- Pagination -->
         <?php if (isset($pagination) && $pagination['totalPages'] > 1): ?>
-        <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
-            <div class="text-xs text-slate-500">
+        <div class="px-6 py-4 border-t border-slate-100 flex flex-col md:flex-row items-center justify-center gap-4 bg-slate-50/50">
+            <div class="text-[10px] text-slate-500 order-2 md:order-1">
                 Page <span class="font-bold"><?= $pagination['page'] ?></span> of <span class="font-bold"><?= $pagination['totalPages'] ?></span>
             </div>
-            <div class="flex items-center gap-1.5">
+            <div class="flex items-center gap-1.5 order-1 md:order-2">
                 <?php if ($pagination['page'] > 1): ?>
-                    <a href="<?= URLROOT ?>/servers?page=<?= $pagination['page'] - 1 ?>" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
+                    <a href="<?= build_url('servers', ['page' => $pagination['page'] - 1]) ?>" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7" /></svg>
                     </a>
                 <?php endif; ?>
@@ -186,11 +212,11 @@
                     for($i = $start; $i <= $end; $i++): 
                         $active = ($i == $pagination['page']) ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-100' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 shadow-sm';
                 ?>
-                    <a href="<?= URLROOT ?>/servers?page=<?= $i ?>" class="w-8 h-8 flex items-center justify-center border rounded-lg text-xs font-bold transition-all <?= $active ?>"><?= $i ?></a>
+                    <a href="<?= build_url('servers', ['page' => $i]) ?>" class="w-8 h-8 flex items-center justify-center border rounded-lg text-xs font-bold transition-all <?= $active ?>"><?= $i ?></a>
                 <?php endfor; ?>
 
                 <?php if ($pagination['page'] < $pagination['totalPages']): ?>
-                    <a href="<?= URLROOT ?>/servers?page=<?= $pagination['page'] + 1 ?>" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
+                    <a href="<?= build_url('servers', ['page' => $pagination['page'] + 1]) ?>" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7" /></svg>
                     </a>
                 <?php endif; ?>
@@ -373,3 +399,51 @@
             document.getElementById('hiddenBulkDeleteForm').submit();
         });
     }
+
+    function openModal(mode, data = null) {
+        const modal = document.getElementById('serverModal');
+        const content = document.getElementById('modalContent');
+        const form = document.getElementById('serverForm');
+        const title = document.getElementById('modalTitle');
+        
+        form.reset();
+        document.getElementById('serverId').value = '';
+        
+        if (mode === 'edit' && data) {
+            title.innerText = 'Edit Server Profile';
+            document.getElementById('serverId').value = data.id;
+            document.getElementById('svr_fname').value = data.first_name;
+            document.getElementById('svr_mname').value = data.middle_name || '';
+            document.getElementById('svr_lname').value = data.last_name;
+            document.getElementById('svr_nickname').value = data.nickname || '';
+            document.getElementById('svr_dob').value = data.dob || '';
+            document.getElementById('svr_age').value = data.age || '';
+            document.getElementById('svr_address').value = data.address || '';
+            document.getElementById('svr_phone').value = data.phone || '';
+            document.getElementById('svr_rank').value = data.rank || '';
+            document.getElementById('svr_order').value = data.order_name || '';
+            document.getElementById('svr_position').value = data.position || '';
+            document.getElementById('svr_joined').value = data.month_joined || '';
+            document.getElementById('svr_status').value = data.status || 'Active';
+        } else {
+            title.innerText = 'Register New Server';
+        }
+        
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            content.classList.remove('scale-95');
+        }, 10);
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('serverModal');
+        const content = document.getElementById('modalContent');
+        
+        modal.classList.add('opacity-0');
+        content.classList.add('scale-95');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300);
+    }
+</script>

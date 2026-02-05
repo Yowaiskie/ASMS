@@ -10,6 +10,11 @@ class ServerController extends Controller {
 
     public function __construct() {
         $this->requireLogin();
+        // Restrict to Admin and Superadmin
+        $role = $_SESSION['role'] ?? 'User';
+        if ($role !== 'Admin' && $role !== 'Superadmin') {
+            $this->forbidden();
+        }
         $this->serverRepo = new ServerRepository();
     }
 
@@ -18,14 +23,22 @@ class ServerController extends Controller {
         $limit = 10;
         $offset = ($page - 1) * $limit;
 
-        $servers = $this->serverRepo->getAll($limit, $offset);
-        $totalRecords = $this->serverRepo->countAll();
+        $filters = [
+            'search' => $_GET['search'] ?? '',
+            'rank' => $_GET['rank'] ?? '',
+            'team' => $_GET['team'] ?? '',
+            'status' => $_GET['status'] ?? ''
+        ];
+
+        $servers = $this->serverRepo->search($filters, $limit, $offset);
+        $totalRecords = $this->serverRepo->countSearch($filters);
         $totalPages = $totalRecords > 0 ? (int)ceil($totalRecords / $limit) : 0;
 
         $this->view('servers/index', [
             'pageTitle' => 'Altar Servers Directory',
             'title' => 'Servers | ASMS',
             'servers' => $servers,
+            'filters' => $filters,
             'pagination' => [
                 'page' => $page,
                 'totalPages' => $totalPages,
@@ -147,71 +160,87 @@ class ServerController extends Controller {
 
         $servers = $this->serverRepo->getAll();
 
+        // Prepare Logos
         $logoPath = __DIR__ . '/../../public/images/logo.png';
+        $parishLogoPath = __DIR__ . '/../../public/images/parish-logo.png';
+        
         $logoData = '';
         if (file_exists($logoPath)) {
             $type = pathinfo($logoPath, PATHINFO_EXTENSION);
             $logoData = 'data:image/' . $type . ';base64,' . base64_encode(file_get_contents($logoPath));
         }
 
-        $parishLogoPath = __DIR__ . '/../../public/images/parish-logo.png';
-        $parishLogoData = '';
+        $parLogoData = '';
         if (file_exists($parishLogoPath)) {
             $type = pathinfo($parishLogoPath, PATHINFO_EXTENSION);
-            $parishLogoData = 'data:image/' . $type . ';base64,' . base64_encode(file_get_contents($parishLogoPath));
+            $parLogoData = 'data:image/' . $type . ';base64,' . base64_encode(file_get_contents($parishLogoPath));
         }
 
         $html = '
         <html>
         <head>
             <style>
-                @page { margin: 0.5cm; }
-                body { font-family: "Helvetica", sans-serif; font-size: 9px; color: #000; }
-                .header-container { text-align: center; margin-bottom: 20px; }
-                .title { font-size: 18px; font-weight: bold; text-align: right; text-transform: uppercase; margin-bottom: 5px; }
-                .subtitle { font-size: 10px; text-align: right; }
-                table.master-list { width: 100%; border-collapse: collapse; clear: both; }
-                table.master-list th { border: 1px solid #000; padding: 5px; text-align: left; font-weight: bold; text-transform: uppercase; background: #f0f0f0; }
-                table.master-list td { border: 1px solid #000; padding: 5px; vertical-align: top; }
+                body { font-family: Helvetica, sans-serif; color: #333; margin: 10px; }
+                .header { border-bottom: 2px solid #1e63d4; padding-bottom: 15px; margin-bottom: 20px; }
+                .logo { width: 55px; height: auto; }
+                
+                .header-table { width: 100%; border: none; border-collapse: collapse; }
+                .header-side { width: 20%; text-align: center; border: none; }
+                .header-center { width: 60%; text-align: center; border: none; }
+                
+                .parish-name { font-size: 14px; font-weight: bold; color: #1e63d4; text-transform: uppercase; margin: 0; }
+                .ministry-name { font-size: 11px; font-weight: bold; color: #444; margin: 2px 0; }
+                .report-title { font-size: 18px; font-weight: 900; color: #1a202c; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px; }
+                .report-subtitle { font-size: 10px; color: #666; margin-top: 2px; }
+
+                table.data-table { width: 100%; border-collapse: collapse; font-size: 9px; margin-top: 10px; }
+                table.data-table th { background-color: #f8fafc; color: #1e293b; font-weight: bold; text-transform: uppercase; padding: 8px; border: 1px solid #e2e8f0; text-align: left; }
+                table.data-table td { padding: 8px; border: 1px solid #e2e8f0; color: #334155; vertical-align: top; }
+                
+                .font-bold { font-weight: bold; color: #0f172a; }
                 .text-center { text-align: center; }
-                .font-bold { font-weight: bold; }
+                .status-active { color: #059669; font-weight: bold; }
+                
+                .footer { position: fixed; bottom: 0; left: 0; right: 0; border-top: 1px solid #e2e8f0; padding-top: 10px; }
+                .signatories { width: 100%; margin-top: 30px; }
+                .sig-box { text-align: center; width: 45%; }
+                .sig-line { border-top: 1.5px solid #333; width: 200px; margin: 40px auto 5px; font-weight: bold; font-size: 10px; }
+                .sig-label { font-size: 8px; color: #64748b; }
             </style>
         </head>
         <body>
-            <div class="header-container">
-                <table style="width: 100%; border: none;">
+            <div class="header">
+                <table class="header-table">
                     <tr>
-                        <td style="width: 30%; text-align: left; border: none; vertical-align: middle;">
-                            <div style="font-size: 14px; font-weight: bold; font-family: serif; font-style: italic;">Ministry of Altar Servers</div>
-                            <div style="font-weight: bold;">Sacred Heart of Jesus Parish - MBS</div>
-                            <div style="font-size: 8px;">Pilar Rd., Morning Breeze Subdivision, Caloocan City</div>
+                        <td class="header-side">
+                            ' . ($logoData ? '<img src="' . $logoData . '" class="logo">' : '') . '
                         </td>
-                        <td style="width: 40%; text-align: center; border: none; vertical-align: middle;">
-                            ' . ($logoData ? '<img src="' . $logoData . '" style="width: 55px; margin-right: 10px; vertical-align: middle;">' : '') . '
-                            ' . ($parishLogoData ? '<img src="' . $parishLogoData . '" style="width: 55px; vertical-align: middle;">' : '') . '
+                        <td class="header-center">
+                            <div class="parish-name">Sacred Heart of Jesus Parish</div>
+                            <div class="ministry-name">Ministry of Altar Servers (MAS-SHJP MBS)</div>
+                            <div class="report-title">Official Master List</div>
+                            <div class="report-subtitle">Generated on ' . date('F d, Y') . '</div>
                         </td>
-                        <td style="width: 30%; text-align: right; border: none; vertical-align: middle;">
-                            <div class="title">Official Master List</div>
-                            <div class="subtitle">As of ' . date('F Y') . '</div>
+                        <td class="header-side">
+                            ' . ($parLogoData ? '<img src="' . $parLogoData . '" class="logo">' : '') . '
                         </td>
                     </tr>
                 </table>
             </div>
 
-            <table class="master-list">
+            <table class="data-table">
                 <thead>
                     <tr>
                         <th width="3%">#</th>
-                        <th width="15%">Name</th>
+                        <th width="18%">Server Name</th>
                         <th width="8%">Nickname</th>
-                        <th width="18%">Home Address</th>
-                        <th width="8%">DOB</th>
+                        <th width="15%">Home Address</th>
+                        <th width="10%">Date of Birth</th>
                         <th width="10%">Contact</th>
                         <th width="8%">Joined</th>
-                        <th width="10%">Investiture</th>
-                        <th width="8%">Order</th>
+                        <th width="10%">Rank</th>
                         <th width="10%">Position</th>
-                        <th width="5%">Rank</th>
+                        <th width="8%">Status</th>
                     </tr>
                 </thead>
                 <tbody>';
@@ -219,39 +248,44 @@ class ServerController extends Controller {
         $i = 1;
         foreach ($servers as $s) {
             $html .= '<tr>
-                <td class="text-center">' . str_pad($i++, 2, '0', STR_PAD_LEFT) . '.</td>
-                <td class="font-bold">' . h($s->name) . '</td>
+                <td class="text-center">' . $i++ . '.</td>
+                <td class="font-bold">' . h(strtoupper($s->name)) . '</td>
                 <td>' . h($s->nickname) . '</td>
                 <td style="font-size: 8px;">' . h($s->address) . '</td>
-                <td>' . ($s->dob ? date('m-d-Y', strtotime($s->dob)) : '') . '</td>
+                <td class="text-center">' . ($s->dob ? date('F d, Y', strtotime($s->dob)) : '-') . '</td>
                 <td>' . h($s->phone) . '</td>
-                <td>' . h($s->month_joined) . '</td>
-                <td>' . ($s->investiture_date ? date('M d, Y', strtotime($s->investiture_date)) : '') . '</td>
-                <td>' . h($s->order_name) . '</td>
-                <td>' . h($s->position) . '</td>
-                <td>' . h($s->rank) . '</td>
+                <td class="text-center">' . h($s->month_joined) . '</td>
+                <td class="text-center">' . h($s->rank) . '</td>
+                <td class="text-center">' . h($s->position) . '</td>
+                <td class="text-center status-active">' . h($s->status) . '</td>
             </tr>';
         }
 
         $html .= '</tbody></table>
-            <div style="margin-top: 30px; width: 100%;">
-                <table style="width: 100%; border: none;">
+
+            <div class="footer">
+                <table class="signatories">
                     <tr>
-                        <td style="width: 50%; border: none;">
-                            <div style="border-top: 1px solid #000; width: 200px; margin-top: 40px; text-align: center; font-weight: bold;">Bro. BENAIKA LORENZO PARONABLE</div>
-                            <div style="text-align: left; padding-left: 20px;">Admin Officer, MAS-SHJP MBS</div>
+                        <td class="sig-box">
+                            <div class="sig-line">BRO. BENAIKA LORENZO PARONABLE</div>
+                            <div class="sig-label">Admin Officer, MAS-SHJP MBS</div>
                         </td>
-                        <td style="text-align: right; border: none;">
-                            <div style="border-top: 1px solid #000; width: 200px; margin-top: 40px; text-align: center; font-weight: bold; float: right;">Bro. KYLE VINCENT MADRIAGA</div>
-                            <div style="clear: both; text-align: right; padding-right: 20px;">Coordinator, MAS-SHJP MBS</div>
+                        <td width="10%"></td>
+                        <td class="sig-box">
+                            <div class="sig-line">BRO. KYLE VINCENT MADRIAGA</div>
+                            <div class="sig-label">Coordinator, MAS-SHJP MBS</div>
                         </td>
                     </tr>
                 </table>
+                <div style="text-align: right; font-size: 7px; color: #94a3b8; margin-top: 15px;">
+                    ASMS System Generated Document • Page 1 of 1
+                </div>
             </div>
         </body></html>';
 
         $options = new \Dompdf\Options();
         $options->set('defaultFont', 'Helvetica');
+        $options->set('isRemoteEnabled', true);
         $dompdf = new \Dompdf\Dompdf($options);
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'landscape');

@@ -9,21 +9,40 @@ use App\Repositories\UserRepository;
 class ExcuseController extends Controller {
     private $excuseRepo;
     private $userRepo;
+    private $db;
 
     public function __construct() {
         $this->requireLogin();
         $this->excuseRepo = new ExcuseRepository();
         $this->userRepo = new UserRepository();
+        $this->db = \App\Core\Database::getInstance();
     }
 
     public function index() {
         if (($_SESSION['role'] ?? '') === 'User') {
+            $user = $this->userRepo->getById($_SESSION['user_id']);
             $excuses = $this->excuseRepo->getByUserId($_SESSION['user_id']);
             
+            // Fetch server's assigned schedules (for the dropdown)
+            $assignedSchedules = [];
+            if ($user && $user->server_id) {
+                $db = \App\Core\Database::getInstance();
+                $db->query("
+                    SELECT s.mass_type, s.mass_date, s.mass_time 
+                    FROM attendance a 
+                    JOIN schedules s ON a.schedule_id = s.id 
+                    WHERE a.server_id = :sid AND s.mass_date >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+                    ORDER BY s.mass_date DESC, s.mass_time DESC
+                ");
+                $db->bind(':sid', $user->server_id);
+                $assignedSchedules = $db->resultSet();
+            }
+
             $this->view('excuses/user_index', [
                 'pageTitle' => 'File Excuse Letter',
                 'title' => 'Excuses | ASMS',
-                'excuses' => $excuses
+                'excuses' => $excuses,
+                'schedules' => $assignedSchedules
             ]);
         } else {
             // Admin View
@@ -59,16 +78,14 @@ class ExcuseController extends Controller {
 
             if ($this->excuseRepo->updateStatus($id, $status)) {
                 // Email Notification
-                // ... (keep logic) ...
-                $db = \App\Core\Database::getInstance();
                 $this->db->query("
                     SELECT s.email, CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) as name, e.reason 
                     FROM excuses e
                     JOIN servers s ON e.server_id = s.id 
                     WHERE e.id = :id
                 ");
-                $db->bind(':id', $id);
-                $info = $db->single();
+                $this->db->bind(':id', $id);
+                $info = $this->db->single();
 
                 if ($info && $info->email) {
                     $color = $status === 'Approved' ? '#10b981' : '#ef4444';
@@ -132,11 +149,22 @@ class ExcuseController extends Controller {
                 return;
             }
 
+            // If hidden values are empty, use manual input (Others)
+            $type = !empty($_POST['type']) ? $_POST['type'] : ($_POST['manual_type'] ?? null);
+            $date = !empty($_POST['date']) ? $_POST['date'] : ($_POST['manual_date'] ?? null);
+            $time = !empty($_POST['time']) ? $_POST['time'] : ($_POST['manual_time'] ?? null);
+
+            if (empty($type) || empty($date)) {
+                setFlash('msg_error', 'Activity type and date are required.');
+                redirect('excuses');
+                return;
+            }
+
             $data = [
                 'server_id' => $user->server_id,
-                'type' => $_POST['type'],
-                'absence_date' => $_POST['date'],
-                'absence_time' => $_POST['time'] ?? null,
+                'type' => $type,
+                'absence_date' => $date,
+                'absence_time' => $time,
                 'reason' => trim($_POST['reason']),
                 'image_path' => null
             ];

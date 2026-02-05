@@ -19,6 +19,7 @@ class AttendanceRepository implements RepositoryInterface {
             FROM attendance a
             JOIN servers s ON a.server_id = s.id
             JOIN schedules sch ON a.schedule_id = sch.id
+            WHERE s.deleted_at IS NULL
             ORDER BY sch.mass_date DESC
         ");
         
@@ -59,7 +60,7 @@ class AttendanceRepository implements RepositoryInterface {
     }
 
     public function getByUserId($userId) {
-        $this->db->query("SELECT server_id FROM users WHERE id = :user_id");
+        $this->db->query("SELECT server_id FROM users WHERE id = :user_id AND deleted_at IS NULL");
         $this->db->bind(':user_id', $userId);
         $user = $this->db->single();
 
@@ -71,7 +72,8 @@ class AttendanceRepository implements RepositoryInterface {
             SELECT a.*, s.mass_type, s.mass_date, s.mass_time 
             FROM attendance a 
             JOIN schedules s ON a.schedule_id = s.id 
-            WHERE a.server_id = :server_id 
+            JOIN servers srv ON a.server_id = srv.id
+            WHERE a.server_id = :server_id AND srv.deleted_at IS NULL
             ORDER BY s.mass_date DESC
         ");
         $this->db->bind(':server_id', $user->server_id);
@@ -90,7 +92,7 @@ class AttendanceRepository implements RepositoryInterface {
                 sch.mass_time
             FROM (
                 SELECT id, first_name, middle_name, last_name FROM servers 
-                WHERE status = 'Active' 
+                WHERE status = 'Active' AND deleted_at IS NULL
                 " . (!empty($search) ? "AND (first_name LIKE :search OR last_name LIKE :search)" : "") . "
                 ORDER BY last_name ASC, first_name ASC 
                 LIMIT :limit OFFSET :offset
@@ -112,7 +114,7 @@ class AttendanceRepository implements RepositoryInterface {
     }
 
     public function countActiveServers($search = '') {
-        $sql = "SELECT COUNT(*) as count FROM servers WHERE status = 'Active'";
+        $sql = "SELECT COUNT(*) as count FROM servers WHERE status = 'Active' AND deleted_at IS NULL";
         if (!empty($search)) {
             $sql .= " AND (first_name LIKE :search OR last_name LIKE :search)";
         }
@@ -137,7 +139,7 @@ class AttendanceRepository implements RepositoryInterface {
             JOIN schedules sch ON a.schedule_id = sch.id
             WHERE MONTH(sch.mass_date) = :month 
             AND YEAR(sch.mass_date) = :year
-            AND s.status = 'Active'
+            AND s.status = 'Active' AND s.deleted_at IS NULL
             ORDER BY s.last_name ASC, s.first_name ASC, sch.mass_date ASC
         ");
         $this->db->bind(':month', $month);

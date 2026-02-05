@@ -25,43 +25,46 @@
             <?php csrf_field(); ?>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Type of Activity</label>
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Select Assigned Activity</label>
                     <div class="relative">
-                        <select name="type" id="excuse_type" onchange="toggleTimeField()" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none">
-                            <option value="" disabled selected>Select Activity</option>
-                            <option value="Sunday Schedule">Sunday Schedule</option>
-                            <option value="Meeting">Meeting</option>
-                            <option value="Special Event">Special Event / Others</option>
+                        <select id="assigned_schedule" onchange="handleScheduleSelect(this)" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none">
+                            <option value="" disabled selected>Choose from your assignments...</option>
+                            <?php if(!empty($schedules)): ?>
+                                <?php foreach($schedules as $s): ?>
+                                    <option value="<?= h($s->mass_type) ?>|<?= $s->mass_date ?>|<?= $s->mass_time ?>">
+                                        <?= date('M d, Y', strtotime($s->mass_date)) ?> - <?= h($s->mass_type) ?> (<?= date('h:i A', strtotime($s->mass_time)) ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                            <option value="Others">Others / Not in list</option>
                         </select>
                         <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-500">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </div>
                     </div>
+                    <p class="text-[10px] text-slate-400 mt-2 ml-1 italic">Only assignments from the last 7 days and upcoming ones are shown.</p>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Date of Absence</label>
-                    <input type="date" name="date" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                </div>
-            </div>
-
-            <div id="time_field" class="hidden animate-fade-in-up">
-                <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Select Schedule Time</label>
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-                    <?php 
-                        $sundayTimes = ['06:00', '07:30', '09:00', '16:00', '17:30', '19:00'];
-                        foreach($sundayTimes as $time):
-                            $timeId = str_replace(':', '', $time);
-                    ?>
-                    <div class="relative">
-                        <input type="radio" name="time" id="time_<?= $timeId ?>" value="<?= $time ?>" class="peer hidden">
-                        <label for="time_<?= $timeId ?>" class="block py-3 text-center bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-500 cursor-pointer transition-all hover:bg-slate-100 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 peer-checked:shadow-lg peer-checked:shadow-blue-100 peer-checked:hover:bg-blue-700 peer-checked:hover:text-white">
-                            <?= date('h:i A', strtotime($time)) ?>
-                        </label>
+                <div id="manual_fields" class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6 hidden">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Activity Type</label>
+                        <input type="text" name="manual_type" id="input_type" placeholder="e.g. Sunday Mass" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none">
                     </div>
-                    <?php endforeach; ?>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Date</label>
+                        <input type="date" name="manual_date" id="input_date" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Time</label>
+                        <input type="time" name="manual_time" id="input_time" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none">
+                    </div>
                 </div>
+
+                <!-- Hidden inputs to store selection if not using manual -->
+                <input type="hidden" name="type" id="hidden_type">
+                <input type="hidden" name="date" id="hidden_date">
+                <input type="hidden" name="time" id="hidden_time">
             </div>
 
             <div>
@@ -170,20 +173,38 @@
         }
     }
 
-    function toggleTimeField() {
-        const type = document.getElementById('excuse_type').value;
-        const timeField = document.getElementById('time_field');
-        const timeInputs = timeField.querySelectorAll('input');
+    function handleScheduleSelect(select) {
+        const val = select.value;
+        const manualFields = document.getElementById('manual_fields');
+        const hType = document.getElementById('hidden_type');
+        const hDate = document.getElementById('hidden_date');
+        const hTime = document.getElementById('hidden_time');
+        
+        const iType = document.getElementById('input_type');
+        const iDate = document.getElementById('input_date');
+        const iTime = document.getElementById('input_time');
 
-        if (type === 'Sunday Schedule') {
-            timeField.classList.remove('hidden');
-            timeInputs.forEach(input => input.required = true);
+        if (val === 'Others') {
+            manualFields.classList.remove('hidden');
+            iType.required = true;
+            iDate.required = true;
+            iTime.required = true;
+            
+            hType.value = '';
+            hDate.value = '';
+            hTime.value = '';
+        } else if (val) {
+            manualFields.classList.add('hidden');
+            iType.required = false;
+            iDate.required = false;
+            iTime.required = false;
+
+            const parts = val.split('|');
+            hType.value = parts[0];
+            hDate.value = parts[1];
+            hTime.value = parts[2];
         } else {
-            timeField.classList.add('hidden');
-            timeInputs.forEach(input => {
-                input.required = false;
-                input.checked = false;
-            });
+            manualFields.classList.add('hidden');
         }
     }
 

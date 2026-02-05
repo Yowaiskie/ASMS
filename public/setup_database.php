@@ -5,7 +5,7 @@
 require_once __DIR__ . '/../app/config/config.php';
 
 try {
-    // Connect to MySQL server (without selecting DB first to ensure it exists)
+    // Connect to MySQL server
     $pdo = new PDO("mysql:host=" . DB_HOST, DB_USER, DB_PASS);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
@@ -16,168 +16,97 @@ try {
     // Connect to the specific database
     $pdo->exec("USE " . DB_NAME);
 
-    // --- Table: servers ---
-    $sql = "CREATE TABLE IF NOT EXISTS servers (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        rank VARCHAR(50) NOT NULL, -- Senior, Junior, Aspirant
-        team VARCHAR(50) NOT NULL, -- Team A, Team B
-        status VARCHAR(20) DEFAULT 'Active',
-        email VARCHAR(100),
-        phone VARCHAR(20),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )";
-    $pdo->exec($sql);
-    echo "Table 'servers' created.<br>";
-
-    // Seed Servers
-    $check = $pdo->query("SELECT count(*) FROM servers")->fetchColumn();
-    if ($check == 0) {
-        $stmt = $pdo->prepare("INSERT INTO servers (name, rank, team, status, email) VALUES (?, ?, ?, ?, ?)");
-        $stmt->execute(['Juan Dela Cruz', 'Senior Server', 'Team A', 'Active', 'juan@example.com']);
-        $stmt->execute(['Pedro Penduko', 'Junior Server', 'Team B', 'Active', 'pedro@example.com']);
-        $stmt->execute(['Cardo Dalisay', 'Aspirant', 'Team A', 'Inactive', 'cardo@example.com']);
-        $stmt->execute(['Jose Rizal', 'Head Server', 'Team A', 'Active', 'jose@example.com']);
-        echo "Sample data inserted into 'servers'.<br>";
+    // Function to safely add a column if it doesn't exist
+    function addColumn($pdo, $table, $column, $definition) {
+        $check = $pdo->query("SHOW COLUMNS FROM `$table` LIKE '$column'")->fetch();
+        if (!$check) {
+            $pdo->exec("ALTER TABLE `$table` ADD `$column` $definition");
+            echo "Added column '$column' to table '$table'.<br>";
+        }
     }
 
-    // --- Table: schedules ---
-    $sql = "CREATE TABLE IF NOT EXISTS schedules (
+    // --- Table: servers ---
+    $pdo->exec("CREATE TABLE IF NOT EXISTS servers (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        first_name VARCHAR(100) NOT NULL,
+        last_name VARCHAR(100) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )");
+    
+    // Add all missing columns to 'servers'
+    addColumn($pdo, 'servers', 'middle_name', "VARCHAR(100) AFTER first_name");
+    addColumn($pdo, 'servers', 'nickname', "VARCHAR(50) AFTER last_name");
+    addColumn($pdo, 'servers', 'dob', "DATE AFTER nickname");
+    addColumn($pdo, 'servers', 'age', "INT AFTER dob");
+    addColumn($pdo, 'servers', 'address', "TEXT AFTER age");
+    addColumn($pdo, 'servers', 'phone', "VARCHAR(20) AFTER address");
+    addColumn($pdo, 'servers', 'email', "VARCHAR(100) AFTER phone");
+    addColumn($pdo, 'servers', 'rank', "VARCHAR(50) DEFAULT 'Server' AFTER email");
+    addColumn($pdo, 'servers', 'team', "VARCHAR(50) DEFAULT 'Unassigned' AFTER rank");
+    addColumn($pdo, 'servers', 'status', "VARCHAR(20) DEFAULT 'Active' AFTER team");
+    addColumn($pdo, 'servers', 'month_joined', "VARCHAR(20) AFTER status");
+    addColumn($pdo, 'servers', 'investiture_date', "DATE AFTER month_joined");
+    addColumn($pdo, 'servers', 'order_name', "VARCHAR(100) AFTER investiture_date");
+    addColumn($pdo, 'servers', 'position', "VARCHAR(100) AFTER order_name");
+    addColumn($pdo, 'servers', 'profile_image', "VARCHAR(255) AFTER position");
+    addColumn($pdo, 'servers', 'suspension_until', "DATE NULL AFTER profile_image");
+    addColumn($pdo, 'servers', 'deleted_at', "TIMESTAMP NULL DEFAULT NULL");
+
+    // Check if 'name' column exists and migration is needed
+    $checkName = $pdo->query("SHOW COLUMNS FROM servers LIKE 'name'")->fetch();
+    if ($checkName) {
+        // Migration: If 'name' exists, try to split it into first and last name
+        $pdo->exec("UPDATE servers SET first_name = SUBSTRING_INDEX(name, ' ', 1), last_name = SUBSTRING_INDEX(name, ' ', -1) WHERE first_name = '' OR first_name IS NULL");
+        echo "Migrated 'name' data to 'first_name' and 'last_name'.<br>";
+    }
+
+    // --- Table: users ---
+    $pdo->exec("CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(50) NOT NULL UNIQUE,
+        password VARCHAR(255) NOT NULL,
+        role VARCHAR(20) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )");
+    
+    addColumn($pdo, 'users', 'is_verified', "TINYINT(1) DEFAULT 0");
+    addColumn($pdo, 'users', 'can_edit_profile', "TINYINT(1) DEFAULT 0");
+    addColumn($pdo, 'users', 'has_edited_profile', "TINYINT(1) DEFAULT 0");
+    addColumn($pdo, 'users', 'force_password_reset', "TINYINT(1) DEFAULT 1");
+    addColumn($pdo, 'users', 'last_read_announcements', "TIMESTAMP NULL");
+    addColumn($pdo, 'users', 'server_id', "INT");
+    addColumn($pdo, 'users', 'deleted_at', "TIMESTAMP NULL DEFAULT NULL");
+
+    // --- Other tables ---
+    $pdo->exec("CREATE TABLE IF NOT EXISTS schedules (
         id INT AUTO_INCREMENT PRIMARY KEY,
         mass_type VARCHAR(100) NOT NULL,
         mass_date DATE NOT NULL,
         mass_time VARCHAR(20) NOT NULL,
         status VARCHAR(20) DEFAULT 'Confirmed',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )";
-    $pdo->exec($sql);
-    echo "Table 'schedules' created.<br>";
+    )");
 
-    // Seed Schedules
-    $check = $pdo->query("SELECT count(*) FROM schedules")->fetchColumn();
-    if ($check == 0) {
-        $stmt = $pdo->prepare("INSERT INTO schedules (mass_type, mass_date, mass_time, status) VALUES (?, ?, ?, ?)");
-        $stmt->execute(['Sunday Mass (Early)', '2026-02-08', '06:00 AM', 'Confirmed']);
-        $stmt->execute(['Sunday Mass (Regular)', '2026-02-08', '08:00 AM', 'Confirmed']);
-        $stmt->execute(['Wedding Mass', '2026-02-10', '10:00 AM', 'Pending']);
-        $stmt->execute(['Funeral Mass', '2026-02-11', '01:00 PM', 'Confirmed']);
-        echo "Sample data inserted into 'schedules'.<br>";
-    }
-
-    // --- Table: attendance ---
-    $sql = "CREATE TABLE IF NOT EXISTS attendance (
+    $pdo->exec("CREATE TABLE IF NOT EXISTS attendance (
         id INT AUTO_INCREMENT PRIMARY KEY,
         server_id INT,
         schedule_id INT,
-        status VARCHAR(20) NOT NULL, -- Present, Late, Absent
+        status VARCHAR(20) NOT NULL,
         remarks TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )";
-    $pdo->exec($sql);
-    echo "Table 'attendance' created.<br>";
+    )");
 
-    // Seed Attendance
-    $check = $pdo->query("SELECT count(*) FROM attendance")->fetchColumn();
-    if ($check == 0) {
-        $stmt = $pdo->prepare("INSERT INTO attendance (server_id, schedule_id, status) VALUES (?, ?, ?)");
-        $stmt->execute([1, 1, 'Present']);
-        $stmt->execute([2, 1, 'Late']);
-        $stmt->execute([4, 1, 'Present']);
-        echo "Sample data inserted into 'attendance'.<br>";
-    }
-
-    // --- Table: users ---
-    $sql = "CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(50) NOT NULL UNIQUE,
-        password VARCHAR(255) NOT NULL,
-        role VARCHAR(20) NOT NULL, -- User, Admin, Superadmin
-        is_verified TINYINT(1) DEFAULT 0,
-        force_password_reset TINYINT(1) DEFAULT 1,
-        last_read_announcements TIMESTAMP NULL,
-        server_id INT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )";
-    $pdo->exec($sql);
-    echo "Table 'users' created.<br>";
-
-    // Seed Users
-    $check = $pdo->query("SELECT count(*) FROM users")->fetchColumn();
-    if ($check == 0) {
-        $password = password_hash(DEFAULT_USER_PASSWORD, PASSWORD_DEFAULT); // Use default password
-        
-        $stmt = $pdo->prepare("INSERT INTO users (username, password, role, force_password_reset) VALUES (?, ?, ?, 1)");
-        
-        // Create the requested accounts
-        $stmt->execute(['user', $password, 'User']);
-        $stmt->execute(['admin', $password, 'Admin']);
-        $stmt->execute(['superadmin', $password, 'Superadmin']);
-        
-        echo "Sample accounts inserted (Pass: " . DEFAULT_USER_PASSWORD . ").<br>";
-    }
-
-    // --- Table: announcements ---
-    $sql = "CREATE TABLE IF NOT EXISTS announcements (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        title VARCHAR(255) NOT NULL,
-        category VARCHAR(50) NOT NULL,
-        message TEXT NOT NULL,
-        author VARCHAR(100) DEFAULT 'Admin',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )";
-    $pdo->exec($sql);
-    echo "Table 'announcements' created.<br>";
-
-    // --- Table: logs ---
-    $sql = "CREATE TABLE IF NOT EXISTS logs (
+    $pdo->exec("CREATE TABLE IF NOT EXISTS logs (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT,
-        action VARCHAR(50), -- Create, Update, Delete, Login
-        module VARCHAR(50), -- Servers, Schedules, etc.
+        action VARCHAR(50),
+        module VARCHAR(50),
         description TEXT,
         ip_address VARCHAR(45),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )";
-    $pdo->exec($sql);
-    echo "Table 'logs' created.<br>";
+    )");
 
-    // --- Table: system_settings ---
-    $sql = "CREATE TABLE IF NOT EXISTS system_settings (
-        setting_key VARCHAR(50) PRIMARY KEY,
-        setting_value TEXT,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    )";
-    $pdo->exec($sql);
-    echo "Table 'system_settings' created.<br>";
-
-    // --- Table: excuses ---
-    $sql = "CREATE TABLE IF NOT EXISTS excuses (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        server_id INT NOT NULL,
-        type VARCHAR(50), -- Mass, Meeting, Event
-        absence_date DATE,
-        absence_time TIME,
-        reason TEXT,
-        image_path VARCHAR(255),
-        status VARCHAR(20) DEFAULT 'Pending',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )";
-    $pdo->exec($sql);
-    echo "Table 'excuses' created.<br>";
-
-    // Seed System Settings
-    $check = $pdo->query("SELECT count(*) FROM system_settings")->fetchColumn();
-    if ($check == 0) {
-        $stmt = $pdo->prepare("INSERT INTO system_settings (setting_key, setting_value) VALUES (?, ?)");
-        $stmt->execute(['system_name', 'Altar Servers Management System']);
-        $stmt->execute(['admin_email', 'admin@church.org']);
-        $stmt->execute(['contact_phone', '+63 912 345 6789']);
-        $stmt->execute(['maintenance_mode', 'off']);
-        $stmt->execute(['allow_registration', 'on']);
-        echo "Default system settings seeded.<br>";
-    }
-
-    echo "<hr><strong>Database setup completed successfully!</strong> <a href='" . URLROOT . "'>Go to Dashboard</a>";
+    echo "<hr><strong>Database schema updated successfully!</strong> All columns are now synchronized with the code.";
 
 } catch (PDOException $e) {
     echo "Error: " . $e->getMessage();

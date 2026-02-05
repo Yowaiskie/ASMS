@@ -240,7 +240,13 @@
 
                 <div>
                     <div class="flex justify-between items-end mb-1.5">
-                        <label class="block text-xs font-bold text-slate-500 ml-1">Assigned Servers</label>
+                        <div class="flex items-center gap-2">
+                            <label class="block text-xs font-bold text-slate-500 ml-1">Assigned Servers</label>
+                            <label class="flex items-center gap-1 cursor-pointer group">
+                                <input type="checkbox" id="assignAllCheckbox" onclick="toggleAssignAll(this)" class="rounded text-blue-600 border-gray-300 w-3 h-3 focus:ring-blue-500">
+                                <span class="text-[9px] font-bold text-slate-400 group-hover:text-blue-500 transition-colors uppercase tracking-tighter">Assign All</span>
+                            </label>
+                        </div>
                         <input type="text" id="serverSearch" onkeyup="filterServers()" placeholder="Search..." class="text-[10px] px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none">
                     </div>
                     <div class="max-h-32 overflow-y-auto border border-slate-200 rounded-xl p-2 bg-slate-50 custom-scrollbar" id="serverList">
@@ -478,6 +484,13 @@
         });
     }
 
+    function toggleAssignAll(checkbox) {
+        const checked = checkbox.checked;
+        document.querySelectorAll('.server-checkbox').forEach(cb => {
+            cb.checked = checked;
+        });
+    }
+
     function toggleRecurringOptions() {
         const isRecurring = document.getElementById('is_recurring').checked;
         const options = document.getElementById('recurringOptions');
@@ -506,6 +519,7 @@
     function openModal(mode, date = null, event = null) {
         modal.classList.remove('hidden'); setTimeout(() => { modal.classList.remove('opacity-0'); modalContent.classList.remove('scale-95'); }, 10);
         document.querySelectorAll('.server-checkbox').forEach(cb => cb.checked = false);
+        if(document.getElementById('assignAllCheckbox')) document.getElementById('assignAllCheckbox').checked = false;
         document.querySelectorAll('.color-radio').forEach(r => r.checked = false);
         
         // Reset Recurring

@@ -24,8 +24,11 @@ class AttendanceController extends Controller {
     }
 
     public function index() {
-        if (isset($_SESSION['role']) && $_SESSION['role'] === 'User') {
-            // ... (User View Logic remains same) ...
+        $role = $_SESSION['role'] ?? 'User';
+        $viewType = $_GET['view'] ?? 'manage';
+
+        if ($role === 'User' || ($role !== 'User' && $viewType === 'personal')) {
+            // --- PERSONAL HISTORY VIEW ---
             $allRecords = $this->attendanceRepo->getByUserId($_SESSION['user_id']);
             
             $stats = ['Present' => 0, 'Late' => 0, 'Absent' => 0, 'Excused' => 0];
@@ -38,15 +41,23 @@ class AttendanceController extends Controller {
                 else $massRecords[] = $r;
             }
 
-            $this->view('attendance/user_index', [
-                'pageTitle' => 'My Attendance',
+            $viewData = [
+                'pageTitle' => ($role === 'User') ? 'My Attendance' : 'My Personal History',
                 'title' => 'My Attendance | ASMS',
                 'stats' => $stats,
                 'massRecords' => $massRecords,
-                'meetingRecords' => $meetingRecords
-            ]);
+                'meetingRecords' => $meetingRecords,
+                'isAdmin' => ($role !== 'User')
+            ];
+
+            if ($role === 'User') {
+                $this->view('attendance/user_index', $viewData);
+            } else {
+                // For Admins viewing their own, we might want a different wrapper or button to go back
+                $this->view('attendance/user_index', $viewData);
+            }
         } else {
-            // Admin View
+            // --- ADMIN MANAGEMENT VIEW ---
             $date = $_GET['date'] ?? date('Y-m-d');
             $search = trim($_GET['search'] ?? '');
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -128,6 +139,10 @@ class AttendanceController extends Controller {
 
     public function update() {
         $this->verifyCsrf();
+        $role = $_SESSION['role'] ?? 'User';
+        if ($role !== 'Admin' && $role !== 'Superadmin') {
+            $this->forbidden();
+        }
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $id = $_POST['attendance_id'] ?? '';
@@ -229,6 +244,11 @@ class AttendanceController extends Controller {
     }
 
     public function downloadReport() {
+        $role = $_SESSION['role'] ?? 'User';
+        if ($role !== 'Admin' && $role !== 'Superadmin') {
+            $this->forbidden();
+        }
+
         $dateInput = $_GET['date'] ?? date('Y-m-d');
         $month = date('m', strtotime($dateInput));
         $year = date('Y', strtotime($dateInput));
@@ -426,7 +446,7 @@ class AttendanceController extends Controller {
         $html .= '</tbody></table>
             <div class="footer">
                 <div class="legend" style="margin-top: 10px; font-size: 8px;">
-                    <b>Legend:</b> P = Present | L = Late | A = Absent | E = Excused | <b>S</b> = Serve | <b>M</b> = Meeting
+                    <b>Legend:</b> P = Present | L = Late | A = Absent | E = Excused | <b>S</b> = Assigned (Waiting) | <b>M</b> = Meeting
                 </div>
                 <table style="width: 100%; border: none; margin-top: 20px;">
                     <tr>

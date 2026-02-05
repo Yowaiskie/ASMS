@@ -33,6 +33,14 @@ class Controller {
         }
     }
 
+    public function forbidden() {
+        $this->view('errors/403', [
+            'title' => 'Forbidden Access | ASMS',
+            'pageTitle' => 'Access Denied'
+        ]);
+        exit;
+    }
+
     protected function requireLogin() {
         if (!isset($_SESSION['user_id'])) {
             header('Location: ' . URLROOT . '/login');
@@ -44,22 +52,9 @@ class Controller {
     }
 
     protected function checkForceReset() {
-        $forceReset = $_SESSION['force_reset'] ?? 0;
-        if (!$forceReset) return;
-
-        $current_path = rtrim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
-        $allowed_paths = [
-            rtrim(URLROOT . '/settings', '/'),
-            rtrim(URLROOT . '/settings/store', '/'),
-            rtrim(URLROOT . '/logout', '/'),
-            rtrim(URLROOT . '/maintenance', '/')
-        ];
-
-        if (!in_array($current_path, $allowed_paths)) {
-            setFlash('msg_info', 'You must change your password before you can proceed.', 'bg-blue-100 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg mb-4 text-sm font-bold');
-            header('Location: ' . URLROOT . '/settings');
-            exit;
-        }
+        // No longer strictly redirecting. 
+        // Notification will be handled via views/banners.
+        return;
     }
 
     protected function checkVerification() {
@@ -77,7 +72,7 @@ class Controller {
         ];
 
         if (!$isVerified && !in_array($current_path, $allowed_paths)) {
-            setFlash('msg_error', 'Please complete your personal details to verify your account.', 'bg-amber-100 border border-amber-200 text-amber-700 px-4 py-3 rounded-lg mb-4 text-sm font-bold');
+            setFlash('msg_error', 'VERIFICATION: Please complete your profile details to verify your account.', 'bg-amber-100 border border-amber-200 text-amber-700 px-4 py-3 rounded-lg mb-4 text-sm font-bold');
             header('Location: ' . URLROOT . '/settings');
             exit;
         }
