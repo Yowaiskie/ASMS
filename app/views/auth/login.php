@@ -13,129 +13,145 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
+        body { font-family: 'Inter', sans-serif; }
         .bg-mesh {
             background-color: #0f172a;
             background-image: 
-                radial-gradient(at 0% 0%, rgba(30, 99, 212, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(30, 99, 212, 0.15) 0px, transparent 50%);
+                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(37, 99, 235, 0.15) 0px, transparent 50%);
         }
-        .login-card {
-            backdrop-filter: blur(16px) saturate(180%);
-            -webkit-backdrop-filter: blur(16px) saturate(180%);
-            background-color: rgba(255, 255, 255, 0.9);
-        }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .animate-fade-up {
-            animation: fadeInUp 0.6s ease-out forwards;
+        .animate-fade { animation: fadeIn 0.8s ease-out forwards; }
+        
+        /* Form Field Enhancement */
+        .input-group:focus-within label { color: #2563eb; }
+        .input-group:focus-within .input-icon { color: #2563eb; transform: scale(1.1); }
+        .custom-input {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .custom-input:focus {
+            background-color: #fff;
+            box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.1), 0 8px 10px -6px rgba(37, 99, 235, 0.1);
         }
     </style>
 </head>
-<body class="bg-mesh min-h-screen flex items-center justify-center p-4">
+<body class="bg-white min-h-screen flex overflow-hidden">
 
-    <div class="w-full max-w-md animate-fade-up">
-        <!-- Branding Top -->
-        <div class="text-center mb-8">
-            <div class="inline-flex p-4 bg-white/10 rounded-3xl backdrop-blur-xl mb-4 shadow-xl ring-1 ring-white/20">
+    <!-- Left Side: Visual/Branding -->
+    <div class="hidden lg:flex lg:w-5/12 bg-mesh relative items-center justify-center p-8 overflow-hidden">
+        <div class="absolute inset-0 opacity-10">
+            <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" stroke-width="0.5"/></pattern></defs>
+                <rect width="100" height="100" fill="url(#grid)" />
+            </svg>
+        </div>
+        
+        <div class="relative z-10 text-center max-w-sm animate-fade">
+            <div class="inline-flex p-4 bg-white/10 rounded-3xl backdrop-blur-2xl mb-6 shadow-2xl ring-1 ring-white/20">
                 <img src="<?= URLROOT ?>/images/logo.png" alt="Logo" class="h-16 w-auto drop-shadow-2xl">
             </div>
-            <h1 class="text-3xl font-extrabold text-white tracking-tight">Ministry of Altar Servers</h1>
-            <p class="text-slate-400 text-sm mt-2 font-medium">Sacred Heart of Jesus Parish - MBS</p>
+            <h1 class="text-3xl font-black text-white tracking-tighter mb-4 leading-tight">
+                Serve the Lord <br><span class="text-blue-500 text-2xl">with Gladness.</span>
+            </h1>
+            <p class="text-slate-400 text-sm font-medium leading-relaxed italic">
+                "As for me and my household, we will serve the Lord." &mdash; Joshua 24:15
+            </p>
         </div>
+    </div>
 
-        <!-- Login Card -->
-        <div class="login-card p-8 md:p-10 rounded-[2.5rem] shadow-2xl border border-white/20">
-            <div class="mb-8">
-                <h2 class="text-xl font-bold text-slate-800">Sign In</h2>
-                <p class="text-slate-500 text-xs mt-1">Please enter your credentials to access your account.</p>
+    <!-- Right Side: Enhanced Login Form -->
+    <div class="w-full lg:w-7/12 flex items-center justify-center p-6 md:p-12 bg-slate-50/30 relative">
+        <div class="w-full max-w-sm animate-fade" style="animation-delay: 0.1s">
+            
+            <div class="mb-10 text-center lg:text-left">
+                <div class="lg:hidden flex justify-center mb-6">
+                    <img src="<?= URLROOT ?>/images/logo.png" alt="Logo" class="h-12 w-auto">
+                </div>
+                <h2 class="text-3xl font-black text-slate-900 tracking-tight mb-2">Welcome Back</h2>
+                <p class="text-slate-500 text-sm font-medium">Please enter your server credentials.</p>
             </div>
 
             <?php if(isset($error)): ?>
-                <div class="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-2xl mb-6 text-xs font-bold flex items-center gap-3">
+                <div class="bg-rose-50 border border-rose-100 text-rose-600 px-4 py-3 rounded-2xl mb-8 text-xs font-bold flex items-center gap-3 animate-fade">
                     <i class="ph-bold ph-warning-circle text-lg"></i>
-                    <?= $error ?>
+                    <p><?= $error ?></p>
                 </div>
             <?php endif; ?>
 
-            <?php if(isset($_GET['registered'])): ?>
-                <div class="bg-emerald-50 border border-emerald-100 text-emerald-600 px-4 py-3 rounded-2xl mb-6 text-xs font-bold flex items-center gap-3">
-                    <i class="ph-bold ph-check-circle text-lg"></i>
-                    Registration successful! You can now login.
-                </div>
-            <?php endif; ?>
-
-            <form action="<?= URLROOT ?>/auth/login" method="POST" class="space-y-5">
+            <form action="<?= URLROOT ?>/auth/login" method="POST" class="space-y-6">
                 <?php csrf_field(); ?>
                 
-                <div class="space-y-2">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Username</label>
-                    <div class="relative group">
-                        <span class="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-blue-600 transition-colors">
-                            <i class="ph ph-user text-xl"></i>
+                <div class="space-y-2 input-group">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1 transition-colors">Username</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 input-icon transition-all">
+                            <i class="ph-bold ph-user-circle text-xl"></i>
                         </span>
                         <input type="text" name="username" required 
-                            class="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm font-medium text-slate-700 placeholder:text-slate-400"
-                            placeholder="Your username">
+                            class="custom-input w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 text-sm font-bold text-slate-800 placeholder:text-slate-300 placeholder:font-medium"
+                            placeholder="Enter your username">
                     </div>
                 </div>
 
-                <div class="space-y-2">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Password</label>
-                    <div class="relative group">
-                        <span class="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-blue-600 transition-colors">
-                            <i class="ph ph-lock-key text-xl"></i>
+                <div class="space-y-2 input-group">
+                    <div class="flex justify-between items-center px-1">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] transition-colors">Password</label>
+                    </div>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 input-icon transition-all">
+                            <i class="ph-bold ph-lock-key text-xl"></i>
                         </span>
                         <input type="password" id="password" name="password" required 
-                            class="w-full pl-12 pr-12 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm font-medium text-slate-700 placeholder:text-slate-400"
+                            class="custom-input w-full pl-12 pr-12 py-4 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 text-sm font-bold text-slate-800 placeholder:text-slate-300"
                             placeholder="••••••••">
-                        <button type="button" onclick="togglePassword()" class="absolute right-4 top-3.5 text-slate-400 hover:text-blue-600 transition-colors">
-                            <i id="eye-icon" class="ph ph-eye text-xl"></i>
+                        <button type="button" onclick="togglePassword()" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors">
+                            <i id="eye-icon" class="ph-bold ph-eye text-xl"></i>
                         </button>
                     </div>
                 </div>
 
-                <div class="pt-2">
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-blue-200 transform active:scale-[0.98] flex items-center justify-center gap-2">
-                        <span>Access Dashboard</span>
-                        <i class="ph-bold ph-arrow-right"></i>
+                <div class="pt-4">
+                    <button type="submit" class="group w-full bg-slate-900 hover:bg-blue-600 text-white font-black py-4 rounded-2xl transition-all shadow-xl shadow-slate-200 hover:shadow-blue-200 transform active:scale-[0.98] flex items-center justify-center gap-3 uppercase tracking-widest text-xs">
+                        <span>Sign In</span>
+                        <i class="ph-bold ph-arrow-right text-base group-hover:translate-x-1 transition-transform"></i>
                     </button>
                 </div>
             </form>
 
-            <div class="mt-8 pt-6 border-t border-slate-100 text-center">
-                <p class="text-xs text-slate-400 font-medium italic">
-                    Altar Servers Management System v1.2
-                </p>
-            </div>
+            <?php if (isset($allowRegistration) && $allowRegistration === 'on'): ?>
+                <div class="mt-12 p-6 bg-slate-50 border border-slate-100 rounded-[2rem] flex items-center justify-between">
+                    <div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider">New here?</p>
+                        <p class="text-xs text-slate-600 font-bold">Start serving today</p>
+                    </div>
+                    <a href="<?= URLROOT ?>/register" class="px-5 py-2.5 bg-white border border-slate-200 text-blue-600 hover:text-white hover:bg-blue-600 hover:border-blue-600 rounded-xl font-black text-[10px] uppercase tracking-wider transition-all shadow-sm">Create Account</a>
+                </div>
+            <?php endif; ?>
         </div>
-        
-        <!-- Footer Info -->
-        <p class="text-center mt-8 text-slate-500 text-[10px] font-bold uppercase tracking-widest">
-            &copy; <?= date('Y') ?> Sacred Heart of Jesus Parish. All rights reserved.
-        </p>
+
+        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 lg:left-12 lg:translate-x-0">
+            <p class="text-slate-300 text-[9px] font-black uppercase tracking-[0.3em]">
+                ASMS &bull; SHJP MBS &bull; <?= date('Y') ?>
+            </p>
+        </div>
     </div>
 
     <script>
         function togglePassword() {
             const passwordInput = document.getElementById('password');
             const eyeIcon = document.getElementById('eye-icon');
-            
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
-                eyeIcon.classList.remove('ph-eye');
-                eyeIcon.classList.add('ph-eye-closed');
+                eyeIcon.classList.replace('ph-eye', 'ph-eye-closed');
             } else {
                 passwordInput.type = 'password';
-                eyeIcon.classList.remove('ph-eye-closed');
-                eyeIcon.classList.add('ph-eye');
+                eyeIcon.classList.replace('ph-eye-closed', 'ph-eye');
             }
         }
     </script>

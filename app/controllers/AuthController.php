@@ -19,6 +19,8 @@ class AuthController extends Controller {
             exit;
         }
         
+        $allowRegistration = \App\Models\SystemSetting::get('allow_registration', 'off');
+        
         // Load view directly (special layout for auth)
         require_once '../app/views/auth/login.php';
     }
@@ -53,6 +55,7 @@ class AuthController extends Controller {
                     header('Location: ' . URLROOT . '/dashboard');
                 }
             } else {
+                $allowRegistration = \App\Models\SystemSetting::get('allow_registration', 'off');
                 $error = "Invalid username or password.";
                 require_once '../app/views/auth/login.php';
             }
@@ -65,6 +68,13 @@ class AuthController extends Controller {
             header('Location: ' . URLROOT . '/dashboard');
             exit;
         }
+
+        $allowRegistration = \App\Models\SystemSetting::get('allow_registration', 'off');
+        if ($allowRegistration !== 'on') {
+            setFlash('msg_error', 'Public registration is currently disabled.');
+            redirect('login');
+        }
+
         require_once '../app/views/auth/register.php';
     }
 

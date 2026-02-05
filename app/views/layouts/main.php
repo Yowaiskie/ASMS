@@ -15,14 +15,21 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --primary: #1e63d4;
-            --color-primary: #1e63d4;
+            --primary: #2563eb;
+            --color-primary: #2563eb;
         }
-        .bg-primary { background-color: #1e63d4 !important; }
+        .bg-primary { background-color: #2563eb !important; }
+
+        .bg-mesh-dark {
+            background-color: #0f172a;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(37, 99, 235, 0.1) 0px, transparent 50%);
+        }
 
         /* Global Loading Overlay */
         #global-loader {
@@ -89,7 +96,7 @@
         }
     </style>
 </head>
-<body class="bg-[#f8fafc] font-sans text-slate-800 flex h-screen overflow-hidden">
+<body class="bg-slate-50 font-sans text-slate-800 flex h-screen overflow-hidden">
 
     <!-- Sidebar -->
     <?php include __DIR__ . '/../partials/sidebar.php'; ?>
