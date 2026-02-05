@@ -18,7 +18,7 @@
             Import CSV
         </button>
 
-        <button onclick="generateSundays()" data-loading class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-5 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 font-bold text-sm">
+        <button onclick="generateSundays()" data-loading="Generating Schedules..." class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-5 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 font-bold text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
@@ -266,7 +266,7 @@
                 </div>
                 <button type="submit" class="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">Save Schedule</button>
             </div>
-            <div id="deleteBtnContainer" class="hidden mt-4 pt-3 border-t border-slate-100 text-center"><button type="button" id="deleteLink" data-loading class="text-xs text-red-500 font-bold hover:underline">Delete Schedule</button></div>
+            <div id="deleteBtnContainer" class="hidden mt-4 pt-3 border-t border-slate-100 text-center"><button type="button" id="deleteLink" data-loading="Deleting..." class="text-xs text-red-500 font-bold hover:underline">Delete Schedule</button></div>
         </form>
     </div>
 </div>

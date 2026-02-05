@@ -4,7 +4,7 @@
         <p class="text-slate-500 text-sm mt-1">Monitor system activities and user actions</p>
     </div>
     
-    <a href="<?= URLROOT ?>/logs?export=1&<?= http_build_query($filters) ?>" data-loading class="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl shadow-lg transition-all flex items-center gap-2 font-semibold text-sm">
+    <a href="<?= URLROOT ?>/logs?export=1&<?= http_build_query($filters) ?>" data-loading="Exporting Log..." class="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl shadow-lg transition-all flex items-center gap-2 font-semibold text-sm">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
         </svg>

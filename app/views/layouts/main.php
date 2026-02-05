@@ -97,7 +97,7 @@
     <!-- Loading Overlay -->
     <div id="global-loader">
         <span class="loader-spinner"></span>
-        <p class="font-bold text-sm tracking-widest uppercase animate-pulse">Generating PDF...</p>
+        <p id="loader-text" class="font-bold text-sm tracking-widest uppercase animate-pulse">Processing...</p>
         <p class="text-[10px] text-slate-300 mt-2">Please wait a moment</p>
     </div>
 
@@ -241,6 +241,12 @@
             const loadingEl = e.target.closest('[data-loading]');
             if (loadingEl) {
                 const loader = document.getElementById('global-loader');
+                const loaderText = document.getElementById('loader-text');
+                
+                // Set dynamic text
+                const msg = loadingEl.getAttribute('data-loading');
+                loaderText.innerText = msg ? msg : 'Processing...';
+                
                 loader.style.display = 'flex';
                 
                 // Also add button spinner if it's a button or link
