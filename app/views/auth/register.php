@@ -129,14 +129,6 @@
                     </button>
                 </div>
             </form>
-
-            <div class="mt-12 p-6 bg-slate-50 border border-slate-100 rounded-[2rem] flex items-center justify-between">
-                <div>
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Member already?</p>
-                    <p class="text-xs text-slate-600 font-bold">Sign in to continue</p>
-                </div>
-                <a href="<?= URLROOT ?>/login" class="px-5 py-2.5 bg-white border border-slate-200 text-blue-600 hover:text-white hover:bg-blue-600 hover:border-blue-600 rounded-xl font-black text-[10px] uppercase tracking-wider transition-all shadow-sm">Sign In</a>
-            </div>
         </div>
 
         <div class="absolute bottom-8 left-1/2 -translate-x-1/2 lg:left-12 lg:translate-x-0">
