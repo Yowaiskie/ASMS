@@ -11,6 +11,13 @@
             </svg>
         </button>
 
+        <button type="button" onclick="document.getElementById('importModal').classList.remove('hidden')" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-5 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 font-bold text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
+            </svg>
+            Import CSV
+        </button>
+
         <button type="button" onclick="toggleForm()" class="bg-primary hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl shadow-lg shadow-blue-200 transition-all flex items-center gap-2 font-semibold text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -100,6 +107,52 @@
             <button type="button" onclick="toggleForm()" class="px-8 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition-all">Cancel</button>
         </div>
     </form>
+</div>
+
+<!-- Import Modal -->
+<div id="importModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden p-8">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-bold text-slate-800">Bulk Import Users</h3>
+            <button onclick="document.getElementById('importModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+        </div>
+
+        <form action="<?= URLROOT ?>/users/import" method="POST" enctype="multipart/form-data" id="importForm">
+            <?php csrf_field(); ?>
+            
+            <div class="mb-6 p-4 bg-slate-50 rounded-2xl border border-slate-100 text-[10px] text-slate-600">
+                <strong class="block mb-2 text-slate-700 uppercase tracking-widest text-[9px]">Required CSV Format:</strong>
+                <code class="block bg-white p-2 rounded border border-slate-200 leading-relaxed break-all">
+                    Username, Full Name, Role (User/Admin)
+                </code>
+                <p class="mt-2 text-slate-400 italic font-medium">* 3 columns total. First row is header.</p>
+            </div>
+
+            <div id="dropZone" class="border-2 border-dashed border-slate-200 rounded-3xl p-10 flex flex-col items-center justify-center gap-4 hover:border-blue-400 hover:bg-blue-50 transition-all cursor-pointer group text-center">
+                <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm font-bold text-slate-700">Drop CSV file here</p>
+                    <p class="text-xs text-slate-400 mt-1">or click to browse</p>
+                </div>
+                <input type="file" name="csv_file" id="fileInput" class="hidden" accept=".csv">
+            </div>
+            
+            <div id="fileInfo" class="mt-4 p-4 bg-blue-50 rounded-2xl border border-blue-100 hidden">
+                <div class="flex items-center gap-3">
+                    <svg class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span id="fileName" class="text-xs font-bold text-blue-800 truncate">file.csv</span>
+                </div>
+            </div>
+
+            <button type="submit" id="submitImport" disabled class="w-full mt-6 py-4 bg-slate-100 text-slate-400 rounded-2xl font-bold text-sm transition-all">
+                Upload and Import
+            </button>
+        </form>
+    </div>
 </div>
 
 <div class="relative">
@@ -380,6 +433,48 @@
         modal.classList.add("opacity-0");
         document.getElementById("editModalContent").classList.add("scale-95");
         setTimeout(() => modal.classList.add("hidden"), 300);
+    }
+
+    // CSV Import Logic
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileNameDisplay = document.getElementById('fileName');
+    const submitBtn = document.getElementById('submitImport');
+
+    if (dropZone) {
+        dropZone.onclick = () => fileInput.click();
+
+        dropZone.ondragover = (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-blue-400', 'bg-blue-50');
+        };
+
+        ['dragleave', 'drop'].forEach(event => {
+            dropZone.addEventListener(event, () => {
+                dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+            });
+        });
+
+        dropZone.ondrop = (e) => {
+            e.preventDefault();
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                handleFileSelect();
+            }
+        };
+
+        fileInput.onchange = handleFileSelect;
+    }
+
+    function handleFileSelect() {
+        if (fileInput.files.length) {
+            fileNameDisplay.textContent = fileInput.files[0].name;
+            fileInfo.classList.remove('hidden');
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('bg-slate-100', 'text-slate-400');
+            submitBtn.classList.add('bg-blue-600', 'text-white', 'hover:bg-blue-700', 'shadow-lg', 'shadow-blue-200');
+        }
     }
 
     function toggleFieldPassword(btn) {

@@ -70,11 +70,14 @@
             <?php csrf_field(); ?>
             
             <div class="mb-6 p-4 bg-slate-50 rounded-2xl border border-slate-100 text-[10px] text-slate-600">
-                <strong class="block mb-2 text-slate-700 uppercase tracking-widest text-[9px]">Required CSV Format (In Order):</strong>
-                <code class="block bg-white p-2 rounded border border-slate-200 leading-relaxed break-all">
+                <div class="flex justify-between items-center mb-2">
+                    <strong class="text-slate-700 uppercase tracking-widest text-[9px]">Required CSV Format (16 Columns):</strong>
+                    <span class="text-blue-600 font-bold">Recommended</span>
+                </div>
+                <code class="block bg-white p-2 rounded border border-slate-200 leading-relaxed break-all mb-2">
                     First Name, Middle Name, Last Name, Nickname, Address, Date of Birth (YYYY-MM-DD), Age, Phone, Joined (YYYY-MM), Investiture (YYYY-MM-DD), Order, Position, Rank, Team, Status, Email
                 </code>
-                <p class="mt-2 text-slate-400 italic font-medium">* 16 columns total. Ensure the column order is exact.</p>
+                <p class="mt-2 text-slate-400 italic font-medium">* Ensure exact column order. Use comma or semicolon.</p>
             </div>
 
             <div id="dropZone" class="border-2 border-dashed border-slate-200 rounded-3xl p-10 flex flex-col items-center justify-center gap-4 hover:border-blue-400 hover:bg-blue-50 transition-all cursor-pointer group">
@@ -445,5 +448,49 @@
         setTimeout(() => {
             modal.classList.add('hidden');
         }, 300);
+    }
+
+    // CSV Import Logic
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const submitBtn = document.getElementById('submitImport');
+
+    if (dropZone) {
+        dropZone.onclick = () => fileInput.click();
+
+        dropZone.ondragover = (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-blue-400', 'bg-blue-50');
+        };
+
+        dropZone.ondragleave = () => {
+            dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+        };
+
+        dropZone.ondrop = (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+            const files = e.dataTransfer.files;
+            if (files.length) {
+                fileInput.files = files;
+                updateFileInfo(files[0].name);
+            }
+        };
+
+        fileInput.onchange = () => {
+            if (fileInput.files.length) {
+                updateFileInfo(fileInput.files[0].name);
+            }
+        };
+    }
+
+    function updateFileInfo(name) {
+        fileName.innerText = name;
+        fileInfo.classList.remove('hidden');
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('bg-slate-100', 'text-slate-400');
+        submitBtn.classList.add('bg-blue-600', 'text-white', 'hover:bg-blue-700', 'shadow-lg', 'shadow-blue-200');
     }
 </script>

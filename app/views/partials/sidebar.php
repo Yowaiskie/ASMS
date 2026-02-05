@@ -44,11 +44,12 @@ try {
     }
 } catch (Exception $e) {}
 
-// Navigation
+// Navigation Structure
 $nav_items = [
     [
-        'label' => 'Main',
-        'type' => 'flat',
+        'label' => 'Overview',
+        'type' => 'dropdown',
+        'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />',
         'items' => [
             [
                 'label' => 'Dashboard',
@@ -64,8 +65,9 @@ $nav_items = [
         ]
     ],
     [
-        'label' => 'Operations',
-        'type' => 'flat',
+        'label' => 'Service',
+        'type' => 'dropdown',
+        'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-1 1H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />',
         'items' => [
             [
                 'label' => 'Schedules',
@@ -86,8 +88,9 @@ $nav_items = [
         ]
     ],
     [
-        'label' => 'Directory',
-        'type' => 'flat',
+        'label' => 'Administration',
+        'type' => 'dropdown',
+        'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />',
         'items' => [
             [
                 'label' => 'Server Profiles',
@@ -99,13 +102,6 @@ $nav_items = [
                 'url' => $root . '/users',
                 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />'
             ],
-        ]
-    ],
-    [
-        'label' => 'System',
-        'type' => 'dropdown',
-        'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />',
-        'items' => [
             [
                 'label' => 'Reports',
                 'url' => $root . '/reports',
@@ -165,6 +161,8 @@ $nav_items = [
             <?php foreach ($nav_items as $group): ?>
                 <?php 
                     $role = $_SESSION['role'] ?? 'User';
+                    
+                    // Filter visible items in this group
                     $visible_items = array_filter($group['items'], function($item) use ($role) {
                         if ($role === 'User') {
                             if (in_array($item['label'], ['Server Profiles', 'User Accounts', 'Reports', 'Audit Logs', 'Archive Center'])) return false;
@@ -179,10 +177,6 @@ $nav_items = [
                 ?>
 
                 <div>
-                    <p class="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3">
-                        <?= $group['label'] ?>
-                    </p>
-                    
                     <div class="space-y-1">
                         <?php if ($group['type'] === 'flat'): ?>
                             <?php foreach ($visible_items as $item): 

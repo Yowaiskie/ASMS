@@ -233,7 +233,14 @@ class UserController extends Controller {
                 $db = \App\Core\Database::getInstance();
 
                 $firstRow = true;
-                while (($column = fgetcsv($file, 10000, ",")) !== FALSE) {
+                while (($line = fgetcsv($file, 10000, ",")) !== FALSE) {
+                    $column = $line;
+
+                    // Delimiter Detection: If only 1 column found, try semicolon
+                    if (count($column) == 1 && strpos($column[0], ';') !== false) {
+                        $column = str_getcsv($column[0], ';');
+                    }
+
                     if ($firstRow) { $firstRow = false; continue; } // Skip Header
 
                     if (count($column) < 2) continue;

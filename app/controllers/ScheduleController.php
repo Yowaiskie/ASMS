@@ -472,6 +472,7 @@ class ScheduleController extends Controller {
     }
 
     public function import() {
+        $this->verifyCsrf();
         if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['csv_file']) && $_FILES['csv_file']['error'] == 0) {
             $fileName = $_FILES['csv_file']['tmp_name'];
             
@@ -480,7 +481,14 @@ class ScheduleController extends Controller {
                 $count = 0;
                 $firstRow = true;
                 
-                while (($column = fgetcsv($file, 10000, ",")) !== FALSE) {
+                while (($line = fgetcsv($file, 10000, ",")) !== FALSE) {
+                    $column = $line;
+
+                    // Delimiter Detection: If only 1 column found, try semicolon
+                    if (count($column) == 1 && strpos($column[0], ';') !== false) {
+                        $column = str_getcsv($column[0], ';');
+                    }
+
                     if ($firstRow) { $firstRow = false; continue; } // Skip Header row
 
                     if (count($column) < 3) continue;
