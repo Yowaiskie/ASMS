@@ -167,7 +167,7 @@
                                                                             <input type="hidden" name="id" value="<?= $svr->id ?>">
                                                                             <input type="hidden" name="action" value="unsuspend">
                                                                             <input type="hidden" name="page" value="<?= $pagination['page'] ?? 1 ?>">
-                                                                            <button type="submit" data-loading="Updating Status..." title="Unsuspend Server" class="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors">
+                                                                            <button type="submit" title="Unsuspend Server" class="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors">
                                                                                 <i class="ph ph-shield-check text-lg"></i>
                                                                             </button>
                                                                         </form>
@@ -177,7 +177,7 @@
                                                                             <input type="hidden" name="id" value="<?= $svr->id ?>">
                                                                             <input type="hidden" name="action" value="suspend">
                                                                             <input type="hidden" name="page" value="<?= $pagination['page'] ?? 1 ?>">
-                                                                            <button type="button" onclick="showConfirm('Suspend this server for 30 days?', 'Suspend Server', () => document.getElementById('suspend-server-<?= $svr->id ?>').submit())" data-loading="Updating Status..." title="Suspend Server" class="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors">
+                                                                            <button type="button" onclick="showConfirm('Suspend this server for 30 days?', 'Suspend Server', () => document.getElementById('suspend-server-<?= $svr->id ?>').submit())" title="Suspend Server" class="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors">
                                                                                 <i class="ph ph-hand-palm text-lg"></i>
                                                                             </button>
                                                                         </form>
