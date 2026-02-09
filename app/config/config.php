@@ -16,7 +16,16 @@ define('DB_NAME', $_ENV['DB_NAME'] ?? 'asms_db');
 define('DEFAULT_USER_PASSWORD', $_ENV['DEFAULT_USER_PASSWORD'] ?? '12345');
 
 define('APPROOT', dirname(dirname(__FILE__)));
-define('URLROOT', '/ASMS/public');
+
+// Dynamic URLROOT
+$scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+$urlRoot = str_replace('/index.php', '', $scriptName);
+
+// If we are in the root (htdocs), urlRoot might be empty or just a slash.
+// We want it to be empty if it's the root to avoid double slashes like //login
+$urlRoot = rtrim($urlRoot, '/');
+define('URLROOT', $urlRoot);
+
 define('SITENAME', 'ASMS');
 
 // SMTP Config

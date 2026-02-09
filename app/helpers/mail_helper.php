@@ -3,7 +3,12 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-function sendEmailNotification($to, $subject, $title, $message, $actionText = 'Go to Dashboard', $actionUrl = 'http://localhost/ASMS/public/login') {
+function sendEmailNotification($to, $subject, $title, $message, $actionText = 'Go to Dashboard', $actionUrl = null) {
+    if ($actionUrl === null) {
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $actionUrl = $protocol . '://' . $host . URLROOT . '/login';
+    }
     $mail = new PHPMailer(true);
 
     if (empty($to)) {

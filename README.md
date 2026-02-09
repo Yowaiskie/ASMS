@@ -46,9 +46,10 @@ public/             # Web root (Index, CSS, JS, Assets)
    ```
 2. **Setup Database:**
    - Create a database named `asms_db` in PHPMyAdmin.
-   - Run the setup script: `http://localhost/ASMS/public/setup_database.php`
+   - Run the setup script: `http://localhost/[your-folder]/public/setup_database.php`
 3. **Configure:**
-   - Edit `app/config/config.php` if you use different DB credentials.
+   - Edit `.env` or `app/config/config.php` if you use different DB credentials.
+   - The system automatically detects its root folder, so you can host it in a subfolder or directly in the document root.
 4. **Build Styles:**
    ```bash
    npm install

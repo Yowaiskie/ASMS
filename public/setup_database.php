@@ -1,6 +1,6 @@
 <?php
 // setup_database.php
-// Run this file in your browser: http://localhost/ASMS/public/setup_database.php
+// Run this file in your browser: http://localhost/[your-path]/public/setup_database.php
 
 require_once __DIR__ . '/../app/config/config.php';
 
