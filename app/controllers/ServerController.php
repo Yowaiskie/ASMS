@@ -421,8 +421,9 @@ class ServerController extends Controller {
     }
 
     public function delete() {
-        $id = $_GET['id'] ?? null;
-        $page = $_GET['page'] ?? 1;
+        $this->verifyCsrf();
+        $id = $_POST['id'] ?? null;
+        $page = $_POST['page'] ?? 1;
         $server = $this->serverRepo->getById($id);
         $name = $server ? $server->name : "ID: $id";
 

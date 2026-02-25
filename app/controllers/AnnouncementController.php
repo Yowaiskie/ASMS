@@ -72,17 +72,15 @@ class AnnouncementController extends Controller {
     }
 
     public function delete() {
-        $page = $_GET['page'] ?? 1;
+        $this->verifyCsrf();
+        $page = $_POST['page'] ?? 1;
         if (($_SESSION['role'] ?? '') === 'User') {
             $this->forbidden();
         }
 
-        $id = $_GET['id'] ?? null;
-        $announcement = $this->announcementRepo->getById($id);
-        $title = $announcement ? $announcement->title : "ID: $id";
-
+        $id = $_POST['id'] ?? null;
         if ($id && $this->announcementRepo->delete($id)) {
-            logAction('Delete', 'Announcements', "Deleted announcement: $title");
+            logAction('Delete', 'Announcements', "Deleted announcement ID: $id");
             setFlash('msg_success', 'Announcement deleted.');
         } else {
             setFlash('msg_error', 'Failed to delete announcement.');

@@ -123,7 +123,7 @@
         </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full text-left">
+            <table class="w-full text-left min-w-[800px]">
                 <thead class="bg-slate-50/50 text-[10px] font-bold text-slate-500 uppercase border-b border-slate-100">
                     <tr>
                         <th class="p-4 w-12 selection-col hidden"></th>
@@ -183,7 +183,7 @@
                                                                         </form>
                                                                     <?php endif; ?>
                                     
-                                                                    <button type="button" onclick="showConfirm('Are you sure you want to delete this server profile?', 'Delete Server', () => window.location.href='<?= URLROOT ?>/servers/delete?id=<?= $svr->id ?>&page=<?= $pagination['page'] ?? 1 ?>')" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors action-btn" title="Delete Server"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+                                                                    <button type="button" onclick="showConfirm('Are you sure you want to delete this server profile?', 'Delete Server', function() { document.getElementById('deleteServerId').value = '<?= $svr->id ?>'; document.getElementById('singleDeleteForm').submit(); })" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors action-btn" title="Delete Server"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
                                                                 </div>
                                                             </td>                        </tr>
                         <?php endforeach; ?>
@@ -228,6 +228,13 @@
         <?php endif; ?>
     </div>
 </div>
+
+<!-- Single Delete Form -->
+<form action="<?= URLROOT ?>/servers/delete" method="POST" id="singleDeleteForm" class="hidden">
+    <?php csrf_field(); ?>
+    <input type="hidden" name="id" id="deleteServerId">
+    <input type="hidden" name="page" value="<?= $pagination['page'] ?? 1 ?>">
+</form>
 
 <!-- Bulk Delete Hidden Form -->
             <form action="<?= URLROOT ?>/servers/bulk-delete" method="POST" id="hiddenBulkDeleteForm" class="hidden">

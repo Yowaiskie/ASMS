@@ -352,7 +352,8 @@ class ScheduleController extends Controller {
     }
 
     public function delete() {
-        $id = $_GET['id'] ?? null;
+        $this->verifyCsrf();
+        $id = $_POST['id'] ?? null;
         if ($id && $this->scheduleRepo->delete($id)) {
             logAction('Delete', 'Schedules', "Deleted schedule ID: $id");
             setFlash('msg_success', 'Schedule deleted.');

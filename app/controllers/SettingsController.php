@@ -157,7 +157,9 @@ class SettingsController extends Controller {
                 $new = $_POST['new_password'];
                 $confirm = $_POST['confirm_password'];
 
-                if ($new !== $confirm) {
+                if (empty($current)) {
+                    setFlash('msg_error', 'Please enter your current password.');
+                } elseif ($new !== $confirm) {
                     setFlash('msg_error', 'New passwords do not match.');
                 } else {
                     $user = $this->userRepo->getById($_SESSION['user_id']);
@@ -165,12 +167,13 @@ class SettingsController extends Controller {
                         $hashed = password_hash($new, PASSWORD_DEFAULT);
                         if ($this->userRepo->update($_SESSION['user_id'], [
                             'password' => $hashed, 
-                            'role' => $role,
                             'force_password_reset' => 0
                         ])) {
                             $_SESSION['force_reset'] = 0;
                             logAction('Update', 'Settings', 'Changed account password.');
                             setFlash('msg_success', 'Password updated successfully.');
+                        } else {
+                            setFlash('msg_error', 'Something went wrong while updating the password.');
                         }
                     } else {
                         setFlash('msg_error', 'Incorrect current password.');

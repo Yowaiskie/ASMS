@@ -171,7 +171,7 @@
         </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full text-left">
+            <table class="w-full text-left min-w-[700px]">
                 <thead class="bg-slate-50/50 text-xs font-bold text-slate-500 uppercase border-b border-slate-100">
                     <tr>
                         <th class="p-4 w-12 selection-col hidden"></th>

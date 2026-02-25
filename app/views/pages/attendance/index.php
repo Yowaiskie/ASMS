@@ -1,45 +1,48 @@
-<div class="flex justify-between items-end mb-8">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
     <div>
         <h2 class="text-2xl font-bold text-slate-800">Attendance Management</h2>
         <p class="text-slate-500 text-sm mt-1">Daily tracking for Mass and Meetings</p>
     </div>
     
-    <div class="flex items-center gap-3">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <!-- View Toggle -->
-        <div class="bg-white p-1 rounded-xl border border-slate-200 shadow-sm flex mr-2">
-            <a href="<?= URLROOT ?>/attendance?view=manage" class="px-4 py-2 rounded-lg text-xs font-bold transition-all <?= (!isset($_GET['view']) || $_GET['view'] === 'manage') ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50' ?>">
+        <div class="bg-white p-1 rounded-xl border border-slate-200 shadow-sm flex w-full sm:w-auto">
+            <a href="<?= URLROOT ?>/attendance?view=manage" class="flex-1 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all text-center <?= (!isset($_GET['view']) || $_GET['view'] === 'manage') ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50' ?>">
                 Management
             </a>
-            <a href="<?= URLROOT ?>/attendance?view=personal" class="px-4 py-2 rounded-lg text-xs font-bold transition-all <?= (isset($_GET['view']) && $_GET['view'] === 'personal') ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50' ?>">
+            <a href="<?= URLROOT ?>/attendance?view=personal" class="flex-1 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all text-center <?= (isset($_GET['view']) && $_GET['view'] === 'personal') ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50' ?>">
                 My History
             </a>
         </div>
 
-        <a href="<?= URLROOT ?>/attendance/downloadReport?date=<?= $date ?>" data-loading="Generating Report..." class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-5 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 font-bold text-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Download Report
-        </a>
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+            <a href="<?= URLROOT ?>/attendance/downloadReport?date=<?= $date ?>" data-loading="Generating Report..." class="flex-1 sm:flex-none bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-4 py-2.5 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 font-bold text-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Report
+            </a>
 
-        <form action="<?= URLROOT ?>/attendance" method="GET" class="flex items-center gap-2">
-            <input type="hidden" name="date" value="<?= $date ?>">
-            <div class="relative">
-                <input type="text" name="search" value="<?= h($search ?? '') ?>" placeholder="Search server..." class="pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm w-64 transition-all">
-                <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            <form action="<?= URLROOT ?>/attendance" method="GET" class="flex items-center gap-2 flex-1 sm:flex-none">
+                <input type="hidden" name="date" value="<?= $date ?>">
+                <div class="relative flex-1">
+                    <input type="text" name="search" value="<?= h($search ?? '') ?>" placeholder="Search..." class="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all">
+                    <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="flex items-center gap-2 bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
-                <input type="date" name="date" value="<?= $date ?>" class="px-4 py-2 bg-transparent text-sm font-bold text-slate-700 focus:outline-none" onchange="this.form.submit()">
-            </div>
-        </form>
+                
+                <div class="bg-white p-1 rounded-xl border border-slate-200 shadow-sm shrink-0">
+                    <input type="date" name="date" value="<?= $date ?>" class="px-2 py-2 bg-transparent text-sm font-bold text-slate-700 focus:outline-none" onchange="this.form.submit()">
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
 <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-    <table class="w-full text-left border-collapse">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse min-w-[800px]">
         <!-- ... existing thead ... -->
         <thead>
             <tr class="bg-slate-50/50 text-slate-500 text-[10px] uppercase font-bold tracking-widest border-b border-slate-100">
@@ -106,6 +109,7 @@
             <?php endif; ?>
         </tbody>
     </table>
+    </div>
 
     <!-- Pagination -->
     <?php if (isset($pagination) && $pagination['totalPages'] > 1): ?>

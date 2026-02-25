@@ -1,31 +1,31 @@
-<div class="flex items-end justify-between mb-8">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
     <div>
         <h2 class="text-2xl font-bold text-slate-800">Schedule Management</h2>
         <p class="text-slate-500 text-sm mt-1">Manage mass schedules and assignments</p>
     </div>
     
-    <div class="flex gap-2">
+    <div class="flex flex-wrap gap-2">
         <button onclick="toggleSelectionMode()" id="selectModeBtn" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 p-2.5 rounded-xl shadow-sm transition-all" title="Select Multiple">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
         </button>
 
-        <button onclick="document.getElementById('importModal').classList.remove('hidden')" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-5 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 font-bold text-sm">
+        <button onclick="document.getElementById('importModal').classList.remove('hidden')" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-4 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 font-bold text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
-            Import CSV
+            Import
         </button>
 
-        <button onclick="generateSundays()" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-5 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 font-bold text-sm">
+        <button onclick="generateSundays()" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-4 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 font-bold text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
             Auto-Fill
         </button>
         
-        <button onclick="openModal('add')" class="bg-primary hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl shadow-lg shadow-blue-200 transition-all flex items-center gap-2 font-semibold text-sm">
+        <button onclick="openModal('add')" class="bg-primary hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl shadow-lg shadow-blue-200 transition-all flex items-center gap-2 font-semibold text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
@@ -112,18 +112,20 @@
         </div>
     </div>
     
-    <div class="grid grid-cols-7 gap-4 mb-4 text-center">
-        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Sun</div>
-        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Mon</div>
-        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Tue</div>
-        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Wed</div>
-        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Thu</div>
-        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Fri</div>
-        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Sat</div>
-    </div>
-    
-    <div id="calendarGrid" class="grid grid-cols-7 gap-4 auto-rows-fr">
-        <!-- Calendar Cells -->
+    <div class="overflow-x-auto custom-scrollbar">
+        <div class="grid grid-cols-7 gap-4 mb-4 text-center min-w-[700px]">
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Sun</div>
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Mon</div>
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Tue</div>
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Wed</div>
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Thu</div>
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Fri</div>
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Sat</div>
+        </div>
+        
+        <div id="calendarGrid" class="grid grid-cols-7 gap-4 auto-rows-fr min-w-[700px]">
+            <!-- Calendar Cells -->
+        </div>
     </div>
 
     <!-- Legend -->
@@ -139,10 +141,16 @@
 </div>
 
 <!-- Forms for Bulk Action -->
-<form action="<?= URLROOT ?>/schedules/bulk-action" method="POST" id="bulkForm" class="hidden">
+<form action="<?= URLROOT ?>/schedules/bulk-delete" method="POST" id="bulkForm" class="hidden">
     <?php csrf_field(); ?>
     <input type="hidden" name="action" id="bulkAction" value="">
     <input type="hidden" name="ids" id="bulkIds" value="">
+</form>
+
+<!-- Single Delete Form -->
+<form action="<?= URLROOT ?>/schedules/delete" method="POST" id="singleDeleteForm" class="hidden">
+    <?php csrf_field(); ?>
+    <input type="hidden" name="id" id="deleteScheduleId">
 </form>
 
 <!-- Add/Edit Modal -->
@@ -546,7 +554,10 @@
             if (event.color) { const r = document.querySelector(`.color-radio[value="${event.color}"]`); if (r) r.checked = true; }
             if (event.assigned_servers) event.assigned_servers.forEach(id => { const cb = document.querySelector(`.server-checkbox[value="${id}"]`); if (cb) cb.checked = true; });
             document.getElementById('deleteBtnContainer').classList.remove('hidden');
-            document.getElementById('deleteLink').onclick = () => showConfirm('Delete this schedule?', 'Delete Schedule', () => window.location.href=`<?= URLROOT ?>/schedules/delete?id=${event.id}`);
+            document.getElementById('deleteLink').onclick = () => showConfirm('Delete this schedule?', 'Delete Schedule', function() {
+                document.getElementById('deleteScheduleId').value = event.id;
+                document.getElementById('singleDeleteForm').submit();
+            });
 
             // Check if past
             const eventDateTime = new Date(`${event.mass_date} ${event.mass_time}`);

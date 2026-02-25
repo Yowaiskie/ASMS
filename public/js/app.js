@@ -6,14 +6,6 @@ function toggleElement(id) {
     }
 }
 
-// Helper to toggle elements
-function toggleElement(id) {
-    const el = document.getElementById(id);
-    if (el) {
-        el.classList.toggle('hidden');
-    }
-}
-
 // Global Loading Helper
 function setLoading(el) {
     if (el) {

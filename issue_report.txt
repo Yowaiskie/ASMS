@@ -1,0 +1,129 @@
+ASMS PROJECT - ISSUE REPORT & TESTING PROCESS
+==========================================
+
+Generated on: 2026-02-10
+
+1. DATABASE SCHEMA INCOMPLETENESS
+---------------------------------
+The file 'public/setup_database.php' is missing several table definitions and columns that are required by the application's repositories and models.
+
+* MISSING TABLES:
+  - 'announcements': Required by AnnouncementRepository.php
+  - 'excuses': Required by ExcuseRepository.php
+  - 'system_settings': Required by SystemSetting.php model.
+
+* MISSING COLUMNS:
+  - Table 'schedules': 'event_name' (VARCHAR), 'color' (VARCHAR).
+  - Table 'users': 'last_viewed_excuses' (TIMESTAMP).
+
+TEST PROCESS:
+1. Run http://localhost/ASMS/public/setup_database.php in your browser.
+2. Attempt to login as Admin.
+3. Navigate to 'Announcements' or 'Excuses' page.
+4. EXPECTED RESULT: SQL error "Table 'asms_db.announcements' doesn't exist" or similar.
+
+
+2. MISSING MODEL FILE
+---------------------
+The repository 'app/repositories/ExcuseRepository.php' exists and is used by controllers, but there is no corresponding model file 'app/models/Excuse.php'. While the repository uses raw results, this is inconsistent with other modules like 'Announcement' or 'User'.
+
+TEST PROCESS:
+1. Check the 'app/models' directory.
+2. EXPECTED RESULT: 'Excuse.php' is missing.
+
+
+3. INCOMPLETE TRAINING MODULE
+-----------------------------
+The 'TrainingController.php' and its view 'app/views/pages/trainings/index.php' are currently just placeholders. There is no backend logic, database table, or model for managing training modules.
+
+TEST PROCESS:
+1. Navigate to the 'Trainings' page from the sidebar.
+2. EXPECTED RESULT: A static page with no interactive features or data.
+
+
+4. SOFT DELETE INCONSISTENCY
+----------------------------
+The 'UserRepository' and 'ServerRepository' have circular soft-delete logic. When a User is deleted, it tries to delete the linked Server, and vice versa. If not handled carefully, this can lead to redundant database calls.
+
+TEST PROCESS:
+1. Create a user linked to a server.
+2. Delete the user from the 'Users' management page.
+3. Check the 'servers' table in the database.
+4. EXPECTED RESULT: Both 'users.deleted_at' and 'servers.deleted_at' should be set, but verify if the logic in 'UserRepository::delete' and 'ServerRepository::delete' causes issues.
+
+
+5. CONFIGURATION & ENVIRONMENT
+------------------------------
+The 'app/config/config.php' depends on a '.env' file. If the user only has '.env.example', the application might fail to connect to the database.
+
+TEST PROCESS:
+1. Ensure '.env' exists and matches your local MySQL credentials.
+2. If missing, copy '.env.example' to '.env'.
+
+
+HOW TO TEST THE ENTIRE SYSTEM
+-----------------------------
+1. Setup Database: Run 'public/setup_database.php'.
+2. Check for Errors: Look at the output of the setup script.
+3. Login: Try logging in with the default credentials (if any, check AuthController or Seed data).
+4. Feature Walkthrough:
+   - Dashboard: Check if statistics are loading.
+   - Schedules: Try creating a schedule (will likely fail due to missing 'event_name' column).
+   - Servers: Try adding a server.
+   - Excuses/Announcements: Will fail due to missing tables.
+   - Archives: Check if soft-deleted items appear.
+
+6. INITIAL ACCESS PROBLEM (LOCKOUT)
+----------------------------------
+The system has no default user creation script. Since registration is disabled by default (and the 'system_settings' table where it could be enabled is missing), a fresh installation will have no way to log in or create an account.
+
+TEST PROCESS:
+1. Setup a fresh database using 'setup_database.php'.
+2. Navigate to the login page.
+3. Attempt to register.
+4. EXPECTED RESULT: Registration is disabled, and there are no default credentials to log in.
+
+8. FIXED: INSECURE GET DELETIONS & CSRF
+-------------------------------------
+Status: RESOLVED
+
+Many delete buttons were using 'GET' requests (window.location.href), which is insecure and bypassed CSRF protection. This often caused "broken" behavior where actions wouldn't process correctly.
+
+FIXED IN: 
+- 'ScheduleController.php', 'ServerController.php', 'AnnouncementController.php'
+- Updated views to use hidden 'POST' forms with 'csrf_field()' for all delete actions.
+- Added 'verify_csrf()' to the corresponding controller methods.
+
+9. FIXED: INCORRECT ROUTES IN VIEWS
+-----------------------------------
+Status: RESOLVED
+Fixed a bug in 'Schedules' view where bulk delete was pointing to a non-existent '/schedules/bulk-action' route. It now correctly points to '/schedules/bulk-delete'.
+
+10. FIXED: SUPERADMIN EXCLUSION FROM SERVER LISTS
+----------------------------------------------
+Status: RESOLVED
+
+Superadmin details are no longer shown in the Altar Servers Directory or the PDF Master List. This ensures that administrative accounts are kept separate from the volunteer server records.
+
+FIXED IN: 'ServerRepository.php'
+- Updated 'search', 'countSearch', 'getAll', and 'countAll' methods to filter out records linked to users with the 'Superadmin' role.
+
+11. FIXED: UI PROFESSIONALIZATION & FULL RESPONSIVENESS
+------------------------------------------------------
+Status: RESOLVED
+
+The application has been transformed from a static, basic layout into a professional, modern, and fully responsive system.
+
+FIXED:
+- **Mobile Navigation**: Implemented a slide-over sidebar with a hamburger menu and backdrop blur effects.
+- **Smart Sidebar Content**: Used JS cloning to ensure the same navigation menu works on both desktop and mobile without duplicating code.
+- **Responsive Layouts**: Redesigned headers for Dashboard, Attendance, Servers, Users, and Schedules to stack properly on mobile.
+- **Horizontal Scrolling**: Added custom scrollable containers for all tables and the calendar grid, preventing layout "breakage" on small screens.
+- **Premium Styling**: Added custom-designed scrollbars, 'h-screen-safe' viewport fixes, and refined typography/spacing across the system. (Removed parish logo from UI as requested).
+- **Dropdown Fix**: Re-engineered sidebar dropdown logic to be robust against cloning and context changes.
+
+RECOMMENDED NEXT STEPS
+----------------------
+1. Implement the Training module's backend logic.
+2. Review soft-delete logic in repositories for redundancy.
+3. Add more unit tests for repository methods.

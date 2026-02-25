@@ -74,10 +74,11 @@ try {
     addColumn($pdo, 'users', 'has_edited_profile', "TINYINT(1) DEFAULT 0");
     addColumn($pdo, 'users', 'force_password_reset', "TINYINT(1) DEFAULT 1");
     addColumn($pdo, 'users', 'last_read_announcements', "TIMESTAMP NULL");
+    addColumn($pdo, 'users', 'last_viewed_excuses', "TIMESTAMP NULL");
     addColumn($pdo, 'users', 'server_id', "INT");
     addColumn($pdo, 'users', 'deleted_at', "TIMESTAMP NULL DEFAULT NULL");
 
-    // --- Other tables ---
+    // --- Table: schedules ---
     $pdo->exec("CREATE TABLE IF NOT EXISTS schedules (
         id INT AUTO_INCREMENT PRIMARY KEY,
         mass_type VARCHAR(100) NOT NULL,
@@ -86,7 +87,10 @@ try {
         status VARCHAR(20) DEFAULT 'Confirmed',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )");
+    addColumn($pdo, 'schedules', 'event_name', "VARCHAR(255) AFTER mass_type");
+    addColumn($pdo, 'schedules', 'color', "VARCHAR(50) AFTER event_name");
 
+    // --- Table: attendance ---
     $pdo->exec("CREATE TABLE IF NOT EXISTS attendance (
         id INT AUTO_INCREMENT PRIMARY KEY,
         server_id INT,
@@ -96,6 +100,7 @@ try {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )");
 
+    // --- Table: logs ---
     $pdo->exec("CREATE TABLE IF NOT EXISTS logs (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT,
@@ -106,7 +111,54 @@ try {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )");
 
-    echo "<hr><strong>Database schema updated successfully!</strong> All columns are now synchronized with the code.";
+    // --- Table: announcements ---
+    $pdo->exec("CREATE TABLE IF NOT EXISTS announcements (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        category VARCHAR(50),
+        message TEXT NOT NULL,
+        author VARCHAR(100),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )");
+
+    // --- Table: excuses ---
+    $pdo->exec("CREATE TABLE IF NOT EXISTS excuses (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        server_id INT NOT NULL,
+        type VARCHAR(50) NOT NULL,
+        absence_date DATE NOT NULL,
+        absence_time VARCHAR(50),
+        reason TEXT NOT NULL,
+        image_path VARCHAR(255),
+        status VARCHAR(20) DEFAULT 'Pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )");
+
+    // --- Table: system_settings ---
+    $pdo->exec("CREATE TABLE IF NOT EXISTS system_settings (
+        setting_key VARCHAR(50) PRIMARY KEY,
+        setting_value TEXT
+    )");
+
+    // Default System Settings
+    $pdo->exec("INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES 
+        ('system_name', 'Altar Servers Management System'),
+        ('allow_registration', 'on'),
+        ('maintenance_mode', 'off')");
+
+    // --- CREATE DEFAULT SUPERADMIN ---
+    $adminUsername = 'superadmin';
+    $adminPassword = password_hash('admin123', PASSWORD_DEFAULT);
+    
+    $checkAdmin = $pdo->prepare("SELECT id FROM users WHERE username = :username");
+    $checkAdmin->execute(['username' => $adminUsername]);
+    if (!$checkAdmin->fetch()) {
+        $pdo->prepare("INSERT INTO users (username, password, role, force_password_reset) VALUES (:u, :p, 'Superadmin', 0)")
+            ->execute(['u' => $adminUsername, 'p' => $adminPassword]);
+        echo "Default Superadmin created (Username: superadmin, Password: admin123).<br>";
+    }
+
+    echo "<hr><strong>Database schema updated successfully!</strong> All columns and tables are now synchronized with the code.";
 
 } catch (PDOException $e) {
     echo "Error: " . $e->getMessage();

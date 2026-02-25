@@ -1,4 +1,4 @@
-<div class="flex items-end justify-between mb-8 animate-fade-in-up">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 animate-fade-in-up">
     <div>
         <h2 class="text-2xl font-bold text-slate-800">Manage Excuse Letters</h2>
         <p class="text-slate-500 text-sm mt-1">Review and action pending excuse requests</p>
@@ -37,7 +37,8 @@
         </div>
     </div>
 
-    <table class="w-full text-left border-collapse">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse min-w-[900px]">
         <thead>
             <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
                 <th class="p-4 w-12 selection-col hidden"></th>
@@ -125,6 +126,7 @@
             <?php endif; ?>
         </tbody>
     </table>
+    </div>
 </div>
 
 <!-- Pagination -->

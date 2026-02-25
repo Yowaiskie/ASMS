@@ -226,26 +226,42 @@ $nav_items = [
                     </div>
                 </div>
             <?php endforeach; ?>
-        </nav>
-    </div>
 
-    <div class="p-4 border-t border-slate-50 shrink-0 bg-white">
-        <a href="<?= URLROOT ?>/logout" class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            <span class="font-bold text-xs">Logout</span>
-        </a>
+            <!-- Logout (Visible in Nav for Cloning) -->
+            <div class="pt-4 mt-4 border-t border-slate-50">
+                <a href="<?= URLROOT ?>/logout" class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    <span class="font-bold text-xs">Logout</span>
+                </a>
+            </div>
+        </nav>
     </div>
 </aside>
 
 <script>
+
     function toggleSidebarDropdown(btn) {
-        const group = btn.closest('.dropdown-group');
-        const content = group.querySelector('.dropdown-content');
+
+        // Find the parent container (either the direct parent div or a specifically marked container)
+
+        // We use nextElementSibling to find the content div right after the button
+
+        const content = btn.nextElementSibling;
+
         const arrow = btn.querySelector('.dropdown-arrow');
+
         
-        content.classList.toggle('hidden');
-        arrow.classList.toggle('rotate-180');
+
+        if (content) {
+
+            content.classList.toggle('hidden');
+
+            if (arrow) arrow.classList.toggle('rotate-180');
+
+        }
+
     }
+
 </script>

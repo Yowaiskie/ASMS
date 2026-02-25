@@ -24,6 +24,28 @@
         }
         .bg-primary { background-color: #2563eb !important; }
 
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Fix for mobile height issues */
+        .h-screen-safe {
+            height: 100vh;
+            height: 100dvh;
+        }
+
         .bg-mesh-dark {
             background-color: #0f172a;
             background-image: 
@@ -96,9 +118,30 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 font-sans text-slate-800 flex h-screen overflow-hidden">
+<body class="bg-slate-50 font-sans text-slate-800 flex h-screen-safe overflow-hidden">
 
-    <!-- Sidebar -->
+    <!-- Mobile Sidebar Backdrop (Overlay) -->
+    <div id="mobile-sidebar-overlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden transition-opacity duration-300 opacity-0 md:hidden" onclick="closeMobileSidebar()"></div>
+
+    <!-- Mobile Sidebar Container -->
+    <div id="mobile-sidebar" class="fixed inset-y-0 left-0 w-64 bg-white z-[60] transform -translate-x-full transition-transform duration-300 ease-in-out md:hidden shadow-2xl">
+        <div class="h-full flex flex-col">
+            <div class="p-4 flex items-center justify-between border-b border-slate-50">
+                <div class="flex items-center gap-2">
+                    <img src="<?= URLROOT ?>/images/logo.png" class="h-8 w-auto">
+                    <span class="font-bold text-slate-800">ASMS</span>
+                </div>
+                <button onclick="closeMobileSidebar()" class="p-2 text-slate-400 hover:text-slate-600">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto" id="mobile-sidebar-content">
+                <!-- Sidebar content will be cloned here via JS to avoid duplication -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar (Desktop) -->
     <?php include __DIR__ . '/../partials/sidebar.php'; ?>
 
     <!-- Loading Overlay -->
@@ -111,14 +154,22 @@
     <!-- Main Content Wrapper -->
     <main class="flex-1 flex flex-col transition-all duration-300 w-full overflow-hidden">
         
-        <!-- Mobile Header (Optional) -->
-        <header class="md:hidden h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 shadow-sm z-40 shrink-0">
-            <span class="font-bold text-lg text-primary">ASMS</span>
-            <button class="p-2 text-slate-500">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
-                </svg>
-            </button>
+        <!-- Mobile Header -->
+        <header class="md:hidden h-16 bg-white border-b border-slate-100 flex items-center justify-between px-4 shrink-0 z-40">
+            <div class="flex items-center gap-3">
+                <button onclick="openMobileSidebar()" class="p-2 -ml-2 text-slate-500 hover:text-blue-600 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                    </svg>
+                </button>
+                <div class="flex items-center gap-2">
+                    <img src="<?= URLROOT ?>/images/logo.png" class="h-8 w-auto">
+                    <span class="font-black text-slate-800 tracking-tight">ASMS</span>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+            </div>
         </header>
 
         <!-- Page Content -->
@@ -260,6 +311,34 @@
                 }, 3500);
             }
         });
+
+        // Mobile Sidebar Controls
+        const mobileSidebar = document.getElementById('mobile-sidebar');
+        const mobileOverlay = document.getElementById('mobile-sidebar-overlay');
+        const desktopSidebarNav = document.querySelector('aside nav');
+        const mobileSidebarContent = document.getElementById('mobile-sidebar-content');
+
+        function openMobileSidebar() {
+            // Clone nav if not already cloned
+            if (mobileSidebarContent.children.length === 0) {
+                const navClone = desktopSidebarNav.cloneNode(true);
+                mobileSidebarContent.appendChild(navClone);
+            }
+            
+            mobileSidebar.classList.remove('-translate-x-full');
+            mobileOverlay.classList.remove('hidden');
+            setTimeout(() => {
+                mobileOverlay.classList.remove('opacity-0');
+            }, 10);
+        }
+
+        function closeMobileSidebar() {
+            mobileSidebar.classList.add('-translate-x-full');
+            mobileOverlay.classList.add('opacity-0');
+            setTimeout(() => {
+                mobileOverlay.classList.add('hidden');
+            }, 300);
+        }
     </script>
 </body>
 </html>
