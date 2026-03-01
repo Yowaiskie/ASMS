@@ -51,6 +51,13 @@ class Controller {
         $this->checkVerification();
     }
 
+    protected function requireRole($role) {
+        $this->requireLogin();
+        if (($_SESSION['role'] ?? '') !== $role) {
+            $this->forbidden();
+        }
+    }
+
     protected function checkForceReset() {
         // No longer strictly redirecting. 
         // Notification will be handled via views/banners.

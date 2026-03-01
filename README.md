@@ -19,7 +19,7 @@ A comprehensive, robust, and secure management platform specifically designed fo
 
 - **Backend:** PHP 8.x (Custom OOP MVC Framework)
 - **Frontend:** Tailwind CSS v4 (Modern Utility-first CSS)
-- **Database:** MySQL / MariaDB (Singleton PDO Connection)
+- **Database:** MySQL (Singleton PDO Connection)
 - **Icons:** Phosphor Icons / HeroIcons
 - **Charts:** Chart.js
 - **Environment:** XAMPP / Apache

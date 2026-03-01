@@ -6,11 +6,13 @@ use App\Core\Controller;
 use App\Repositories\ScheduleRepository;
 use App\Repositories\ServerRepository;
 use App\Repositories\AnnouncementRepository;
+use App\Repositories\ScheduleTemplateRepository;
 
 class ScheduleController extends Controller {
     private $scheduleRepo;
     private $serverRepo;
     private $announcementRepo;
+    private $templateRepo;
     private $userRepo;
     private $db;
 
@@ -19,6 +21,7 @@ class ScheduleController extends Controller {
         $this->scheduleRepo = new ScheduleRepository();
         $this->serverRepo = new ServerRepository();
         $this->announcementRepo = new AnnouncementRepository();
+        $this->templateRepo = new ScheduleTemplateRepository();
         $this->userRepo = new \App\Repositories\UserRepository();
         $this->db = \App\Core\Database::getInstance();
     }
@@ -216,7 +219,7 @@ class ScheduleController extends Controller {
                     logAction('Update', 'Schedules', "Updated schedule ID: $id (" . $data['mass_type'] . ")");
                     setFlash('msg_success', 'Schedule updated successfully!');
                 } else {
-                    setFlash('msg_error', 'Failed to update schedule.');
+                    setFlash('msg_error', 'Failed to update schedule. A schedule already exists for this date and time.');
                 }
             } elseif ($isRecurring) {
                 // Create Recurring
@@ -237,6 +240,7 @@ class ScheduleController extends Controller {
                     $end = new \DateTime($endDate);
                     $current = clone $startDate;
                     $count = 0;
+                    $skipped = 0;
 
                     while ($current <= $end) {
                         $shouldCreate = false;
@@ -257,13 +261,18 @@ class ScheduleController extends Controller {
 
                         if ($shouldCreate) {
                             $data['mass_date'] = $current->format('Y-m-d');
-                            if ($this->scheduleRepo->create($data)) {
-                                $newId = $this->db->lastInsertId();
-                                if ($newId) {
-                                    $this->scheduleRepo->syncAssignments($newId, $assignedServers);
-                                    $this->notifyAssignedServers($newId, $data, $assignedServers);
+                            // Check for conflict before creating in loop
+                            if (!$this->scheduleRepo->hasConflict($data['mass_date'], $data['mass_time'])) {
+                                if ($this->scheduleRepo->create($data)) {
+                                    $newId = $this->db->lastInsertId();
+                                    if ($newId) {
+                                        $this->scheduleRepo->syncAssignments($newId, $assignedServers);
+                                        $this->notifyAssignedServers($newId, $data, $assignedServers);
+                                    }
+                                    $count++;
                                 }
-                                $count++;
+                            } else {
+                                $skipped++;
                             }
                         }
 
@@ -271,8 +280,6 @@ class ScheduleController extends Controller {
                         if ($frequency === 'daily') {
                             $current->modify("+$interval day");
                         } elseif ($frequency === 'weekly') {
-                            // If we are checking specific days, we go day by day, 
-                            // but if we hit the end of the week, we jump by interval weeks
                             if (empty($recurringDays)) {
                                 $current->modify("+$interval week");
                             } else {
@@ -291,16 +298,10 @@ class ScheduleController extends Controller {
 
                     $this->db->commit();
                     
-                    // Trigger Announcement
-                    $this->announcementRepo->create([
-                        'title' => 'Recurring Schedules Added',
-                        'category' => 'Mass Schedule',
-                        'message' => $count . ' new schedules for ' . $data['mass_type'] . ' have been generated until ' . date('M d, Y', strtotime($endDate)) . '.',
-                        'author' => $_SESSION['full_name'] ?? 'Admin'
-                    ]);
-
-                    logAction('Create', 'Schedules', "Created $count recurring schedules for " . $data['mass_type']);
-                    setFlash('msg_success', "Successfully created $count recurring schedules!");
+                    $msg = "Successfully created $count recurring schedules!";
+                    if ($skipped > 0) $msg .= " ($skipped slots were skipped due to conflicts).";
+                    
+                    setFlash('msg_success', $msg);
                 } catch (\Exception $e) {
                     $this->db->rollBack();
                     setFlash('msg_error', 'Error creating recurring schedules: ' . $e->getMessage());
@@ -315,18 +316,9 @@ class ScheduleController extends Controller {
                         $this->notifyAssignedServers($newId, $data, $assignedServers);
                     }
                     
-                    // Trigger Announcement
-                    $this->announcementRepo->create([
-                        'title' => 'New Schedule Added',
-                        'category' => 'Mass Schedule',
-                        'message' => 'A new ' . $data['mass_type'] . ' has been scheduled for ' . date('M d, Y', strtotime($data['mass_date'])) . ' at ' . date('h:i A', strtotime($data['mass_time'])) . '.',
-                        'author' => $_SESSION['full_name'] ?? 'Admin'
-                    ]);
-
-                    logAction('Create', 'Schedules', "Created new schedule: " . $data['mass_type'] . " on " . $data['mass_date']);
                     setFlash('msg_success', 'Schedule created successfully!');
                 } else {
-                    setFlash('msg_error', 'Failed to create schedule.');
+                    setFlash('msg_error', 'Failed to create schedule. A schedule already exists for this date and time.');
                 }
             }
             redirect('schedules');
@@ -402,74 +394,175 @@ class ScheduleController extends Controller {
     }
 
     public function generate() {
-        $month = str_pad($_GET['month'] ?? date('m'), 2, '0', STR_PAD_LEFT);
-        $year = $_GET['year'] ?? date('Y');
+        $startMonth = (int)($_GET['month'] ?? date('m'));
+        $startYear = (int)($_GET['year'] ?? date('Y'));
+        $endMonth = isset($_GET['end_month']) && $_GET['end_month'] !== '' ? (int)$_GET['end_month'] : $startMonth;
+        $endYear = isset($_GET['end_year']) && $_GET['end_year'] !== '' ? (int)$_GET['end_year'] : $startYear;
         
-        $sundayTimes = ['06:00', '07:30', '09:00', '16:00', '17:30', '19:00'];
-        $count = 0;
+        $templates = $this->templateRepo->getAll();
+
+        if (empty($templates)) {
+            setFlash('msg_error', "No Auto-Fill templates found. Please configure them first in Auto-Fill Settings.");
+            redirect('schedules');
+            return;
+        }
 
         try {
-            $date = new \DateTime("$year-$month-01");
-            
-            while ($date->format('m') == $month) {
-                $dayOfWeek = $date->format('w');
-                $dateStr = $date->format('Y-m-d');
+            $startDate = new \DateTime("$startYear-$startMonth-01");
+            $endDate = new \DateTime("$endYear-$endMonth-01");
+            $endDate->modify('last day of this month');
 
-                // Saturday: Anticipated Mass at 6PM
-                if ($dayOfWeek == 6) {
-                    $data = [
-                        'mass_type' => 'Anticipated Mass',
-                        'mass_date' => $dateStr,
-                        'mass_time' => '18:00',
-                        'status' => 'Confirmed'
-                    ];
-                    $this->scheduleRepo->create($data);
-                    $count++;
-                }
+            $current = clone $startDate;
+            $count = 0;
+            $monthsProcessed = [];
 
-                // Sunday: All slots + Fixed Meeting
-                if ($dayOfWeek == 0) {
-                    foreach ($sundayTimes as $time) {
-                        $data = [
-                            'mass_type' => 'Sunday Mass',
-                            'mass_date' => $dateStr,
-                            'mass_time' => $time,
-                            'status' => 'Confirmed'
-                        ];
-                        $this->scheduleRepo->create($data);
-                        $count++;
+            while ($current <= $endDate) {
+                $month = $current->format('m');
+                $year = $current->format('Y');
+                $monthsProcessed[] = $current->format('F Y');
+                
+                $monthStart = clone $current;
+                $monthEnd = clone $current;
+                $monthEnd->modify('last day of this month');
+
+                $dayRunner = clone $monthStart;
+                while ($dayRunner <= $monthEnd) {
+                    $dayOfWeek = (int)$dayRunner->format('w');
+                    $dateStr = $dayRunner->format('Y-m-d');
+
+                    $dayTemplates = array_filter($templates, function($t) use ($dayOfWeek) {
+                        return (int)$t->day_of_week === $dayOfWeek;
+                    });
+
+                    foreach ($dayTemplates as $tpl) {
+                        // Check for conflict before auto-generating
+                        if (!$this->scheduleRepo->hasConflict($dateStr, $tpl->mass_time)) {
+                            $data = [
+                                'mass_type' => $tpl->mass_type,
+                                'event_name' => $tpl->event_name,
+                                'color' => $tpl->color,
+                                'mass_date' => $dateStr,
+                                'mass_time' => $tpl->mass_time,
+                                'status' => 'Confirmed'
+                            ];
+                            $this->scheduleRepo->create($data);
+                            $count++;
+                        }
                     }
-
-                    // Add Fixed Meeting (1:00 PM - 3:00 PM)
-                    $this->scheduleRepo->create([
-                        'mass_type' => 'Meeting',
-                        'mass_date' => $dateStr,
-                        'mass_time' => '13:00',
-                        'status' => 'Confirmed',
-                        'color' => 'gray'
-                    ]);
-                    $count++;
+                    $dayRunner->modify('+1 day');
                 }
                 
-                $date->modify('+1 day');
+                $current->modify('first day of next month');
             }
 
-            logAction('Create', 'Schedules', "Generated $count schedules for $month/$year.");
+            $monthRangeStr = count($monthsProcessed) > 1 
+                ? $monthsProcessed[0] . " to " . end($monthsProcessed)
+                : $monthsProcessed[0];
+
+            logAction('Create', 'Schedules', "Generated $count schedules for $monthRangeStr based on templates.");
             
             // Bulk Announcement
             $this->announcementRepo->create([
-                'title' => 'Monthly Schedules Generated',
+                'title' => 'Schedules Generated',
                 'category' => 'System',
-                'message' => "Schedules for " . date('F Y', strtotime("$year-$month-01")) . " have been automatically generated. Please check the calendar for your assignments.",
+                'message' => "Schedules for $monthRangeStr have been automatically generated based on the Master Plan.",
                 'author' => 'System'
             ]);
 
-            setFlash('msg_success', "Generated $count schedules (Saturdays & Sundays) for $month/$year.");
+            setFlash('msg_success', "Successfully generated $count slots for $monthRangeStr.");
         } catch (\Exception $e) {
             setFlash('msg_error', "Error generating schedules: " . $e->getMessage());
         }
         
         redirect('schedules');
+    }
+
+    // --- Template Management ---
+
+    public function templates() {
+        $this->requireRole('Superadmin');
+        
+        $templates = $this->templateRepo->getAll();
+        
+        $data = [
+            'pageTitle' => 'Auto-Fill Settings',
+            'title' => 'Auto-Fill Config | ASMS',
+            'templates' => $templates
+        ];
+        
+        $this->view('schedules/templates', $data);
+    }
+
+    public function storeTemplate() {
+        $this->requireRole('Superadmin');
+        $this->verifyCsrf();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $data = [
+                'day_of_week' => $_POST['day_of_week'],
+                'mass_time' => $_POST['mass_time'],
+                'mass_type' => $_POST['mass_type'],
+                'event_name' => $_POST['event_name'] ?? null,
+                'color' => $_POST['color'] ?? 'blue'
+            ];
+
+            if ($this->templateRepo->create($data)) {
+                setFlash('msg_success', 'Template slot added.');
+            } else {
+                setFlash('msg_error', 'Failed to add template. A slot already exists for this time.');
+            }
+        }
+        redirect('schedules/templates');
+    }
+
+    public function deleteTemplate() {
+        $this->requireRole('Superadmin');
+        $this->verifyCsrf();
+
+        $id = $_POST['id'] ?? null;
+        if ($id && $this->templateRepo->delete($id)) {
+            setFlash('msg_success', 'Template slot removed.');
+        } else {
+            setFlash('msg_error', 'Failed to remove template.');
+        }
+        redirect('schedules/templates');
+    }
+
+    public function copyTemplate() {
+        $this->requireRole('Superadmin');
+        $this->verifyCsrf();
+
+        $fromDay = $_POST['from_day'];
+        $toDay = $_POST['to_day'];
+
+        $sourceTemplates = $this->templateRepo->getByDay($fromDay);
+        if ($sourceTemplates) {
+            foreach ($sourceTemplates as $tpl) {
+                $this->templateRepo->create([
+                    'day_of_week' => $toDay,
+                    'mass_time' => $tpl->mass_time,
+                    'mass_type' => $tpl->mass_type,
+                    'event_name' => $tpl->event_name,
+                    'color' => $tpl->color
+                ]);
+            }
+            setFlash('msg_success', 'Patterns copied successfully!');
+        } else {
+            setFlash('msg_error', 'Source day has no templates to copy.');
+        }
+        redirect('schedules/templates');
+    }
+
+    public function clearTemplates() {
+        $this->requireRole('Superadmin');
+        $this->verifyCsrf();
+
+        $day = $_POST['day_of_week'] ?? null;
+        if ($day !== null) {
+            $this->templateRepo->clearDay($day);
+            setFlash('msg_success', 'Day cleared.');
+        }
+        redirect('schedules/templates');
     }
 
     public function import() {

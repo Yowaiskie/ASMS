@@ -140,6 +140,17 @@ try {
         setting_value TEXT
     )");
 
+    // --- Table: schedule_templates ---
+    $pdo->exec("CREATE TABLE IF NOT EXISTS schedule_templates (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        day_of_week INT NOT NULL,
+        mass_time TIME NOT NULL,
+        mass_type VARCHAR(100) NOT NULL,
+        event_name VARCHAR(255) DEFAULT NULL,
+        color VARCHAR(50) DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )");
+
     // Default System Settings
     $pdo->exec("INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES 
         ('system_name', 'Altar Servers Management System'),

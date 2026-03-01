@@ -35,6 +35,11 @@ $router->get('/schedules/delete', [ScheduleController::class, 'delete']);
 $router->post('/schedules/bulk-delete', [ScheduleController::class, 'bulkDelete']);
 $router->post('/schedules/bulk-update', [ScheduleController::class, 'bulkUpdate']);
 $router->get('/schedules/generate', [ScheduleController::class, 'generate']);
+$router->get('/schedules/templates', [ScheduleController::class, 'templates']);
+$router->post('/schedules/store-template', [ScheduleController::class, 'storeTemplate']);
+$router->post('/schedules/delete-template', [ScheduleController::class, 'deleteTemplate']);
+$router->post('/schedules/copy-template', [ScheduleController::class, 'copyTemplate']);
+$router->post('/schedules/clear-templates', [ScheduleController::class, 'clearTemplates']);
 $router->post('/schedules/import', [ScheduleController::class, 'import']);
 
 // Servers

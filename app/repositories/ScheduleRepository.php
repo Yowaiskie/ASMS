@@ -72,7 +72,24 @@ class ScheduleRepository implements RepositoryInterface {
         return $this->db->resultSet();
     }
 
+    public function hasConflict($date, $time, $excludeId = null) {
+        $sql = "SELECT id FROM schedules WHERE mass_date = :date AND mass_time = :time";
+        if ($excludeId) {
+            $sql .= " AND id != :id";
+        }
+        $this->db->query($sql);
+        $this->db->bind(':date', $date);
+        $this->db->bind(':time', $time);
+        if ($excludeId) {
+            $this->db->bind(':id', $excludeId);
+        }
+        return $this->db->single();
+    }
+
     public function create(array $data) {
+        if ($this->hasConflict($data['mass_date'], $data['mass_time'])) {
+            return false;
+        }
         $this->db->query("INSERT INTO schedules (mass_type, event_name, color, mass_date, mass_time, status) VALUES (:mass_type, :event_name, :color, :mass_date, :mass_time, :status)");
         $this->db->bind(':mass_type', $data['mass_type']);
         $this->db->bind(':event_name', $data['event_name'] ?? null);
@@ -84,6 +101,9 @@ class ScheduleRepository implements RepositoryInterface {
     }
 
     public function update($id, array $data) {
+        if ($this->hasConflict($data['mass_date'], $data['mass_time'], $id)) {
+            return false;
+        }
         $this->db->query("UPDATE schedules SET mass_type = :type, event_name = :event_name, color = :color, mass_date = :date, mass_time = :time, status = :status WHERE id = :id");
         $this->db->bind(':id', $id);
         $this->db->bind(':type', $data['mass_type']);

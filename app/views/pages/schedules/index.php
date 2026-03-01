@@ -17,13 +17,6 @@
             </svg>
             Import
         </button>
-
-        <button onclick="generateSundays()" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-4 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 font-bold text-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Auto-Fill
-        </button>
         
         <button onclick="openModal('add')" class="bg-primary hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl shadow-lg shadow-blue-200 transition-all flex items-center gap-2 font-semibold text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -309,12 +302,91 @@
     </div>
 </div>
 
+<!-- Auto-Fill Configuration Modal -->
+<div id="configModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10">
+            <div>
+                <h3 class="text-xl font-bold text-slate-800 tracking-tight">Auto-Fill Settings</h3>
+                <p class="text-xs text-slate-500 font-medium mt-0.5">Define default mass slots for each day of the week.</p>
+            </div>
+            <button onclick="closeConfigModal()" class="p-2 hover:bg-slate-50 rounded-xl text-slate-400 transition-colors">
+                <i class="ph-bold ph-x text-xl"></i>
+            </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-6 bg-slate-50/50">
+            <div class="flex gap-1 mb-6 bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto custom-scrollbar">
+                <?php $days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']; 
+                foreach($days as $index => $day): ?>
+                    <button onclick="switchConfigDay(<?= $index ?>)" 
+                            class="day-tab flex-1 min-w-[80px] py-2 px-3 rounded-xl text-xs font-bold transition-all whitespace-nowrap <?= $index === 0 ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50' ?>"
+                            data-day="<?= $index ?>">
+                        <?= $day ?>
+                    </button>
+                <?php endforeach; ?>
+            </div>
+
+            <div id="templatesList" class="space-y-3">
+                <div class="text-center py-12 bg-white rounded-3xl border border-dashed border-slate-200">
+                    <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-300">
+                        <i class="ph-bold ph-calendar-blank text-3xl"></i>
+                    </div>
+                    <p class="text-sm font-bold text-slate-400 uppercase tracking-widest">No default slots for this day</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 border-t border-slate-100 bg-white">
+            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Add New Slot Template</h4>
+            <form id="addTemplateForm" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <select name="mass_type" required class="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="Sunday Mass">Sunday Mass</option>
+                    <option value="Anticipated Mass">Anticipated Mass</option>
+                    <option value="Weekday Mass">Weekday Mass</option>
+                    <option value="Wedding">Wedding</option>
+                    <option value="Funeral">Funeral</option>
+                    <option value="Baptism">Baptism</option>
+                    <option value="Meeting">Meeting</option>
+                </select>
+                <input type="time" name="mass_time" required class="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2.5 rounded-xl font-bold text-xs hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all flex items-center justify-center gap-2">
+                    <i class="ph-bold ph-plus"></i> Add Slot
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
     const schedules = <?= json_encode($schedules) ?>;
     const currentServerId = <?= json_encode($currentServerId) ?>;
     let currentDate = new Date();
     let isSelectionMode = false;
     let selectedIds = [];
+    let activeConfigDay = 0;
+
+    function openConfigModal() {
+        document.getElementById('configModal').classList.remove('hidden');
+    }
+
+    function closeConfigModal() {
+        document.getElementById('configModal').classList.add('hidden');
+    }
+
+    function switchConfigDay(dayIndex) {
+        activeConfigDay = dayIndex;
+        document.querySelectorAll('.day-tab').forEach(tab => {
+            if (parseInt(tab.dataset.day) === dayIndex) {
+                tab.classList.add('bg-blue-600', 'text-white', 'shadow-md');
+                tab.classList.remove('text-slate-500', 'hover:bg-slate-50');
+            } else {
+                tab.classList.remove('bg-blue-600', 'text-white', 'shadow-md');
+                tab.classList.add('text-slate-500', 'hover:bg-slate-50');
+            }
+        });
+        // Logic to load templates for this day will go here
+    }
 
     const modal = document.getElementById('scheduleModal');
     const modalContent = document.getElementById('modalContent');
@@ -390,7 +462,13 @@
                     eventEl.className = `text-[10px] font-bold px-2 py-1 rounded-lg truncate transition-colors ${colorClass}`;
                 }
 
-                eventEl.innerText = `${evt.mass_time.substring(0,5)} ${evt.mass_type === 'Special Event' ? (evt.event_name || evt.mass_type) : evt.mass_type}`;
+                // Format Time to 12h
+                const [h, m] = evt.mass_time.substring(0,5).split(':');
+                const h12 = h % 12 || 12;
+                const ampm = h >= 12 ? 'PM' : 'AM';
+                const time12 = `${h12}:${m} ${ampm}`;
+
+                eventEl.innerText = `${time12} ${evt.mass_type === 'Special Event' ? (evt.event_name || evt.mass_type) : evt.mass_type}`;
                 
                 // Add Check Icon if Selected
                 if (isSelectionMode && isSelected) {
@@ -616,11 +694,6 @@
             submitBtn.classList.remove('bg-slate-100', 'text-slate-400');
             submitBtn.classList.add('bg-blue-600', 'text-white', 'shadow-lg', 'shadow-blue-200');
         }
-    }
-
-    function generateSundays() {
-        const m = prompt("Month (1-12):", new Date().getMonth() + 1);
-        if (m) { const y = prompt("Year:", new Date().getFullYear()); if (y) window.location.href = `<?= URLROOT ?>/schedules/generate?month=${m}&year=${y}`; }
     }
     renderCalendar();
 </script>
