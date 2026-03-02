@@ -33,11 +33,13 @@ class ServerController extends Controller {
         $servers = $this->serverRepo->search($filters, $limit, $offset);
         $totalRecords = $this->serverRepo->countSearch($filters);
         $totalPages = $totalRecords > 0 ? (int)ceil($totalRecords / $limit) : 0;
+        $ranks = (new \App\Repositories\SystemSettingRepository())->getRanks();
 
         $this->view('servers/index', [
             'pageTitle' => 'Altar Servers Directory',
             'title' => 'Servers | ASMS',
             'servers' => $servers,
+            'ranks' => $ranks,
             'filters' => $filters,
             'pagination' => [
                 'page' => $page,

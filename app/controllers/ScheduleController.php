@@ -46,6 +46,9 @@ class ScheduleController extends Controller {
             // Admin View
             $schedules = $this->scheduleRepo->getAll();
             $servers = $this->serverRepo->getAll();
+            $activityTypes = $this->templateRepo instanceof \App\Repositories\ScheduleTemplateRepository 
+                ? (new \App\Repositories\SystemSettingRepository())->getActivityTypes() 
+                : [];
 
             // Attach assignments to schedules
             foreach ($schedules as $s) {
@@ -65,6 +68,7 @@ class ScheduleController extends Controller {
                 'title' => 'Schedules | ASMS',
                 'schedules' => $schedules,
                 'servers' => $servers,
+                'activityTypes' => $activityTypes,
                 'currentServerId' => $currentServerId
             ];
             

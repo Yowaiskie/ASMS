@@ -87,6 +87,14 @@ $router->get('/trainings', [TrainingController::class, 'index']);
 
 // Settings
 $router->get('/settings', [SettingsController::class, 'index']);
+$router->get('/settings/system', [SettingsController::class, 'system']);
+$router->post('/settings/system/update', [SettingsController::class, 'storeSystem']);
+$router->post('/settings/activity-type/store', [SettingsController::class, 'storeActivityType']);
+$router->get('/settings/activity-type/delete/:id', [SettingsController::class, 'deleteActivityType']);
+$router->post('/settings/rank/store', [SettingsController::class, 'storeRank']);
+$router->get('/settings/rank/delete/:id', [SettingsController::class, 'deleteRank']);
+$router->post('/settings/category/store', [SettingsController::class, 'storeCategory']);
+$router->get('/settings/category/delete/:id', [SettingsController::class, 'deleteCategory']);
 $router->post('/settings/store', [SettingsController::class, 'store']);
 $router->get('/settings/backup', [SettingsController::class, 'backup']);
 $router->get('/settings/toggle_edit/:id', [SettingsController::class, 'toggle_edit']);

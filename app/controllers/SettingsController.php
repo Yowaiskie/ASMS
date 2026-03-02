@@ -4,16 +4,21 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Repositories\UserRepository;
+use App\Repositories\SystemSettingRepository;
 use App\Models\SystemSetting;
 
 class SettingsController extends Controller {
     private $userRepo;
+    private $systemRepo;
     private $settingModel;
+    private $db;
 
     public function __construct() {
         $this->requireLogin();
         $this->userRepo = new UserRepository();
+        $this->systemRepo = new SystemSettingRepository();
         $this->settingModel = new SystemSetting();
+        $this->db = \App\Core\Database::getInstance();
     }
 
     public function index() {
@@ -48,6 +53,91 @@ class SettingsController extends Controller {
                 'system' => $systemSettings
             ]);
         }
+    }
+
+    public function system() {
+        $this->requireRole('Superadmin');
+        
+        $data = [
+            'pageTitle' => 'System Configuration',
+            'title' => 'System Settings | ASMS',
+            'activityTypes' => $this->systemRepo->getActivityTypes(false),
+            'ranks' => $this->systemRepo->getRanks(false),
+            'categories' => $this->systemRepo->getCategories(false),
+            'system_name' => $this->systemRepo->get('system_name', 'Altar Servers Management System'),
+            'admin_email' => $this->systemRepo->get('admin_email', ''),
+            'parish_name' => $this->systemRepo->get('parish_name', 'Our Parish')
+        ];
+        
+        $this->view('settings/system', $data);
+    }
+
+    public function storeSystem() {
+        $this->requireRole('Superadmin');
+        $this->verifyCsrf();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->systemRepo->set('system_name', $_POST['system_name']);
+            $this->systemRepo->set('parish_name', $_POST['parish_name']);
+            $this->systemRepo->set('admin_email', $_POST['admin_email']);
+            
+            setFlash('msg_success', 'System settings updated.');
+        }
+        redirect('settings/system');
+    }
+
+    public function storeActivityType() {
+        $this->requireRole('Superadmin');
+        $this->verifyCsrf();
+        if ($this->systemRepo->addActivityType($_POST['name'], $_POST['color'] ?? 'blue')) {
+            setFlash('msg_success', 'Activity type added.');
+        } else {
+            setFlash('msg_error', 'Failed to add. Maybe it already exists?');
+        }
+        redirect('settings/system');
+    }
+
+    public function deleteActivityType($id) {
+        $this->requireRole('Superadmin');
+        $this->systemRepo->deleteActivityType($id);
+        setFlash('msg_success', 'Activity type removed.');
+        redirect('settings/system');
+    }
+
+    public function storeRank() {
+        $this->requireRole('Superadmin');
+        $this->verifyCsrf();
+        if ($this->systemRepo->addRank($_POST['name'])) {
+            setFlash('msg_success', 'Rank added.');
+        } else {
+            setFlash('msg_error', 'Failed to add.');
+        }
+        redirect('settings/system');
+    }
+
+    public function deleteRank($id) {
+        $this->requireRole('Superadmin');
+        $this->systemRepo->deleteRank($id);
+        setFlash('msg_success', 'Rank removed.');
+        redirect('settings/system');
+    }
+
+    public function storeCategory() {
+        $this->requireRole('Superadmin');
+        $this->verifyCsrf();
+        if ($this->systemRepo->addCategory($_POST['name'])) {
+            setFlash('msg_success', 'Category added.');
+        } else {
+            setFlash('msg_error', 'Failed to add.');
+        }
+        redirect('settings/system');
+    }
+
+    public function deleteCategory($id) {
+        $this->requireRole('Superadmin');
+        $this->systemRepo->deleteCategory($id);
+        setFlash('msg_success', 'Category removed.');
+        redirect('settings/system');
     }
 
     public function store() {

@@ -21,6 +21,7 @@ class AnnouncementController extends Controller {
         $announcements = $this->announcementRepo->getAll($limit, $offset);
         $totalRecords = $this->announcementRepo->countAll();
         $totalPages = ceil($totalRecords / $limit);
+        $categories = (new \App\Repositories\SystemSettingRepository())->getCategories();
         
         // Mark as read when ANY user views the list
         if (isset($_SESSION['user_id'])) {
@@ -31,6 +32,7 @@ class AnnouncementController extends Controller {
             'pageTitle' => 'Announcements',
             'title' => 'Announcements | ASMS',
             'announcements' => $announcements,
+            'categories' => $categories,
             'pagination' => [
                 'page' => $page,
                 'totalPages' => $totalPages

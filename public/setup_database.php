@@ -151,6 +151,43 @@ try {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )");
 
+    // --- Table: activity_types ---
+    $pdo->exec("CREATE TABLE IF NOT EXISTS activity_types (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(100) UNIQUE NOT NULL,
+        default_color VARCHAR(50) DEFAULT 'blue',
+        is_active BOOLEAN DEFAULT 1
+    )");
+
+    // --- Table: server_ranks ---
+    $pdo->exec("CREATE TABLE IF NOT EXISTS server_ranks (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(50) UNIQUE NOT NULL,
+        is_active BOOLEAN DEFAULT 1
+    )");
+
+    // --- Table: announcement_categories ---
+    $pdo->exec("CREATE TABLE IF NOT EXISTS announcement_categories (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(50) UNIQUE NOT NULL,
+        is_active BOOLEAN DEFAULT 1
+    )");
+
+    // --- Seed Activity Types ---
+    $activityTypes = ['Sunday Mass', 'Anticipated Mass', 'Weekday Mass', 'Wedding', 'Funeral', 'Baptism', 'Special Event', 'Meeting'];
+    $stmt = $pdo->prepare("INSERT IGNORE INTO activity_types (name, default_color) VALUES (?, 'blue')");
+    foreach($activityTypes as $type) $stmt->execute([$type]);
+
+    // --- Seed Ranks ---
+    $ranks = ['Senior', 'Junior', 'Aspirant'];
+    $stmt = $pdo->prepare("INSERT IGNORE INTO server_ranks (name) VALUES (?)");
+    foreach($ranks as $rank) $stmt->execute([$rank]);
+
+    // --- Seed Announcement Categories ---
+    $categories = ['General', 'Training', 'Schedule', 'Reminder'];
+    $stmt = $pdo->prepare("INSERT IGNORE INTO announcement_categories (name) VALUES (?)");
+    foreach($categories as $cat) $stmt->execute([$cat]);
+
     // Default System Settings
     $pdo->exec("INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES 
         ('system_name', 'Altar Servers Management System'),

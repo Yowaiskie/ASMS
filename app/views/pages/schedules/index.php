@@ -160,14 +160,9 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">Activity / Mass Type</label>
                         <select name="mass_type" id="mass_type" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option value="Sunday Mass">Sunday Mass</option>
-                            <option value="Anticipated Mass">Anticipated Mass</option>
-                            <option value="Weekday Mass">Weekday Mass</option>
-                            <option value="Wedding">Wedding</option>
-                            <option value="Funeral">Funeral</option>
-                            <option value="Baptism">Baptism</option>
-                            <option value="Special Event">Special Event</option>
-                            <option value="Meeting">Meeting</option>
+                            <?php foreach($activityTypes as $at): ?>
+                                <option value="<?= h($at->name) ?>"><?= h($at->name) ?></option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                     <div>

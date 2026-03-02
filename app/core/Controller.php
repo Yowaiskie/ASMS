@@ -15,6 +15,11 @@ class Controller {
 
     // Load View
     public function view($view, $data = []) {
+        // Fetch global system settings
+        $systemRepo = new \App\Repositories\SystemSettingRepository();
+        $data['system_name'] = $systemRepo->get('system_name', 'Altar Servers Management System');
+        $data['parish_name'] = $systemRepo->get('parish_name', 'Sacred Heart of Jesus Parish');
+
         // Extract data array to variables
         extract($data);
         

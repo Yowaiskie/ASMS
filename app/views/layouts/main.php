@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $title ?? 'ASMS Dashboard' ?></title>
+    <title><?= $title ?? h($system_name) ?></title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="<?= URLROOT ?>/images/logo.png">
@@ -129,7 +129,7 @@
             <div class="p-4 flex items-center justify-between border-b border-slate-50">
                 <div class="flex items-center gap-2">
                     <img src="<?= URLROOT ?>/images/logo.png" class="h-8 w-auto">
-                    <span class="font-bold text-slate-800">ASMS</span>
+                    <span class="font-bold text-slate-800"><?= h($system_name) ?></span>
                 </div>
                 <button onclick="closeMobileSidebar()" class="p-2 text-slate-400 hover:text-slate-600">
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -164,7 +164,7 @@
                 </button>
                 <div class="flex items-center gap-2">
                     <img src="<?= URLROOT ?>/images/logo.png" class="h-8 w-auto">
-                    <span class="font-black text-slate-800 tracking-tight">ASMS</span>
+                    <span class="font-black text-slate-800 tracking-tight"><?= h($system_name) ?></span>
                 </div>
             </div>
             

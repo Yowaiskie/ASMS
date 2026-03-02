@@ -34,10 +34,9 @@
             <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Category</label>
             <div class="relative">
                 <select name="category" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all appearance-none cursor-pointer">
-                    <option value="General">General</option>
-                    <option value="Training">Training</option>
-                    <option value="Schedule">Schedule</option>
-                    <option value="Reminder">Reminder</option>
+                    <?php foreach($categories as $cat): ?>
+                        <option value="<?= h($cat->name) ?>"><?= h($cat->name) ?></option>
+                    <?php endforeach; ?>
                 </select>
                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>

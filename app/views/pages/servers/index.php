@@ -44,9 +44,9 @@
         <div class="w-32">
             <select name="rank" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 transition-all">
                 <option value="">All Ranks</option>
-                <option value="Senior" <?= ($filters['rank'] ?? '') === 'Senior' ? 'selected' : '' ?>>Senior</option>
-                <option value="Junior" <?= ($filters['rank'] ?? '') === 'Junior' ? 'selected' : '' ?>>Junior</option>
-                <option value="Aspirant" <?= ($filters['rank'] ?? '') === 'Aspirant' ? 'selected' : '' ?>>Aspirant</option>
+                <?php foreach($ranks as $r): ?>
+                    <option value="<?= h($r->name) ?>" <?= ($filters['rank'] ?? '') === $r->name ? 'selected' : '' ?>><?= h($r->name) ?></option>
+                <?php endforeach; ?>
             </select>
         </div>
         <div class="flex gap-2">
@@ -304,7 +304,11 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">Rank</label>
-                            <input type="text" name="rank" id="svr_rank" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                            <select name="rank" id="svr_rank" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                                <?php foreach($ranks as $r): ?>
+                                    <option value="<?= h($r->name) ?>"><?= h($r->name) ?></option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">Order</label>
