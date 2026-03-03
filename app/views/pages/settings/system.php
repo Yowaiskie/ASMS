@@ -10,22 +10,22 @@
         <!-- Parish Branding Card -->
         <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-8">
             <h3 class="text-lg font-black text-slate-800 mb-6 flex items-center gap-3">
-                <i class="ph-bold ph-buildings text-blue-600"></i>
+                <i class="ph-bold ph-buildings text-primary"></i>
                 Parish Profile
             </h3>
             <form action="<?= URLROOT ?>/settings/system/update" method="POST" class="space-y-5">
                 <?php csrf_field(); ?>
                 <div class="space-y-1.5">
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">System Name</label>
-                    <input type="text" name="system_name" value="<?= h($system_name) ?>" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10">
+                    <input type="text" name="system_name" value="<?= h($system_name) ?>" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary-500/10">
                 </div>
                 <div class="space-y-1.5">
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Parish Name</label>
-                    <input type="text" name="parish_name" value="<?= h($parish_name) ?>" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10">
+                    <input type="text" name="parish_name" value="<?= h($parish_name) ?>" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary-500/10">
                 </div>
                 <div class="space-y-1.5">
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Admin Email Address</label>
-                    <input type="email" name="admin_email" value="<?= h($admin_email) ?>" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10">
+                    <input type="email" name="admin_email" value="<?= h($admin_email) ?>" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary-500/10">
                 </div>
                 <button type="submit" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold text-sm hover:bg-black transition-all">Update Profile</button>
             </form>
@@ -50,7 +50,7 @@
             <form action="<?= URLROOT ?>/settings/category/store" method="POST" class="flex gap-3">
                 <?php csrf_field(); ?>
                 <input type="text" name="name" required placeholder="New Category..." class="flex-1 px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none">
-                <button type="submit" class="bg-blue-600 text-white px-5 rounded-2xl font-bold"><i class="ph-bold ph-plus"></i></button>
+                <button type="submit" class="bg-primary text-white px-5 rounded-2xl font-bold"><i class="ph-bold ph-plus"></i></button>
             </form>
         </div>
     </div>
@@ -88,7 +88,7 @@
                         <option value="yellow">Yellow</option>
                         <option value="indigo">Indigo</option>
                     </select>
-                    <button type="submit" class="bg-blue-600 text-white px-5 rounded-2xl font-bold"><i class="ph-bold ph-plus"></i></button>
+                    <button type="submit" class="bg-primary text-white px-5 rounded-2xl font-bold"><i class="ph-bold ph-plus"></i></button>
                 </div>
             </form>
         </div>
@@ -112,7 +112,7 @@
             <form action="<?= URLROOT ?>/settings/rank/store" method="POST" class="flex gap-3">
                 <?php csrf_field(); ?>
                 <input type="text" name="name" required placeholder="New Rank (e.g. Senior)..." class="flex-1 px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none">
-                <button type="submit" class="bg-blue-600 text-white px-5 rounded-2xl font-bold"><i class="ph-bold ph-plus"></i></button>
+                <button type="submit" class="bg-primary text-white px-5 rounded-2xl font-bold"><i class="ph-bold ph-plus"></i></button>
             </form>
         </div>
     </div>

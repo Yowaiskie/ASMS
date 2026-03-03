@@ -19,10 +19,13 @@
     
     <style>
         :root {
-            --primary: #2563eb;
-            --color-primary: #2563eb;
+            --primary: #a33b39;
+            --color-primary: #a33b39;
+            --secondary: #00599c;
+            --accent: #f9c402;
         }
-        .bg-primary { background-color: #2563eb !important; }
+        .bg-primary { background-color: #a33b39 !important; }
+        .text-primary { color: #a33b39 !important; }
 
         /* Custom Scrollbar */
         .custom-scrollbar::-webkit-scrollbar {
@@ -49,8 +52,8 @@
         .bg-mesh-dark {
             background-color: #0f172a;
             background-image: 
-                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.1) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(37, 99, 235, 0.1) 0px, transparent 50%);
+                radial-gradient(at 0% 0%, rgba(163, 59, 57, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(163, 59, 57, 0.15) 0px, transparent 50%);
         }
 
         /* Global Loading Overlay */
@@ -157,7 +160,7 @@
         <!-- Mobile Header -->
         <header class="md:hidden h-16 bg-white border-b border-slate-100 flex items-center justify-between px-4 shrink-0 z-40">
             <div class="flex items-center gap-3">
-                <button onclick="openMobileSidebar()" class="p-2 -ml-2 text-slate-500 hover:text-blue-600 transition-colors">
+                <button onclick="openMobileSidebar()" class="p-2 -ml-2 text-slate-500 hover:text-primary transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
                     </svg>
@@ -201,7 +204,7 @@
                     Are you sure you want to proceed?
                 </p>
                 <div class="flex gap-3">
-                    <button id="globalConfirmYesBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-200 transition-all active:scale-[0.98]">Yes, Proceed</button>
+                    <button id="globalConfirmYesBtn" class="flex-1 bg-primary hover:opacity-90 text-white font-bold py-3 rounded-xl shadow-lg shadow-primary-200 transition-all active:scale-[0.98]">Yes, Proceed</button>
                     <button onclick="closeGlobalConfirm()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3 rounded-xl transition-all">Cancel</button>
                 </div>
             </div>
@@ -212,7 +215,7 @@
     <div id="globalAlertModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[150] hidden items-center justify-center p-4 transition-opacity duration-200 opacity-0">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-200" id="globalAlertContent">
             <div class="p-6 text-center">
-                <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
                     <i class="ph-bold ph-info text-3xl"></i>
                 </div>
                 <h3 class="text-xl font-bold text-slate-800 mb-2" id="globalAlertTitle">Notice</h3>

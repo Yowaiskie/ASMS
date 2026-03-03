@@ -15,17 +15,17 @@
 <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6">
     <form method="GET" action="<?= URLROOT ?>/logs" class="flex flex-wrap items-center gap-3">
         <div class="flex-1 min-w-[200px]">
-            <input type="text" name="search" value="<?= h($filters['search']) ?>" placeholder="Search user, IP, or desc..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all">
+            <input type="text" name="search" value="<?= h($filters['search']) ?>" placeholder="Search user, IP, or desc..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-sm transition-all">
         </div>
         
-        <select name="role" class="px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer text-sm transition-all">
+        <select name="role" class="px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 cursor-pointer text-sm transition-all">
             <option value="">All Roles</option>
             <option value="Superadmin" <?= $filters['role'] == 'Superadmin' ? 'selected' : '' ?>>Superadmin</option>
             <option value="Admin" <?= $filters['role'] == 'Admin' ? 'selected' : '' ?>>Admin</option>
             <option value="User" <?= $filters['role'] == 'User' ? 'selected' : '' ?>>User</option>
         </select>
 
-        <select name="action" class="px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer text-sm transition-all">
+        <select name="action" class="px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 cursor-pointer text-sm transition-all">
             <option value="">All Actions</option>
             <option value="Login" <?= $filters['action'] == 'Login' ? 'selected' : '' ?>>Login</option>
             <option value="Create" <?= $filters['action'] == 'Create' ? 'selected' : '' ?>>Create</option>
@@ -39,7 +39,7 @@
             <input type="date" name="end_date" value="<?= h($filters['end_date']) ?>" class="bg-transparent border-none py-2 px-2 text-slate-600 focus:ring-0 text-sm">
         </div>
 
-        <button type="submit" class="bg-primary text-white px-6 py-2.5 rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-100 text-sm font-semibold">
+        <button type="submit" class="bg-primary text-white px-6 py-2.5 rounded-xl hover:bg-primary-700 transition-all shadow-md shadow-primary-100 text-sm font-semibold">
             Filter
         </button>
         
@@ -83,7 +83,7 @@
                         </td>
                         <td class="px-6 py-4">
                             <?php 
-                                $color = 'bg-blue-100 text-blue-700';
+                                $color = 'bg-primary-100 text-primary-700';
                                 if($log->action == 'Create') $color = 'bg-green-100 text-green-700';
                                 if($log->action == 'Delete') $color = 'bg-red-100 text-red-700';
                                 if($log->action == 'Update') $color = 'bg-amber-100 text-amber-700';
@@ -130,7 +130,7 @@
                     if ($end - $start < 4) $start = max(1, $end - 4);
                     
                     for($i = $start; $i <= $end; $i++): 
-                        $active = ($i == $pagination['page']) ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-100' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 shadow-sm';
+                        $active = ($i == $pagination['page']) ? 'bg-primary text-white border-primary shadow-md shadow-primary-100' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 shadow-sm';
                 ?>
                     <a href="<?= URLROOT ?>/logs?page=<?= $i ?>&<?= $queryStr ?>" class="w-8 h-8 flex items-center justify-center border rounded-lg text-xs font-bold transition-all <?= $active ?>"><?= $i ?></a>
                 <?php endfor; ?>

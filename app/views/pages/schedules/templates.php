@@ -25,15 +25,15 @@
 <div class="mb-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
     <div>
         <div class="flex items-center gap-2 mb-1">
-            <span class="px-2 py-0.5 rounded-md bg-blue-100 text-blue-600 text-[10px] font-black uppercase tracking-widest">Master Pattern</span>
-            <div class="h-1 w-8 bg-blue-200 rounded-full"></div>
+            <span class="px-2 py-0.5 rounded-md bg-primary-100 text-primary text-[10px] font-black uppercase tracking-widest">Master Pattern</span>
+            <div class="h-1 w-8 bg-primary-200 rounded-full"></div>
         </div>
         <h2 class="text-3xl font-black text-slate-800 tracking-tight">Weekly Master Plan</h2>
-        <p class="text-slate-500 text-sm mt-1 font-medium">Design your parish's routine. One-click <span class="text-blue-600 font-bold">Auto-Fill</span> will use this pattern.</p>
+        <p class="text-slate-500 text-sm mt-1 font-medium">Design your parish's routine. One-click <span class="text-primary font-bold">Auto-Fill</span> will use this pattern.</p>
     </div>
     
     <div class="flex flex-wrap gap-3">
-        <button onclick="openGenerateModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl shadow-xl shadow-blue-200 transition-all flex items-center gap-2 font-bold text-sm">
+        <button onclick="openGenerateModal()" class="bg-primary hover:bg-primary-700 text-white px-6 py-3 rounded-2xl shadow-xl shadow-primary-200 transition-all flex items-center gap-2 font-bold text-sm">
             <i class="ph-bold ph-magic-wand text-lg"></i>
             Auto-Fill Now
         </button>
@@ -48,7 +48,7 @@
 <div id="generateModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[80] hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-sm overflow-hidden p-8 animate-fade-in-up">
         <div class="flex items-center gap-3 mb-6">
-            <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
+            <div class="w-12 h-12 bg-primary-50 rounded-2xl flex items-center justify-center text-primary">
                 <i class="ph-bold ph-magic-wand text-2xl"></i>
             </div>
             <div>
@@ -62,7 +62,7 @@
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1.5">
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Start Month</label>
-                    <select id="genMonth" class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10">
+                    <select id="genMonth" class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary-500/10">
                         <?php 
                         $months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
                         $currentM = date('n');
@@ -74,7 +74,7 @@
                 </div>
                 <div class="space-y-1.5">
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Start Year</label>
-                    <select id="genYear" class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10">
+                    <select id="genYear" class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary-500/10">
                         <?php 
                         $currentY = date('Y');
                         for($y = $currentY; $y <= $currentY + 2; $y++): 
@@ -96,7 +96,7 @@
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1.5">
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">End Month</label>
-                    <select id="genEndMonth" class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10">
+                    <select id="genEndMonth" class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary-500/10">
                         <option value="">-- None --</option>
                         <?php foreach($months as $i => $m): ?>
                             <option value="<?= $i+1 ?>"><?= $m ?></option>
@@ -105,7 +105,7 @@
                 </div>
                 <div class="space-y-1.5">
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">End Year</label>
-                    <select id="genEndYear" class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10">
+                    <select id="genEndYear" class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary-500/10">
                         <?php for($y = $currentY; $y <= $currentY + 2; $y++): ?>
                             <option value="<?= $y ?>"><?= $y ?></option>
                         <?php endfor; ?>
@@ -115,7 +115,7 @@
 
             <div class="pt-4 flex gap-3">
                 <button type="button" onclick="document.getElementById('generateModal').classList.add('hidden')" class="flex-1 py-3 text-sm font-bold text-slate-400">Cancel</button>
-                <button onclick="confirmGenerate()" class="flex-1 bg-blue-600 text-white py-3 rounded-2xl text-sm font-bold shadow-lg shadow-blue-100">Generate Now</button>
+                <button onclick="confirmGenerate()" class="flex-1 bg-primary text-white py-3 rounded-2xl text-sm font-bold shadow-lg shadow-primary-100">Generate Now</button>
             </div>
         </div>
     </div>
@@ -135,14 +135,14 @@
             <div class="flex-1 min-w-[190px] flex flex-col gap-5 day-column">
                 <!-- Day Header -->
                 <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between relative overflow-hidden group">
-                    <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                    <div class="absolute top-0 left-0 w-1 h-full bg-primary-500"></div>
                     <div>
                         <span class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] block mb-0.5"><?= substr($dayName, 0, 3) ?></span>
                         <span class="text-sm font-black text-slate-800 tracking-tight"><?= $dayName ?></span>
                     </div>
                     
                     <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onclick="openCopyModal(<?= $dayIndex ?>)" title="Copy Day" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
+                        <button onclick="openCopyModal(<?= $dayIndex ?>)" title="Copy Day" class="p-2 text-slate-400 hover:text-primary hover:bg-primary-50 rounded-xl transition-all">
                             <i class="ph-bold ph-copy text-sm"></i>
                         </button>
                         <button onclick="clearDay(<?= $dayIndex ?>)" title="Clear Day" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all">
@@ -192,8 +192,8 @@
                     <?php endif; ?>
 
                     <!-- Floating Add Button -->
-                    <button onclick="openAddModal(<?= $dayIndex ?>)" class="mt-2 w-full py-4 bg-white/60 hover:bg-white border-2 border-dashed border-slate-200 hover:border-blue-400 text-slate-400 hover:text-blue-600 rounded-[1.8rem] transition-all flex items-center justify-center gap-2 group/btn">
-                        <div class="w-6 h-6 rounded-full bg-slate-100 group-hover/btn:bg-blue-100 flex items-center justify-center transition-colors">
+                    <button onclick="openAddModal(<?= $dayIndex ?>)" class="mt-2 w-full py-4 bg-white/60 hover:bg-white border-2 border-dashed border-slate-200 hover:border-primary-400 text-slate-400 hover:text-primary rounded-[1.8rem] transition-all flex items-center justify-center gap-2 group/btn">
+                        <div class="w-6 h-6 rounded-full bg-slate-100 group-hover/btn:bg-primary-100 flex items-center justify-center transition-colors">
                             <i class="ph-bold ph-plus text-xs"></i>
                         </div>
                         <span class="text-[10px] font-black uppercase tracking-widest">New Slot</span>
@@ -210,7 +210,7 @@
         <div class="p-8 border-b border-slate-50 flex justify-between items-center">
             <div>
                 <h3 class="text-2xl font-black text-slate-800 tracking-tight">Configure Routine</h3>
-                <p class="text-xs text-slate-400 font-bold mt-1 uppercase tracking-widest">Day: <span id="modalDayName" class="text-blue-600"></span></p>
+                <p class="text-xs text-slate-400 font-bold mt-1 uppercase tracking-widest">Day: <span id="modalDayName" class="text-primary"></span></p>
             </div>
             <button onclick="closeModal()" class="p-3 hover:bg-slate-50 rounded-2xl text-slate-300 hover:text-slate-600 transition-all">
                 <i class="ph-bold ph-x text-xl"></i>
@@ -224,7 +224,7 @@
             <div class="grid grid-cols-2 gap-5">
                 <div class="space-y-2">
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] ml-1">Type</label>
-                    <select name="mass_type" required class="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all">
+                    <select name="mass_type" required class="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all">
                         <option value="Sunday Mass">Sunday Mass</option>
                         <option value="Anticipated Mass">Anticipated Mass</option>
                         <option value="Weekday Mass">Weekday Mass</option>
@@ -238,13 +238,13 @@
 
                 <div class="space-y-2">
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] ml-1">Time</label>
-                    <input type="time" name="mass_time" required class="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all">
+                    <input type="time" name="mass_time" required class="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all">
                 </div>
             </div>
 
             <div class="space-y-2">
                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] ml-1">Event Details (Optional)</label>
-                <input type="text" name="event_name" placeholder="e.g. Regular Parish Mass" class="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all">
+                <input type="text" name="event_name" placeholder="e.g. Regular Parish Mass" class="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all">
             </div>
 
             <div class="space-y-2">
@@ -261,7 +261,7 @@
 
             <div class="pt-4 flex gap-4">
                 <button type="button" onclick="closeModal()" class="flex-1 py-4 rounded-2xl border border-slate-100 text-slate-500 text-sm font-bold hover:bg-slate-50 transition-all">Cancel</button>
-                <button type="submit" class="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-bold text-sm hover:bg-blue-700 shadow-xl shadow-blue-200 transition-all">Save Routine</button>
+                <button type="submit" class="flex-1 bg-primary text-white py-4 rounded-2xl font-bold text-sm hover:bg-primary-700 shadow-xl shadow-primary-200 transition-all">Save Routine</button>
             </div>
         </form>
     </div>
@@ -271,7 +271,7 @@
 <div id="copyModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[80] hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-sm overflow-hidden p-8">
         <h3 class="text-xl font-black text-slate-800 mb-2">Copy Routine</h3>
-        <p class="text-xs text-slate-400 font-bold mb-6 uppercase tracking-widest">Duplicate <span id="copyFromDayName" class="text-blue-600"></span> to:</p>
+        <p class="text-xs text-slate-400 font-bold mb-6 uppercase tracking-widest">Duplicate <span id="copyFromDayName" class="text-primary"></span> to:</p>
         
         <form action="<?= URLROOT ?>/schedules/copy-template" method="POST" class="space-y-6">
             <?php csrf_field(); ?>
@@ -281,14 +281,14 @@
                 <?php foreach($days as $idx => $name): ?>
                     <label class="cursor-pointer">
                         <input type="radio" name="to_day" value="<?= $idx ?>" class="peer hidden">
-                        <span class="block px-3 py-2 rounded-xl border border-slate-100 text-[10px] font-black text-slate-500 text-center uppercase peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 transition-all"><?= $name ?></span>
+                        <span class="block px-3 py-2 rounded-xl border border-slate-100 text-[10px] font-black text-slate-500 text-center uppercase peer-checked:bg-primary peer-checked:text-white peer-checked:border-primary transition-all"><?= $name ?></span>
                     </label>
                 <?php endforeach; ?>
             </div>
 
             <div class="flex gap-3">
                 <button type="button" onclick="document.getElementById('copyModal').classList.add('hidden')" class="flex-1 py-3 text-sm font-bold text-slate-400">Cancel</button>
-                <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl text-sm font-bold shadow-lg shadow-blue-100">Copy Pattern</button>
+                <button type="submit" class="flex-1 bg-primary text-white py-3 rounded-xl text-sm font-bold shadow-lg shadow-primary-100">Copy Pattern</button>
             </div>
         </form>
     </div>

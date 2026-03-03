@@ -88,4 +88,8 @@ class Database {
     public function rollBack() {
         return $this->dbh->rollBack();
     }
+
+    public function inTransaction() {
+        return $this->dbh->inTransaction();
+    }
 }

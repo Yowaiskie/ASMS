@@ -18,7 +18,7 @@
             Import
         </button>
         
-        <button onclick="openModal('add')" class="bg-primary hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl shadow-lg shadow-blue-200 transition-all flex items-center gap-2 font-semibold text-sm">
+        <button onclick="openModal('add')" class="bg-primary hover:bg-primary-700 text-white px-4 py-2.5 rounded-xl shadow-lg shadow-primary-200 transition-all flex items-center gap-2 font-semibold text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
@@ -46,8 +46,8 @@
                 <p class="mt-2 text-slate-400 italic font-medium">* Date must be YYYY-MM-DD (e.g., 2026-02-14)</p>
             </div>
 
-            <div id="dropZone" class="border-2 border-dashed border-slate-200 rounded-3xl p-10 flex flex-col items-center justify-center gap-4 hover:border-blue-400 hover:bg-blue-50 transition-all cursor-pointer group text-center">
-                <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+            <div id="dropZone" class="border-2 border-dashed border-slate-200 rounded-3xl p-10 flex flex-col items-center justify-center gap-4 hover:border-primary-400 hover:bg-primary-50 transition-all cursor-pointer group text-center">
+                <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-primary-100 group-hover:text-primary transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
@@ -59,10 +59,10 @@
                 <input type="file" name="csv_file" id="fileInput" class="hidden" accept=".csv">
             </div>
             
-            <div id="fileInfo" class="mt-4 p-4 bg-blue-50 rounded-2xl border border-blue-100 hidden">
+            <div id="fileInfo" class="mt-4 p-4 bg-primary-50 rounded-2xl border border-primary-100 hidden">
                 <div class="flex items-center gap-3">
-                    <svg class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    <span id="fileName" class="text-xs font-bold text-blue-800 truncate">file.csv</span>
+                    <svg class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span id="fileName" class="text-xs font-bold text-primary-800 truncate">file.csv</span>
                 </div>
             </div>
 
@@ -77,14 +77,14 @@
 <div id="calendar-view" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 relative overflow-hidden">
     
     <!-- Selection Bar -->
-    <div id="selectionBar" class="hidden absolute top-0 left-0 right-0 z-10 bg-blue-600 text-white p-4 flex justify-between items-center animate-fade-in-up">
+    <div id="selectionBar" class="hidden absolute top-0 left-0 right-0 z-10 bg-primary text-white p-4 flex justify-between items-center animate-fade-in-up">
         <div class="flex items-center gap-3">
             <span class="font-bold text-sm" id="selectedCount">0 Selected</span>
-            <div class="h-4 w-px bg-blue-400"></div>
+            <div class="h-4 w-px bg-primary-400"></div>
             <button type="button" onclick="selectAllCalendar(false)" class="text-xs hover:underline">Clear</button>
         </div>
         <div class="flex gap-2">
-            <button type="button" onclick="submitBulk('edit')" class="bg-white text-blue-600 hover:bg-blue-50 px-4 py-1.5 rounded-lg text-xs font-bold transition-all">
+            <button type="button" onclick="submitBulk('edit')" class="bg-white text-primary hover:bg-primary-50 px-4 py-1.5 rounded-lg text-xs font-bold transition-all">
                 Edit Status
             </button>
             <button type="button" onclick="submitBulk('delete')" class="bg-red-500 text-white hover:bg-red-600 px-4 py-1.5 rounded-lg text-xs font-bold transition-all">
@@ -159,7 +159,7 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">Activity / Mass Type</label>
-                        <select name="mass_type" id="mass_type" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <select name="mass_type" id="mass_type" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
                             <?php foreach($activityTypes as $at): ?>
                                 <option value="<?= h($at->name) ?>"><?= h($at->name) ?></option>
                             <?php endforeach; ?>
@@ -167,25 +167,25 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">Status</label>
-                        <select name="status" id="status" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"><option value="Confirmed">Confirmed</option><option value="Pending">Pending</option><option value="Cancelled">Cancelled</option></select>
+                        <select name="status" id="status" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"><option value="Confirmed">Confirmed</option><option value="Pending">Pending</option><option value="Cancelled">Cancelled</option></select>
                     </div>
                 </div>
 
                 <div>
                     <label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">Event / Mass Name <span class="font-normal text-slate-400">(Optional - e.g. Memorial of St. Joseph)</span></label>
-                    <input type="text" name="event_name" id="event_name" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter specific name if applicable">
+                    <input type="text" name="event_name" id="event_name" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder="Enter specific name if applicable">
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
-                    <div><label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">Date</label><input type="date" name="mass_date" id="mass_date" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"></div>
-                    <div><label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">Time</label><input type="time" name="mass_time" id="mass_time" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">Date</label><input type="date" name="mass_date" id="mass_date" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">Time</label><input type="time" name="mass_time" id="mass_time" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"></div>
                 </div>
 
                 <!-- Recurring Options -->
                 <div id="recurringSection" class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
                     <div class="flex items-center justify-between mb-3">
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" name="is_recurring" id="is_recurring" class="rounded text-blue-600 border-gray-300 w-4 h-4 focus:ring-blue-500" onchange="toggleRecurringOptions()">
+                            <input type="checkbox" name="is_recurring" id="is_recurring" class="rounded text-primary border-gray-300 w-4 h-4 focus:ring-primary-500" onchange="toggleRecurringOptions()">
                             <span class="text-xs font-bold text-slate-700">Recurring Schedule</span>
                         </label>
                     </div>
@@ -194,7 +194,7 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Frequency</label>
-                                <select name="frequency" id="frequency" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="toggleFrequencyOptions()">
+                                <select name="frequency" id="frequency" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500" onchange="toggleFrequencyOptions()">
                                     <option value="daily">Daily</option>
                                     <option value="weekly">Weekly</option>
                                     <option value="monthly">Monthly</option>
@@ -203,7 +203,7 @@
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Repeat Every</label>
                                 <div class="flex items-center gap-2">
-                                    <input type="number" name="interval" id="interval" value="1" min="1" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <input type="number" name="interval" id="interval" value="1" min="1" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500">
                                     <span id="intervalUnit" class="text-[10px] font-bold text-slate-400">days</span>
                                 </div>
                             </div>
@@ -216,7 +216,7 @@
                                 foreach($days as $i => $d): ?>
                                     <label class="cursor-pointer">
                                         <input type="checkbox" name="recurring_days[]" value="<?= $i ?>" class="peer hidden">
-                                        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-white border border-slate-200 text-[10px] font-bold text-slate-500 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 transition-all uppercase tracking-tighter"><?= $d ?></span>
+                                        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-white border border-slate-200 text-[10px] font-bold text-slate-500 peer-checked:bg-primary peer-checked:text-white peer-checked:border-primary transition-all uppercase tracking-tighter"><?= $d ?></span>
                                     </label>
                                 <?php endforeach; ?>
                             </div>
@@ -224,7 +224,7 @@
 
                         <div>
                             <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">End Recurrence</label>
-                            <input type="date" name="end_date" id="end_date" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <input type="date" name="end_date" id="end_date" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500">
                         </div>
                     </div>
                 </div>
@@ -239,8 +239,8 @@
                         <div class="flex items-center gap-2">
                             <label class="block text-xs font-bold text-slate-500 ml-1">Assigned Servers</label>
                             <label class="flex items-center gap-1 cursor-pointer group">
-                                <input type="checkbox" id="assignAllCheckbox" onclick="toggleAssignAll(this)" class="rounded text-blue-600 border-gray-300 w-3 h-3 focus:ring-blue-500">
-                                <span class="text-[9px] font-bold text-slate-400 group-hover:text-blue-500 transition-colors uppercase tracking-tighter">Assign All</span>
+                                <input type="checkbox" id="assignAllCheckbox" onclick="toggleAssignAll(this)" class="rounded text-primary border-gray-300 w-3 h-3 focus:ring-primary-500">
+                                <span class="text-[9px] font-bold text-slate-400 group-hover:text-primary-500 transition-colors uppercase tracking-tighter">Assign All</span>
                             </label>
                         </div>
                         <input type="text" id="serverSearch" onkeyup="filterServers()" placeholder="Search..." class="text-[10px] px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none">
@@ -248,7 +248,7 @@
                     <div class="max-h-32 overflow-y-auto border border-slate-200 rounded-xl p-2 bg-slate-50 custom-scrollbar" id="serverList">
                         <?php foreach($servers as $svr): ?>
                             <label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg cursor-pointer server-item transition-colors">
-                                <input type="checkbox" name="assigned_servers[]" value="<?= $svr->id ?>" class="server-checkbox rounded text-blue-600 border-gray-300 w-4 h-4 focus:ring-blue-500">
+                                <input type="checkbox" name="assigned_servers[]" value="<?= $svr->id ?>" class="server-checkbox rounded text-primary border-gray-300 w-4 h-4 focus:ring-primary-500">
                                 <span class="text-xs text-slate-700 font-medium server-name"><?= h($svr->name) ?></span>
                             </label>
                         <?php endforeach; ?>
@@ -260,7 +260,7 @@
                 <div id="joinBtnContainer" class="hidden flex-1">
                     <button type="button" onclick="selfAssign()" class="w-full py-2.5 rounded-xl bg-green-500 text-white text-sm font-bold hover:bg-green-600 shadow-lg shadow-green-200 transition-all">Join Schedule</button>
                 </div>
-                <button type="submit" class="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">Save Schedule</button>
+                <button type="submit" class="flex-1 py-2.5 rounded-xl bg-primary text-white text-sm font-bold hover:bg-primary-700 shadow-lg shadow-primary-200 transition-all">Save Schedule</button>
             </div>
             <div id="deleteBtnContainer" class="hidden mt-4 pt-3 border-t border-slate-100 text-center"><button type="button" id="deleteLink" class="text-xs text-red-500 font-bold hover:underline">Delete Schedule</button></div>
         </form>
@@ -291,7 +291,7 @@
 
             <div class="flex gap-2">
                 <button type="button" onclick="document.getElementById('bulkEditModal').classList.add('hidden')" class="flex-1 py-2 border rounded-xl text-sm font-bold">Cancel</button>
-                <button type="submit" class="flex-1 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold">Update</button>
+                <button type="submit" class="flex-1 py-2 bg-primary text-white rounded-xl text-sm font-bold">Update</button>
             </div>
         </form>
     </div>
@@ -315,7 +315,7 @@
                 <?php $days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']; 
                 foreach($days as $index => $day): ?>
                     <button onclick="switchConfigDay(<?= $index ?>)" 
-                            class="day-tab flex-1 min-w-[80px] py-2 px-3 rounded-xl text-xs font-bold transition-all whitespace-nowrap <?= $index === 0 ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50' ?>"
+                            class="day-tab flex-1 min-w-[80px] py-2 px-3 rounded-xl text-xs font-bold transition-all whitespace-nowrap <?= $index === 0 ? 'bg-primary text-white shadow-md' : 'text-slate-500 hover:bg-slate-50' ?>"
                             data-day="<?= $index ?>">
                         <?= $day ?>
                     </button>
@@ -335,7 +335,7 @@
         <div class="p-6 border-t border-slate-100 bg-white">
             <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Add New Slot Template</h4>
             <form id="addTemplateForm" class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <select name="mass_type" required class="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select name="mass_type" required class="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500">
                     <option value="Sunday Mass">Sunday Mass</option>
                     <option value="Anticipated Mass">Anticipated Mass</option>
                     <option value="Weekday Mass">Weekday Mass</option>
@@ -344,8 +344,8 @@
                     <option value="Baptism">Baptism</option>
                     <option value="Meeting">Meeting</option>
                 </select>
-                <input type="time" name="mass_time" required class="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2.5 rounded-xl font-bold text-xs hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all flex items-center justify-center gap-2">
+                <input type="time" name="mass_time" required class="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                <button type="submit" class="bg-primary text-white px-4 py-2.5 rounded-xl font-bold text-xs hover:bg-primary-700 shadow-lg shadow-primary-200 transition-all flex items-center justify-center gap-2">
                     <i class="ph-bold ph-plus"></i> Add Slot
                 </button>
             </form>
@@ -373,10 +373,10 @@
         activeConfigDay = dayIndex;
         document.querySelectorAll('.day-tab').forEach(tab => {
             if (parseInt(tab.dataset.day) === dayIndex) {
-                tab.classList.add('bg-blue-600', 'text-white', 'shadow-md');
+                tab.classList.add('bg-primary', 'text-white', 'shadow-md');
                 tab.classList.remove('text-slate-500', 'hover:bg-slate-50');
             } else {
-                tab.classList.remove('bg-blue-600', 'text-white', 'shadow-md');
+                tab.classList.remove('bg-primary', 'text-white', 'shadow-md');
                 tab.classList.add('text-slate-500', 'hover:bg-slate-50');
             }
         });
@@ -403,8 +403,7 @@
             const isToday = dateStr === `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
             
             const cell = document.createElement('div');
-            cell.className = `min-h-[100px] border ${isToday ? 'border-blue-500 ring-2 ring-blue-100 bg-white' : 'border-slate-100 bg-slate-50/30'} rounded-2xl p-2 transition-all hover:border-blue-300 hover:shadow-md cursor-pointer flex flex-col gap-1 relative group`;
-            
+            cell.className = `min-h-[100px] border ${isToday ? 'border-primary-500 ring-2 ring-primary-100 bg-white' : 'border-slate-100 bg-slate-50/30'} rounded-2xl p-2 transition-all hover:border-primary-300 hover:shadow-md cursor-pointer flex flex-col gap-1 relative group`;            
             // Add schedule
             cell.onclick = (e) => { 
                 if(!isSelectionMode && (e.target === cell || e.target.classList.contains('day-num') || e.target.classList.contains('today-label'))) openModal('add', dateStr); 
@@ -414,12 +413,12 @@
             headerDiv.className = "flex justify-between items-start mb-1";
 
             const dayNum = document.createElement('span');
-            dayNum.className = `text-sm font-bold ${isToday ? 'text-blue-600' : 'text-slate-400'} day-num`; dayNum.innerText = day;
+            dayNum.className = `text-sm font-bold ${isToday ? 'text-primary' : 'text-slate-400'} day-num`; dayNum.innerText = day;
             headerDiv.appendChild(dayNum);
 
             if (isToday) {
                 const todayLabel = document.createElement('span');
-                todayLabel.className = "text-[9px] font-extrabold uppercase tracking-tighter text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded today-label";
+                todayLabel.className = "text-[9px] font-extrabold uppercase tracking-tighter text-primary bg-primary-50 px-1.5 py-0.5 rounded today-label";
                 todayLabel.innerText = "Today";
                 headerDiv.appendChild(todayLabel);
             }
@@ -449,7 +448,7 @@
                 const isSelected = selectedIds.includes(evt.id.toString());
                 if (isSelectionMode) {
                     if (isSelected) {
-                        eventEl.className = `text-[10px] font-bold px-2 py-1 rounded-lg truncate transition-all ring-2 ring-blue-500 ring-offset-1 bg-white text-blue-600 relative`;
+                        eventEl.className = `text-[10px] font-bold px-2 py-1 rounded-lg truncate transition-all ring-2 ring-primary-500 ring-offset-1 bg-white text-primary relative`;
                     } else {
                         eventEl.className = `text-[10px] font-bold px-2 py-1 rounded-lg truncate transition-all opacity-60 hover:opacity-100 ${colorClass}`;
                     }
@@ -467,11 +466,11 @@
                 
                 // Add Check Icon if Selected
                 if (isSelectionMode && isSelected) {
-                    eventEl.className += ' ring-2 ring-blue-500 ring-offset-1 bg-white text-blue-600 relative';
-                    eventEl.innerHTML += ' <span class="absolute right-1 top-1 text-blue-600">✓</span>';
+                    eventEl.className += ' ring-2 ring-primary-500 ring-offset-1 bg-white text-primary relative';
+                    eventEl.innerHTML += ' <span class="absolute right-1 top-1 text-primary">✓</span>';
                 } else if (currentServerId && evt.assigned_ids && evt.assigned_ids.includes(parseInt(currentServerId))) {
                     // Admin Assigned: Highlight and add star
-                    eventEl.className += ' ring-2 ring-blue-600 ring-offset-1 z-10 shadow-sm';
+                    eventEl.className += ' ring-2 ring-primary ring-offset-1 z-10 shadow-sm';
                     eventEl.innerHTML = `<span class="flex items-center gap-1"><span>⭐</span> ${eventEl.innerText}</span>`;
                 }
 
@@ -496,11 +495,11 @@
         const header = document.getElementById('calendarHeader');
         
         if (isSelectionMode) {
-            btn.classList.add('bg-blue-50', 'text-blue-600', 'border-blue-200', 'ring-2', 'ring-blue-200');
+            btn.classList.add('bg-primary-50', 'text-primary', 'border-primary-200', 'ring-2', 'ring-primary-200');
             bar.classList.remove('hidden');
             header.classList.add('pt-16'); // Push header down
         } else {
-            btn.classList.remove('bg-blue-50', 'text-blue-600', 'border-blue-200', 'ring-2', 'ring-blue-200');
+            btn.classList.remove('bg-primary-50', 'text-primary', 'border-primary-200', 'ring-2', 'ring-primary-200');
             bar.classList.add('hidden');
             header.classList.remove('pt-16');
             selectedIds = [];
@@ -662,12 +661,12 @@
 
     dropZone.addEventListener('dragover', (e) => {
         e.preventDefault();
-        dropZone.classList.add('border-blue-400', 'bg-blue-50');
+        dropZone.classList.add('border-primary-400', 'bg-primary-50');
     });
 
     ['dragleave', 'drop'].forEach(event => {
         dropZone.addEventListener(event, () => {
-            dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+            dropZone.classList.remove('border-primary-400', 'bg-primary-50');
         });
     });
 
@@ -687,7 +686,7 @@
             fileInfo.classList.remove('hidden');
             submitBtn.disabled = false;
             submitBtn.classList.remove('bg-slate-100', 'text-slate-400');
-            submitBtn.classList.add('bg-blue-600', 'text-white', 'shadow-lg', 'shadow-blue-200');
+            submitBtn.classList.add('bg-primary', 'text-white', 'shadow-lg', 'shadow-primary-200');
         }
     }
     renderCalendar();

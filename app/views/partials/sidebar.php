@@ -75,11 +75,6 @@ $nav_items = [
                 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />'
             ],
             [
-                'label' => 'Auto-Fill Settings',
-                'url' => $root . '/schedules/templates',
-                'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />'
-            ],
-            [
                 'label' => 'Attendance',
                 'url' => $root . '/attendance',
                 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />'
@@ -103,7 +98,7 @@ $nav_items = [
                 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />'
             ],
             [
-                'label' => 'User Accounts',
+                'label' => 'Server Accounts',
                 'url' => $root . '/users',
                 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />'
             ],
@@ -125,21 +120,23 @@ $nav_items = [
         ]
     ],
     [
-        'label' => 'Setup',
-        'type' => 'flat',
+        'label' => 'System',
+        'type' => 'dropdown',
+        'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />',
         'items' => [
             [
                 'label' => 'Settings',
                 'url' => $root . '/settings',
-                'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />',
-                'submenu' => ($role === 'Superadmin' || $role === 'Admin') ? [
-                    ['label' => 'My Account', 'url' => $root . '/settings'],
-                    ['label' => 'System Config', 'url' => $root . '/settings/system', 'role' => 'Superadmin'],
-                    ['label' => 'Backup Database', 'url' => $root . '/settings/backup', 'role' => 'Superadmin']
-                ] : null
-            ]
+                'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />'
+            ],
+            [
+                'label' => 'Database Management',
+                'url' => $root . '/settings/database',
+                'role' => 'Superadmin',
+                'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 1.1.9 2 2 2h12a2 2 0 002-2V7M4 7c0-1.1.9-2 2-2h12a2 2 0 002 2M4 7l8 5 8-5M12 12l8 5" />'
+            ],
         ]
-    ]
+    ],
 ];
 ?>
 
@@ -160,8 +157,8 @@ $nav_items = [
         <div class="px-6 mb-4 shrink-0">
             <span class="inline-block bg-fuchsia-100 text-fuchsia-600 text-[10px] font-bold px-3 py-1 rounded-full w-fit uppercase tracking-wider">
                 <?php 
-                    $displayRole = $_SESSION['role'] ?? 'Server';
-                    echo ($displayRole === 'User') ? 'Server' : $displayRole;
+                    $role = $_SESSION['role'] ?? 'Server';
+                    echo ($role === 'User') ? 'Server' : h($role);
                 ?>
             </span>
         </div>
@@ -174,11 +171,13 @@ $nav_items = [
                     
                     // Filter visible items in this group
                     $visible_items = array_filter($group['items'], function($item) use ($role) {
+                        if (isset($item['role']) && $item['role'] !== $role) return false;
+                        
                         if ($role === 'User') {
-                            if (in_array($item['label'], ['Server Profiles', 'User Accounts', 'Reports', 'Audit Logs', 'Archive Center'])) return false;
+                            if (in_array($item['label'], ['Server Profiles', 'Server Accounts', 'Reports', 'Audit Logs', 'Archive Center'])) return false;
                         }
                         if ($role === 'Admin') {
-                            if (in_array($item['label'], ['User Accounts', 'Audit Logs', 'Archive Center'])) return false;
+                            if (in_array($item['label'], ['Server Accounts', 'Audit Logs', 'Archive Center'])) return false;
                         }
                         return true;
                     });
@@ -188,21 +187,7 @@ $nav_items = [
 
                 <div>
                     <div class="space-y-1">
-                        <?php if ($group['type'] === 'flat'): ?>
-                            <?php foreach ($visible_items as $item): 
-                                $isActive = (strpos($current_path, parse_url($item['url'], PHP_URL_PATH)) === 0);
-                                if ($item['url'] === $root . '/dashboard' && !($current_path === $root . '/' || $current_path === $root . '/dashboard')) $isActive = false;
-                            ?>
-                                <a href="<?= $item['url'] ?>" 
-                                   class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all <?= $isActive ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'text-slate-600 hover:bg-slate-50' ?>">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><?= $item['icon'] ?></svg>
-                                    <span class="font-bold text-xs flex-1"><?= $item['label'] ?></span>
-                                    <?php if (isset($item['badge']) && $item['badge'] > 0): ?>
-                                        <span class="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full"><?= $item['badge'] ?></span>
-                                    <?php endif; ?>
-                                </a>
-                            <?php endforeach; ?>
-                        <?php else: 
+                        <?php 
                             // Dropdown Logic
                             $hasActiveChild = false;
                             foreach ($visible_items as $item) {
@@ -222,7 +207,7 @@ $nav_items = [
                                         $isActive = (strpos($current_path, parse_url($item['url'], PHP_URL_PATH)) === 0);
                                     ?>
                                         <a href="<?= $item['url'] ?>" 
-                                           class="flex items-center gap-3 px-4 py-2 rounded-lg transition-all <?= $isActive ? 'text-blue-600 font-extrabold bg-blue-50' : 'text-slate-500 hover:text-slate-800' ?>">
+                                           class="flex items-center gap-3 px-4 py-2 rounded-xl transition-all <?= $isActive ? 'bg-primary-50 text-primary font-bold' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50' ?>">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><?= $item['icon'] ?></svg>
                                             <span class="font-bold text-[11px] flex-1"><?= $item['label'] ?></span>
                                             <?php if (isset($item['badge']) && $item['badge'] > 0): ?>
@@ -232,7 +217,6 @@ $nav_items = [
                                     <?php endforeach; ?>
                                 </div>
                             </div>
-                        <?php endif; ?>
                     </div>
                 </div>
             <?php endforeach; ?>
@@ -251,27 +235,12 @@ $nav_items = [
 </aside>
 
 <script>
-
     function toggleSidebarDropdown(btn) {
-
-        // Find the parent container (either the direct parent div or a specifically marked container)
-
-        // We use nextElementSibling to find the content div right after the button
-
         const content = btn.nextElementSibling;
-
         const arrow = btn.querySelector('.dropdown-arrow');
-
-        
-
         if (content) {
-
             content.classList.toggle('hidden');
-
             if (arrow) arrow.classList.toggle('rotate-180');
-
         }
-
     }
-
 </script>

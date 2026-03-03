@@ -6,6 +6,7 @@
     
     <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <!-- View Toggle -->
+        <?php if ($_SESSION['role'] !== 'Superadmin'): ?>
         <div class="bg-white p-1 rounded-xl border border-slate-200 shadow-sm flex w-full sm:w-auto">
             <a href="<?= URLROOT ?>/attendance?view=manage" class="flex-1 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all text-center <?= (!isset($_GET['view']) || $_GET['view'] === 'manage') ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50' ?>">
                 Management
@@ -14,6 +15,7 @@
                 My History
             </a>
         </div>
+        <?php endif; ?>
 
         <div class="flex items-center gap-2 w-full sm:w-auto">
             <a href="<?= URLROOT ?>/attendance/downloadReport?date=<?= $date ?>" data-loading="Generating Report..." class="flex-1 sm:flex-none bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-4 py-2.5 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 font-bold text-sm">
@@ -26,7 +28,7 @@
             <form action="<?= URLROOT ?>/attendance" method="GET" class="flex items-center gap-2 flex-1 sm:flex-none">
                 <input type="hidden" name="date" value="<?= $date ?>">
                 <div class="relative flex-1">
-                    <input type="text" name="search" value="<?= h($search ?? '') ?>" placeholder="Search..." class="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all">
+                    <input type="text" name="search" value="<?= h($search ?? '') ?>" placeholder="Search..." class="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 shadow-sm transition-all">
                     <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                     </div>
@@ -134,7 +136,7 @@
                 if ($end - $start < 4) $start = max(1, $end - 4);
                 
                 for($i = $start; $i <= $end; $i++): 
-                    $active = ($i == $pagination['page']) ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-100' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 shadow-sm';
+                    $active = ($i == $pagination['page']) ? 'bg-primary text-white border-primary shadow-md shadow-primary-100' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 shadow-sm';
             ?>
                 <a href="<?= $baseUrl ?>&page=<?= $i ?>" class="w-8 h-8 flex items-center justify-center border rounded-lg text-xs font-bold transition-all <?= $active ?>"><?= $i ?></a>
             <?php endfor; ?>
@@ -156,7 +158,7 @@ function renderStatusButtons($id, $currentStatus, $currentDate, $scheduleId = nu
         'Present' => ['label' => 'P', 'color' => 'bg-emerald-500', 'hover' => 'hover:bg-emerald-500/20', 'text' => 'text-emerald-600'],
         'Late' =>    ['label' => 'L', 'color' => 'bg-amber-500', 'hover' => 'hover:bg-amber-500/20', 'text' => 'text-amber-600'],
         'Absent' =>  ['label' => 'A', 'color' => 'bg-rose-500', 'hover' => 'hover:bg-rose-500/20', 'text' => 'text-rose-600'],
-        'Excused' => ['label' => 'E', 'color' => 'bg-blue-500', 'hover' => 'hover:bg-blue-500/20', 'text' => 'text-blue-600']
+        'Excused' => ['label' => 'E', 'color' => 'bg-primary-500', 'hover' => 'hover:bg-primary-500/20', 'text' => 'text-primary']
     ];
 
     foreach ($statuses as $status => $style) {

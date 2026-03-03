@@ -317,40 +317,161 @@ class SettingsController extends Controller {
         redirect('users');
     }
 
+    public function database() {
+        $this->requireRole('Superadmin');
+        
+        $userProfile = $this->userRepo->getUserProfile($_SESSION['user_id']);
+        
+        $this->view('settings/database', [
+            'pageTitle' => 'Database Management',
+            'title' => 'Database Management | ASMS',
+            'profile' => $userProfile
+        ]);
+    }
+
     public function backup() {
         if (($_SESSION['role'] ?? '') !== 'Superadmin') {
             setFlash('msg_error', 'Unauthorized.');
             redirect('settings');
         }
 
-        $filename = 'backup_' . DB_NAME . '_' . date('Y-m-d_H-i-s') . '.sql';
+        $startDate = $_GET['start_date'] ?? null;
+        $endDate = $_GET['end_date'] ?? null;
+
+        $filename = 'backup_' . DB_NAME . '_' . date('Y-m-d_H-i-s');
+        if ($startDate) $filename .= '_from_' . $startDate;
+        if ($endDate) $filename .= '_to_' . $endDate;
+        $filename .= '.sql';
         
+        // Set cookie to notify JS that download has started/finished
+        setcookie('download_started', 'true', time() + 3600, '/');
+
         header('Content-Type: application/octet-stream');
         header('Content-Disposition: attachment; filename="' . $filename . '"');
 
         // Simple backup using SHOW CREATE TABLE and SELECT *
-        $tables = ['announcements', 'attendance', 'logs', 'schedules', 'servers', 'system_settings', 'users'];
+        $tables = [
+            'servers' => 'created_at',
+            'users' => 'created_at',
+            'schedules' => 'mass_date',
+            'attendance' => 'created_at',
+            'logs' => 'created_at',
+            'announcements' => 'created_at',
+            'excuses' => 'absence_date',
+            'system_settings' => null,
+            'schedule_templates' => 'created_at',
+            'activity_types' => null,
+            'server_ranks' => null,
+            'announcement_categories' => null
+        ];
         
-        foreach ($tables as $table) {
+        echo "-- ASMS Database Backup\n";
+        echo "-- Date: " . date('Y-m-d H:i:s') . "\n";
+        if ($startDate) echo "-- Filter Start: $startDate\n";
+        if ($endDate) echo "-- Filter End: $endDate\n\n";
+        echo "SET FOREIGN_KEY_CHECKS=0;\n\n";
+
+        foreach ($tables as $table => $dateCol) {
+            // Get table creation
             $this->db->query("SHOW CREATE TABLE $table");
             $row = $this->db->single();
             $createTable = (array)$row;
-            echo "\n\n" . $createTable['Create Table'] . ";\n\n";
+            echo "DROP TABLE IF EXISTS `$table`;\n";
+            echo $createTable['Create Table'] . ";\n\n";
 
-            $this->db->query("SELECT * FROM $table");
+            // Get table data
+            $sql = "SELECT * FROM $table";
+            $where = [];
+            if ($dateCol && $startDate) {
+                $where[] = "$dateCol >= '$startDate'";
+            }
+            if ($dateCol && $endDate) {
+                $where[] = "$dateCol <= '$endDate 23:59:59'";
+            }
+
+            if (!empty($where)) {
+                $sql .= " WHERE " . implode(' AND ', $where);
+            }
+
+            $this->db->query($sql);
             $rows = $this->db->resultSet();
-            foreach ($rows as $r) {
-                $rArray = (array)$r;
-                $keys = array_keys($rArray);
-                $values = array_values($rArray);
-                $values = array_map(function($v) {
-                    if (is_null($v)) return 'NULL';
-                    return "'" . addslashes($v) . "'";
-                }, $values);
-                
-                echo "INSERT INTO $table (" . implode(', ', $keys) . ") VALUES (" . implode(', ', $values) . ");\n";
+            
+            if (!empty($rows)) {
+                echo "-- Data for table `$table`\n";
+                foreach ($rows as $r) {
+                    $rArray = (array)$r;
+                    $keys = array_keys($rArray);
+                    $values = array_values($rArray);
+                    $values = array_map(function($v) {
+                        if (is_null($v)) return 'NULL';
+                        return "'" . addslashes($v) . "'";
+                    }, $values);
+                    
+                    echo "INSERT INTO `$table` (`" . implode('`, `', $keys) . "`) VALUES (" . implode(', ', $values) . ");\n";
+                }
+                echo "\n";
             }
         }
+        echo "SET FOREIGN_KEY_CHECKS=1;\n";
         exit;
+    }
+
+    public function restore() {
+        if (($_SESSION['role'] ?? '') !== 'Superadmin') {
+            setFlash('msg_error', 'Unauthorized.');
+            redirect('settings/database');
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['backup_file'])) {
+            $file = $_FILES['backup_file'];
+            
+            if ($file['error'] !== UPLOAD_ERR_OK) {
+                setFlash('msg_error', 'Error uploading file.');
+                redirect('settings/database');
+            }
+
+            $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+            if (strtolower($ext) !== 'sql') {
+                setFlash('msg_error', 'Invalid file type. Please upload a .sql file.');
+                redirect('settings/database');
+            }
+
+            $sql = file_get_contents($file['tmp_name']);
+            if (empty($sql)) {
+                setFlash('msg_error', 'The uploaded file is empty.');
+                redirect('settings/database');
+            }
+
+            try {
+                // Split SQL into individual queries more robustly
+                // This handles both \n and \r\n
+                $sql = preg_replace('/--.*?\n/', '', $sql); // Remove comments
+                $queries = explode(";\n", str_replace(";\r\n", ";\n", $sql));
+                
+                $successCount = 0;
+
+                // Note: MySQL DDL (DROP/CREATE) implicitly commits transactions.
+                // We cannot wrap the entire restore in one transaction if it contains DDL.
+                foreach ($queries as $query) {
+                    $query = trim($query);
+                    if (!empty($query)) {
+                        $this->db->query($query);
+                        if ($this->db->execute()) {
+                            $successCount++;
+                        }
+                    }
+                }
+                
+                logAction('Restore', 'Database', "Successfully restored database from backup file: " . $file['name']);
+                setFlash('msg_success', 'Database restored successfully! ' . $successCount . ' queries executed.');
+            } catch (\Exception $e) {
+                if ($this->db->inTransaction()) {
+                    $this->db->rollBack();
+                }
+                setFlash('msg_error', 'Restore failed: ' . $e->getMessage());
+            }
+        }
+        
+        redirect('settings/database');
     }
 }

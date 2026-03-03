@@ -4,7 +4,7 @@
         <p class="text-slate-500 text-sm mt-1">Create and manage announcements</p>
     </div>
     
-    <button onclick="toggleElement('createForm')" class="bg-primary hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl shadow-lg shadow-blue-200 transition-all flex items-center gap-2 font-semibold text-sm">
+    <button onclick="toggleElement('createForm')" class="bg-primary hover:bg-primary-700 text-white px-5 py-2.5 rounded-xl shadow-lg shadow-primary-200 transition-all flex items-center gap-2 font-semibold text-sm">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
         </svg>
@@ -27,13 +27,13 @@
         <input type="hidden" name="page" value="<?= $pagination['page'] ?? 1 ?>">
         <div>
             <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Title</label>
-            <input type="text" name="title" required placeholder="Enter announcement title" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-400">
+            <input type="text" name="title" required placeholder="Enter announcement title" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all placeholder:text-slate-400">
         </div>
 
         <div>
             <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Category</label>
             <div class="relative">
-                <select name="category" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all appearance-none cursor-pointer">
+                <select name="category" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all appearance-none cursor-pointer">
                     <?php foreach($categories as $cat): ?>
                         <option value="<?= h($cat->name) ?>"><?= h($cat->name) ?></option>
                     <?php endforeach; ?>
@@ -46,11 +46,11 @@
 
         <div>
             <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Message</label>
-            <textarea name="message" required rows="6" placeholder="Write your announcement here..." class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-400 resize-none"></textarea>
+            <textarea name="message" required rows="6" placeholder="Write your announcement here..." class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all placeholder:text-slate-400 resize-none"></textarea>
         </div>
 
         <div class="flex items-center gap-3 pt-4">
-            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-200 transition-all active:scale-[0.98]">Post Announcement</button>
+            <button type="submit" class="flex-1 bg-primary hover:bg-primary-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-primary-200 transition-all active:scale-[0.98]">Post Announcement</button>
             <button type="button" onclick="toggleElement('createForm')" class="px-8 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition-all active:scale-[0.98]">Cancel</button>
         </div>
     </form>
@@ -67,7 +67,7 @@
     <?php if(!empty($announcements)): ?>
         <?php foreach($announcements as $announcement): ?>
             <?php 
-                $bgColor = 'bg-blue-100 text-blue-600';
+                $bgColor = 'bg-primary-100 text-primary';
                 if($announcement->category == 'Training') $bgColor = 'bg-purple-100 text-purple-600';
                 if($announcement->category == 'Reminder') $bgColor = 'bg-yellow-100 text-yellow-600';
             ?>
@@ -110,7 +110,7 @@
             if ($end - $start < 4) $start = max(1, $end - 4);
             
             for($i = $start; $i <= $end; $i++): 
-                $active = ($i == $pagination['page']) ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-100' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 shadow-sm';
+                $active = ($i == $pagination['page']) ? 'bg-primary text-white border-primary shadow-md shadow-primary-100' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 shadow-sm';
         ?>
             <a href="<?= URLROOT ?>/announcements?page=<?= $i ?>" class="w-8 h-8 flex items-center justify-center border rounded-lg text-xs font-bold transition-all <?= $active ?>"><?= $i ?></a>
         <?php endfor; ?>

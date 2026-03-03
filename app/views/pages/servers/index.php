@@ -23,7 +23,7 @@
             </svg>
             Import CSV
         </button>
-        <button onclick="openModal('add')" class="bg-primary hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl shadow-lg shadow-blue-200 transition-all flex items-center gap-2 font-semibold text-sm">
+        <button onclick="openModal('add')" class="bg-primary hover:bg-primary-700 text-white px-5 py-2.5 rounded-xl shadow-lg shadow-primary-200 transition-all flex items-center gap-2 font-semibold text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
@@ -37,12 +37,12 @@
     <form action="<?= URLROOT ?>/servers" method="GET" class="flex flex-wrap items-end gap-3">
         <div class="flex-1 min-w-[200px]">
             <div class="relative">
-                <input type="text" name="search" value="<?= h($filters['search'] ?? '') ?>" placeholder="Search name..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 transition-all">
+                <input type="text" name="search" value="<?= h($filters['search'] ?? '') ?>" placeholder="Search name..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-primary-500 transition-all">
                 <svg class="h-3.5 w-3.5 text-slate-400 absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             </div>
         </div>
         <div class="w-32">
-            <select name="rank" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 transition-all">
+            <select name="rank" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-primary-500 transition-all">
                 <option value="">All Ranks</option>
                 <?php foreach($ranks as $r): ?>
                     <option value="<?= h($r->name) ?>" <?= ($filters['rank'] ?? '') === $r->name ? 'selected' : '' ?>><?= h($r->name) ?></option>
@@ -72,7 +72,7 @@
             <div class="mb-6 p-4 bg-slate-50 rounded-2xl border border-slate-100 text-[10px] text-slate-600">
                 <div class="flex justify-between items-center mb-2">
                     <strong class="text-slate-700 uppercase tracking-widest text-[9px]">Required CSV Format (16 Columns):</strong>
-                    <span class="text-blue-600 font-bold">Recommended</span>
+                    <span class="text-primary font-bold">Recommended</span>
                 </div>
                 <code class="block bg-white p-2 rounded border border-slate-200 leading-relaxed break-all mb-2">
                     First Name, Middle Name, Last Name, Nickname, Address, Date of Birth (YYYY-MM-DD), Age, Phone, Joined (YYYY-MM), Investiture (YYYY-MM-DD), Order, Position, Rank, Team, Status, Email
@@ -80,8 +80,8 @@
                 <p class="mt-2 text-slate-400 italic font-medium">* Ensure exact column order. Use comma or semicolon.</p>
             </div>
 
-            <div id="dropZone" class="border-2 border-dashed border-slate-200 rounded-3xl p-10 flex flex-col items-center justify-center gap-4 hover:border-blue-400 hover:bg-blue-50 transition-all cursor-pointer group">
-                <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+            <div id="dropZone" class="border-2 border-dashed border-slate-200 rounded-3xl p-10 flex flex-col items-center justify-center gap-4 hover:border-primary-400 hover:bg-primary-50 transition-all cursor-pointer group">
+                <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-primary-100 group-hover:text-primary transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
@@ -93,10 +93,10 @@
                 <input type="file" name="csv_file" id="fileInput" class="hidden" accept=".csv">
             </div>
             
-            <div id="fileInfo" class="mt-4 p-4 bg-blue-50 rounded-2xl border border-blue-100 hidden">
+            <div id="fileInfo" class="mt-4 p-4 bg-primary-50 rounded-2xl border border-primary-100 hidden">
                 <div class="flex items-center gap-3">
-                    <svg class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    <span id="fileName" class="text-xs font-bold text-blue-800 truncate">file.csv</span>
+                    <svg class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span id="fileName" class="text-xs font-bold text-primary-800 truncate">file.csv</span>
                 </div>
             </div>
 
@@ -110,10 +110,10 @@
 <div class="relative">
     <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden animate-fade-in-up delay-100 relative">
         <!-- Selection Bar -->
-        <div id="selectionBar" class="hidden absolute top-0 left-0 right-0 z-20 bg-blue-600 text-white p-4 flex justify-between items-center shadow-md">
+        <div id="selectionBar" class="hidden absolute top-0 left-0 right-0 z-20 bg-primary text-white p-4 flex justify-between items-center shadow-md">
             <div class="flex items-center gap-3">
                 <span class="font-bold text-sm" id="selectedCount">0 Selected</span>
-                <div class="h-4 w-px bg-blue-400"></div>
+                <div class="h-4 w-px bg-primary-400"></div>
                 <button type="button" onclick="selectAll(true)" class="text-xs hover:underline">Select All</button>
                 <button type="button" onclick="toggleSelectionMode()" class="text-xs hover:underline">Cancel</button>
             </div>
@@ -141,7 +141,7 @@
                         <?php foreach($servers as $svr): ?>
                         <tr class="hover:bg-slate-50 transition-colors group cursor-pointer" onclick="toggleRow(this, event)">
                             <td class="p-4 selection-col hidden">
-                                <input type="checkbox" name="ids[]" value="<?= $svr->id ?>" class="server-checkbox rounded text-blue-600 border-gray-300 w-5 h-5 pointer-events-none">
+                                <input type="checkbox" name="ids[]" value="<?= $svr->id ?>" class="server-checkbox rounded text-primary border-gray-300 w-5 h-5 pointer-events-none">
                             </td>
                             <td class="px-6 py-4">
                                 <span class="font-bold text-slate-700 block"><?= h($svr->name) ?></span>
@@ -153,13 +153,13 @@
                             <td class="px-6 py-4 text-slate-500"><?= h($svr->phone) ?></td>
                             <td class="px-6 py-4">
                                 <div class="flex flex-col">
-                                    <span class="font-bold text-blue-600"><?= h($svr->rank) ?></span>
+                                    <span class="font-bold text-primary"><?= h($svr->rank) ?></span>
                                     <span class="text-[10px] text-slate-400 font-medium uppercase"><?= h($svr->position) ?></span>
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-center">
                                 <div class="flex items-center justify-center gap-2">
-                                    <button type="button" onclick='openModal("edit", <?= json_encode($svr) ?>)' class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors action-btn" title="Edit Profile"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></button>
+                                    <button type="button" onclick='openModal("edit", <?= json_encode($svr) ?>)' class="p-2 text-primary hover:bg-primary-50 rounded-lg transition-colors action-btn" title="Edit Profile"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></button>
                                     
                                                                     <?php if($svr->status === 'Suspended'): ?>
                                                                         <form action="<?= URLROOT ?>/servers/update-status" method="POST" class="inline action-btn">
@@ -213,7 +213,7 @@
                     if ($end - $start < 4) $start = max(1, $end - 4);
                     
                     for($i = $start; $i <= $end; $i++): 
-                        $active = ($i == $pagination['page']) ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-100' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 shadow-sm';
+                        $active = ($i == $pagination['page']) ? 'bg-primary text-white border-primary shadow-md shadow-primary-100' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 shadow-sm';
                 ?>
                     <a href="<?= build_url('servers', ['page' => $i]) ?>" class="w-8 h-8 flex items-center justify-center border rounded-lg text-xs font-bold transition-all <?= $active ?>"><?= $i ?></a>
                 <?php endfor; ?>
@@ -340,7 +340,7 @@
 
                 <div class="pt-4 flex gap-2">
                     <button type="button" onclick="closeModal()" class="flex-1 py-3 border border-slate-200 rounded-xl text-slate-600 font-bold text-sm">Cancel</button>
-                    <button type="submit" class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg text-sm">Save Profile</button>
+                    <button type="submit" class="flex-1 py-3 bg-primary text-white rounded-xl font-bold shadow-lg text-sm">Save Profile</button>
                 </div>
             </form>
         </div>
@@ -357,11 +357,11 @@
         const cols = document.querySelectorAll('.selection-col');
         
         if (isSelectionMode) {
-            btn.classList.add('bg-blue-50', 'text-blue-600', 'border-blue-200', 'ring-2', 'ring-blue-200');
+            btn.classList.add('bg-primary-50', 'text-primary', 'border-primary-200', 'ring-2', 'ring-primary-200');
             bar.classList.remove('hidden');
             cols.forEach(col => col.classList.remove('hidden'));
         } else {
-            btn.classList.remove('bg-blue-50', 'text-blue-600', 'border-blue-200', 'ring-2', 'ring-blue-200');
+            btn.classList.remove('bg-primary-50', 'text-primary', 'border-primary-200', 'ring-2', 'ring-primary-200');
             bar.classList.add('hidden');
             cols.forEach(col => col.classList.add('hidden'));
             selectAll(false);
@@ -374,14 +374,14 @@
         
         const cb = tr.querySelector('.server-checkbox');
         cb.checked = !cb.checked;
-        tr.classList.toggle('bg-blue-50', cb.checked);
+        tr.classList.toggle('bg-primary-50', cb.checked);
         updateSelectedCount();
     }
 
     function selectAll(check) {
         document.querySelectorAll('.server-checkbox').forEach(cb => {
             cb.checked = check;
-            cb.closest('tr').classList.toggle('bg-blue-50', check);
+            cb.closest('tr').classList.toggle('bg-primary-50', check);
         });
         updateSelectedCount();
     }
@@ -473,16 +473,16 @@
 
         dropZone.ondragover = (e) => {
             e.preventDefault();
-            dropZone.classList.add('border-blue-400', 'bg-blue-50');
+            dropZone.classList.add('border-primary-400', 'bg-primary-50');
         };
 
         dropZone.ondragleave = () => {
-            dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+            dropZone.classList.remove('border-primary-400', 'bg-primary-50');
         };
 
         dropZone.ondrop = (e) => {
             e.preventDefault();
-            dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+            dropZone.classList.remove('border-primary-400', 'bg-primary-50');
             const files = e.dataTransfer.files;
             if (files.length) {
                 fileInput.files = files;
@@ -502,6 +502,6 @@
         fileInfo.classList.remove('hidden');
         submitBtn.disabled = false;
         submitBtn.classList.remove('bg-slate-100', 'text-slate-400');
-        submitBtn.classList.add('bg-blue-600', 'text-white', 'hover:bg-blue-700', 'shadow-lg', 'shadow-blue-200');
+        submitBtn.classList.add('bg-primary', 'text-white', 'hover:bg-primary-700', 'shadow-lg', 'shadow-primary-200');
     }
 </script>

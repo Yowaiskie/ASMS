@@ -60,7 +60,7 @@
                 <p class="text-xs text-amber-800 font-bold">Only Superadmins can access the system at this time.</p>
             </div>
 
-            <a href="<?= URLROOT ?>/logout" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-bold text-sm transition-all group">
+            <a href="<?= URLROOT ?>/logout" class="inline-flex items-center gap-2 text-primary hover:text-primary-700 font-bold text-sm transition-all group">
                 <i class="ph-bold ph-arrow-left group-hover:-translate-x-1 transition-transform"></i>
                 Go back to login
             </a>

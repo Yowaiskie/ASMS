@@ -32,7 +32,7 @@
                             </div>
                         </td>
                         <td class="px-6 py-4">
-                            <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase bg-blue-50 text-blue-600">
+                            <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase bg-primary-50 text-primary">
                                 <?= h($row->role) ?>
                             </span>
                         </td>

@@ -17,7 +17,7 @@
             <!-- Admin Profile (For Admin & Superadmin) -->
             <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 animate-fade-in-up">
                 <div class="flex items-center gap-3 mb-8">
-                    <div class="p-2 bg-blue-50 text-blue-600 rounded-xl">
+                    <div class="p-2 bg-primary-50 text-primary rounded-xl">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                     </div>
                     <h3 class="text-lg font-bold text-slate-700">Personal Profile</h3>
@@ -51,7 +51,7 @@
                     <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">First Name</label>
-                            <input type="text" name="first_name" value="<?= h($profile->first_name ?? '') ?>" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                            <input type="text" name="first_name" value="<?= h($profile->first_name ?? '') ?>" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Middle Name</label>
@@ -103,7 +103,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="md:col-span-2">
                         <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">System Display Name</label>
-                        <input type="text" name="system_name" value="<?= h($system['system_name'] ?? 'Altar Servers Management System') ?>" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                        <input type="text" name="system_name" value="<?= h($system['system_name'] ?? 'Altar Servers Management System') ?>" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Support Email</label>
@@ -122,7 +122,7 @@
                             </div>
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" name="maintenance_mode" value="on" <?= ($system['maintenance_mode'] ?? 'off') === 'on' ? 'checked' : '' ?> class="sr-only peer">
-                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                             </label>
                         </div>
 
@@ -133,7 +133,7 @@
                             </div>
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" name="allow_registration" value="on" <?= ($system['allow_registration'] ?? 'off') === 'on' ? 'checked' : '' ?> class="sr-only peer">
-                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                             </label>
                         </div>
                     </div>
@@ -157,7 +157,7 @@
                         <label class="block text-[10px] font-bold text-slate-400 mb-1 ml-1 uppercase">Current Password</label>
                         <div class="relative">
                             <input type="password" name="current_password" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none pr-12">
-                            <button type="button" onclick="toggleFieldPassword(this)" class="absolute right-3 top-2.5 text-slate-400 hover:text-blue-600 transition-colors">
+                            <button type="button" onclick="toggleFieldPassword(this)" class="absolute right-3 top-2.5 text-slate-400 hover:text-primary transition-colors">
                                 <i class="ph ph-eye text-base"></i>
                             </button>
                         </div>
@@ -166,7 +166,7 @@
                         <label class="block text-[10px] font-bold text-slate-400 mb-1 ml-1 uppercase">New Password</label>
                         <div class="relative">
                             <input type="password" name="new_password" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none pr-12">
-                            <button type="button" onclick="toggleFieldPassword(this)" class="absolute right-3 top-2.5 text-slate-400 hover:text-blue-600 transition-colors">
+                            <button type="button" onclick="toggleFieldPassword(this)" class="absolute right-3 top-2.5 text-slate-400 hover:text-primary transition-colors">
                                 <i class="ph ph-eye text-base"></i>
                             </button>
                         </div>
@@ -175,7 +175,7 @@
                         <label class="block text-[10px] font-bold text-slate-400 mb-1 ml-1 uppercase">Confirm New</label>
                         <div class="relative">
                             <input type="password" name="confirm_password" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none pr-12">
-                            <button type="button" onclick="toggleFieldPassword(this)" class="absolute right-3 top-2.5 text-slate-400 hover:text-blue-600 transition-colors">
+                            <button type="button" onclick="toggleFieldPassword(this)" class="absolute right-3 top-2.5 text-slate-400 hover:text-primary transition-colors">
                                 <i class="ph ph-eye text-base"></i>
                             </button>
                         </div>
@@ -184,20 +184,6 @@
             </div>
 
             <?php if ($_SESSION['role'] === 'Superadmin'): ?>
-            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 animate-fade-in-up">
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 1.1.9 2 2 2h12a2 2 0 002-2V7M4 7c0-1.1.9-2 2-2h12a2 2 0 002 2M4 7l8 5 8-5M12 12l8 5" /></svg>
-                    </div>
-                    <h3 class="text-lg font-bold text-slate-700">Database Tools</h3>
-                </div>
-                <p class="text-[10px] text-slate-400 mb-6">Download a complete backup of the system database (SQL format).</p>
-                <a href="<?= URLROOT ?>/settings/backup" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-slate-200">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                    Export Database
-                </a>
-            </div>
-
             <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-8 text-white animate-fade-in-up relative overflow-hidden">
                 <div class="absolute -right-4 -bottom-4 opacity-10">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-32 w-32" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
@@ -211,7 +197,7 @@
     </div>
 
     <div class="fixed bottom-6 right-6 z-40">
-        <button type="submit" class="bg-primary hover:bg-blue-700 text-white px-8 py-3 rounded-full shadow-lg shadow-blue-200 transition-all flex items-center gap-2 font-bold text-sm hover:scale-105 transform">
+        <button type="submit" class="bg-primary hover:bg-primary-700 text-white px-8 py-3 rounded-full shadow-lg shadow-primary-200 transition-all flex items-center gap-2 font-bold text-sm hover:scale-105 transform">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
             Save All Changes
         </button>
@@ -233,7 +219,7 @@
                 <img id="cropperImage" class="max-w-full block">
             </div>
             <div class="flex gap-3">
-                <button type="button" onclick="applyCrop()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition-all">Apply & Save</button>
+                <button type="button" onclick="applyCrop()" class="flex-1 bg-primary hover:bg-primary-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition-all">Apply & Save</button>
                 <button type="button" onclick="closeCropper()" class="px-8 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition-all">Cancel</button>
             </div>
         </div>

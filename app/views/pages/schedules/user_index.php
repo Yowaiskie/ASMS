@@ -22,7 +22,7 @@
 
     <!-- Calendar Filters (Only visible in calendar view) -->
     <div id="calendar-filters" class="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
-        <button onclick="setFilter('all')" id="filter-all" class="filter-btn px-4 py-2 rounded-full text-xs font-bold bg-blue-600 text-white shadow-md transition-all whitespace-nowrap">All Schedules</button>
+        <button onclick="setFilter('all')" id="filter-all" class="filter-btn px-4 py-2 rounded-full text-xs font-bold bg-primary text-white shadow-md transition-all whitespace-nowrap">All Schedules</button>
         <button onclick="setFilter('mine')" id="filter-mine" class="filter-btn px-4 py-2 rounded-full text-xs font-bold bg-white text-slate-500 border border-slate-100 hover:bg-slate-50 transition-all whitespace-nowrap">My Schedule</button>
         <button onclick="setFilter('open')" id="filter-open" class="filter-btn px-4 py-2 rounded-full text-xs font-bold bg-white text-slate-500 border border-slate-100 hover:bg-slate-50 transition-all whitespace-nowrap">Open Slots</button>
     </div>
@@ -88,7 +88,7 @@
                 ?>
                 <?php if(!empty($assignedSchedules)): ?>
                     <?php foreach($assignedSchedules as $sch): ?>
-                    <tr onclick="viewDetails(<?= h(json_encode($sch)) ?>)" class="hover:bg-slate-50 transition-colors cursor-pointer bg-blue-50/30">
+                    <tr onclick="viewDetails(<?= h(json_encode($sch)) ?>)" class="hover:bg-slate-50 transition-colors cursor-pointer bg-primary-50/30">
                         <td class="p-6 font-bold text-slate-700"><?= date('M d, Y', strtotime($sch->mass_date)) ?></td>
                         <td class="p-6 text-slate-600 font-medium"><?= date('h:i A', strtotime($sch->mass_time)) ?></td>
                         <td class="p-6">
@@ -97,7 +97,7 @@
                             </span>
                         </td>
                         <td class="p-6">
-                            <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase bg-blue-600 text-white flex items-center gap-1 w-fit">
+                            <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase bg-primary text-white flex items-center gap-1 w-fit">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
                                 Assigned to You
                             </span>
@@ -112,7 +112,7 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                                 </div>
                                 <p class="text-slate-400 font-medium">You have no upcoming assignments.</p>
-                                <button onclick="switchView('calendar')" class="text-blue-600 font-bold text-xs hover:underline">Check calendar to join</button>
+                                <button onclick="switchView('calendar')" class="text-primary font-bold text-xs hover:underline">Check calendar to join</button>
                             </div>
                         </td>
                     </tr>
@@ -133,7 +133,7 @@
 
             <div id="modalBody" class="space-y-6">
                 <div class="flex flex-col gap-1">
-                    <span id="detailType" class="text-xl font-extrabold text-blue-600">Activity Name</span>
+                    <span id="detailType" class="text-xl font-extrabold text-primary">Activity Name</span>
                     <span id="detailDateTime" class="text-sm text-slate-500 font-medium">Date and Time</span>
                 </div>
 
@@ -145,7 +145,7 @@
                 <form id="assignForm" action="<?= URLROOT ?>/schedules/self-assign" method="POST" class="hidden">
                     <?php csrf_field(); ?>
                     <input type="hidden" name="schedule_id" id="targetScheduleId">
-                    <button type="submit" class="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all">
+                    <button type="submit" class="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm shadow-lg shadow-primary-100 hover:bg-primary-700 transition-all">
                         Join this Schedule
                     </button>
                 </form>
@@ -154,7 +154,7 @@
                     <p>This event has already passed.</p>
                 </div>
 
-                <div id="alreadyAssignedMsg" class="hidden text-center p-4 bg-blue-50 text-blue-700 rounded-2xl border border-blue-100 text-xs font-bold">
+                <div id="alreadyAssignedMsg" class="hidden text-center p-4 bg-primary-50 text-primary-700 rounded-2xl border border-primary-100 text-xs font-bold">
                     <p>You are already in this schedule.</p>
                     <p class="text-[10px] opacity-70 mt-1 font-normal italic">Contact Admin to unassign.</p>
                 </div>
@@ -176,7 +176,7 @@
             btn.className = "filter-btn px-4 py-2 rounded-full text-xs font-bold bg-white text-slate-500 border border-slate-100 hover:bg-slate-50 transition-all whitespace-nowrap";
         });
         const activeBtn = document.getElementById(`filter-${filter}`);
-        activeBtn.className = "filter-btn px-4 py-2 rounded-full text-xs font-bold bg-blue-600 text-white shadow-md transition-all whitespace-nowrap";
+        activeBtn.className = "filter-btn px-4 py-2 rounded-full text-xs font-bold bg-primary text-white shadow-md transition-all whitespace-nowrap";
         renderCalendar();
     }
 
@@ -198,7 +198,7 @@
             const isToday = dateStr === `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
             const cell = document.createElement('div');
-            cell.className = `min-h-[100px] border ${isToday ? 'border-blue-500 ring-2 ring-blue-100 bg-white' : 'border-slate-100 bg-slate-50/30'} rounded-2xl p-2 transition-all hover:border-blue-200 hover:shadow-md flex flex-col gap-1 relative group cursor-pointer`;
+            cell.className = `min-h-[100px] border ${isToday ? 'border-primary-500 ring-2 ring-primary-100 bg-white' : 'border-slate-100 bg-slate-50/30'} rounded-2xl p-2 transition-all hover:border-primary-200 hover:shadow-md flex flex-col gap-1 relative group cursor-pointer`;
             
             cell.onclick = () => {
                 const dayEvents = schedules.filter(s => s.mass_date === dateStr);
@@ -214,13 +214,13 @@
             headerDiv.className = "flex justify-between items-start mb-1 pointer-events-none";
 
             const dayNum = document.createElement('span');
-            dayNum.className = `text-sm font-bold ${isToday ? 'text-blue-600' : 'text-slate-400'}`;
+            dayNum.className = `text-sm font-bold ${isToday ? 'text-primary' : 'text-slate-400'}`;
             dayNum.innerText = day;
             headerDiv.appendChild(dayNum);
 
             if (isToday) {
                 const todayLabel = document.createElement('span');
-                todayLabel.className = "text-[9px] font-extrabold uppercase tracking-tighter text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded";
+                todayLabel.className = "text-[9px] font-extrabold uppercase tracking-tighter text-primary bg-primary-50 px-1.5 py-0.5 rounded";
                 todayLabel.innerText = "Today";
                 headerDiv.appendChild(todayLabel);
             }
@@ -242,7 +242,7 @@
                 else if (evt.mass_type === 'Funeral') colorClass = 'bg-purple-100 text-purple-700';
                 else if (evt.mass_type === 'Wedding') colorClass = 'bg-yellow-100 text-yellow-800';
                 
-                eventEl.className = `text-[10px] font-bold px-2 py-1 rounded-lg truncate transition-all ${colorClass} ${isAssigned ? 'ring-2 ring-blue-600 ring-offset-1 z-10 shadow-sm' : 'opacity-80'}`;
+                eventEl.className = `text-[10px] font-bold px-2 py-1 rounded-lg truncate transition-all ${colorClass} ${isAssigned ? 'ring-2 ring-primary ring-offset-1 z-10 shadow-sm' : 'opacity-80'}`;
                 let title = evt.mass_type === 'Special Event' && evt.event_name ? evt.event_name : evt.mass_type;
                 eventEl.innerText = `${evt.mass_time.substring(0,5)} ${title}`;
                 if (isAssigned) eventEl.innerHTML = `⭐ ${eventEl.innerText}`;

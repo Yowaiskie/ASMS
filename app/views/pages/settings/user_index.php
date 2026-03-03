@@ -31,7 +31,7 @@
 <?php if($mustResetPassword || $isLocked || $isUnverified): ?>
     <div class="bg-white rounded-3xl p-6 mb-8 border border-slate-100 shadow-sm animate-fade-in-up">
         <div class="flex items-center gap-3 mb-4 border-b border-slate-50 pb-4">
-            <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+            <div class="w-8 h-8 rounded-full bg-primary-50 text-primary flex items-center justify-center">
                 <i class="ph-bold ph-info text-base"></i>
             </div>
             <h4 class="font-bold text-slate-800">Account Action Items</h4>
@@ -39,14 +39,14 @@
         
         <div class="space-y-4">
             <?php if($mustResetPassword): ?>
-                <div class="flex items-start gap-4 p-4 bg-blue-50 rounded-2xl border border-blue-100 ring-2 ring-blue-500/10">
-                    <div class="p-2 bg-blue-600 text-white rounded-xl">
+                <div class="flex items-start gap-4 p-4 bg-primary-50 rounded-2xl border border-primary-100 ring-2 ring-primary-500/10">
+                    <div class="p-2 bg-primary text-white rounded-xl">
                         <i class="ph-bold ph-lock-key text-lg"></i>
                     </div>
                     <div class="flex-1">
-                        <h5 class="font-bold text-blue-900 text-sm">Mandatory Password Change</h5>
-                        <p class="text-blue-700 text-xs mt-0.5">You are using a temporary password. You <b>must</b> change it to unlock system access.</p>
-                        <button onclick="document.getElementById('password-section').scrollIntoView({behavior: 'smooth'})" class="mt-2 text-[10px] font-extrabold uppercase tracking-wider text-blue-600 hover:text-blue-800 transition-colors">Go to security form ↓</button>
+                        <h5 class="font-bold text-primary-900 text-sm">Mandatory Password Change</h5>
+                        <p class="text-primary-700 text-xs mt-0.5">You are using a temporary password. You <b>must</b> change it to unlock system access.</p>
+                        <button onclick="document.getElementById('password-section').scrollIntoView({behavior: 'smooth'})" class="mt-2 text-[10px] font-extrabold uppercase tracking-wider text-primary hover:text-primary-800 transition-colors">Go to security form ↓</button>
                     </div>
                 </div>
             <?php endif; ?>
@@ -104,7 +104,7 @@
                         <?php if(!empty($profile->profile_image)): ?>
                             <img src="<?= URLROOT ?>/uploads/profiles/<?= h($profile->profile_image) ?>" id="current-profile-img" alt="Profile" class="w-24 h-24 rounded-full object-cover border-4 border-slate-50">
                         <?php else: ?>
-                            <div id="initials-avatar" class="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-3xl border-4 border-slate-50">
+                            <div id="initials-avatar" class="w-24 h-24 bg-primary-100 rounded-full flex items-center justify-center text-primary font-bold text-3xl border-4 border-slate-50">
                                 <?= strtoupper(substr($profile->username ?? 'U', 0, 1)) ?>
                             </div>
                         <?php endif; ?>
@@ -132,7 +132,7 @@
                 <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">First Name</label>
-                        <input type="text" name="first_name" value="<?= h($profile->first_name ?? '') ?>" <?= $isLocked ? 'disabled' : 'required' ?> class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all disabled:opacity-70">
+                        <input type="text" name="first_name" value="<?= h($profile->first_name ?? '') ?>" <?= $isLocked ? 'disabled' : 'required' ?> class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all disabled:opacity-70">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Middle Name</label>
@@ -155,29 +155,29 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Age</label>
-                        <input type="text" name="age" value="<?= h($profile->age ?? '') ?>" maxlength="2" <?= $isLocked ? 'disabled' : 'required' ?> oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0,2)" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-70">
+                        <input type="text" name="age" value="<?= h($profile->age ?? '') ?>" maxlength="2" <?= $isLocked ? 'disabled' : 'required' ?> oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0,2)" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all disabled:opacity-70">
                     </div>
                 </div>
 
                 <div>
                     <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Contact Number</label>
-                    <input type="text" name="phone" value="<?= h($profile->phone ?? '') ?>" maxlength="11" pattern="\d{11}" <?= $isLocked ? 'disabled' : 'required' ?> oninput="this.value = this.value.replace(/[^0-9]/g, '')" placeholder="09xxxxxxxxx" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-70">
+                    <input type="text" name="phone" value="<?= h($profile->phone ?? '') ?>" maxlength="11" pattern="\d{11}" <?= $isLocked ? 'disabled' : 'required' ?> oninput="this.value = this.value.replace(/[^0-9]/g, '')" placeholder="09xxxxxxxxx" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all disabled:opacity-70">
                 </div>
 
                 <div class="md:col-span-2">
                     <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Address</label>       
-                    <textarea name="address" rows="2" <?= $isLocked ? 'disabled' : 'required' ?> class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-70"><?= h($profile->address ?? '') ?></textarea>
+                    <textarea name="address" rows="2" <?= $isLocked ? 'disabled' : 'required' ?> class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all disabled:opacity-70"><?= h($profile->address ?? '') ?></textarea>
                 </div>
 
                  <div class="md:col-span-2">
                     <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Email Address</label>
-                    <input type="email" name="email" value="<?= h($profile->email ?? '') ?>" <?= $isLocked ? 'disabled' : 'required' ?> class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-70">
+                    <input type="email" name="email" value="<?= h($profile->email ?? '') ?>" <?= $isLocked ? 'disabled' : 'required' ?> class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all disabled:opacity-70">
                 </div>
             </div>
 
             <?php if(!$isLocked): ?>
             <div class="pt-4">
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg shadow-blue-200 transform active:scale-[0.98]">
+                <button type="submit" class="bg-primary hover:bg-primary-700 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg shadow-primary-200 transform active:scale-[0.98]">
                     Save Changes
                 </button>
             </div>
@@ -202,7 +202,7 @@
                         <img id="cropperImage" class="max-w-full block">
                     </div>
                     <div class="flex gap-3">
-                        <button onclick="applyCrop()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition-all">Apply & Save</button>
+                        <button onclick="applyCrop()" class="flex-1 bg-primary hover:bg-primary-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition-all">Apply & Save</button>
                         <button onclick="closeCropper()" class="px-8 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition-all">Cancel</button>
                     </div>
                 </div>
@@ -337,14 +337,17 @@
                 <div>
                     <label class="block text-xs font-bold text-slate-500 mb-1">Role</label>
                     <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 text-slate-600 text-sm font-medium">
-                        <?= h($profile->role) ?>
+                        <?php 
+                            $role = $profile->role;
+                            echo ($role === 'User') ? 'Server' : h($role);
+                        ?>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Change Password -->
-        <div id="password-section" class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 animate-fade-in-up delay-200 <?= $mustResetPassword ? 'ring-2 ring-blue-500 shadow-blue-100' : '' ?>">
+        <div id="password-section" class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 animate-fade-in-up delay-200 <?= $mustResetPassword ? 'ring-2 ring-primary-500 shadow-primary-100' : '' ?>">
             <div class="flex items-center gap-3 mb-6">
                 <div class="p-2 bg-slate-100 text-slate-600 rounded-lg">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -361,8 +364,8 @@
                 <div>
                     <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Current Password</label>
                     <div class="relative">
-                        <input type="password" name="current_password" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all pr-12">
-                        <button type="button" onclick="toggleFieldPassword(this)" class="absolute right-3 top-2.5 text-slate-400 hover:text-blue-600 transition-colors">
+                        <input type="password" name="current_password" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all pr-12">
+                        <button type="button" onclick="toggleFieldPassword(this)" class="absolute right-3 top-2.5 text-slate-400 hover:text-primary transition-colors">
                             <i class="ph ph-eye text-base"></i>
                         </button>
                     </div>
@@ -371,8 +374,8 @@
                 <div>
                     <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">New Password</label>
                     <div class="relative">
-                        <input type="password" name="new_password" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all pr-12">
-                        <button type="button" onclick="toggleFieldPassword(this)" class="absolute right-3 top-2.5 text-slate-400 hover:text-blue-600 transition-colors">
+                        <input type="password" name="new_password" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all pr-12">
+                        <button type="button" onclick="toggleFieldPassword(this)" class="absolute right-3 top-2.5 text-slate-400 hover:text-primary transition-colors">
                             <i class="ph ph-eye text-base"></i>
                         </button>
                     </div>
@@ -381,8 +384,8 @@
                 <div>
                     <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Confirm Password</label>
                     <div class="relative">
-                        <input type="password" name="confirm_password" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all pr-12">
-                        <button type="button" onclick="toggleFieldPassword(this)" class="absolute right-3 top-2.5 text-slate-400 hover:text-blue-600 transition-colors">
+                        <input type="password" name="confirm_password" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all pr-12">
+                        <button type="button" onclick="toggleFieldPassword(this)" class="absolute right-3 top-2.5 text-slate-400 hover:text-primary transition-colors">
                             <i class="ph ph-eye text-base"></i>
                         </button>
                     </div>

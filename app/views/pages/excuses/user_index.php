@@ -28,7 +28,7 @@
                 <div class="md:col-span-2">
                     <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Select Assigned Activity</label>
                     <div class="relative">
-                        <select id="assigned_schedule" onchange="handleScheduleSelect(this)" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none">
+                        <select id="assigned_schedule" onchange="handleScheduleSelect(this)" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent appearance-none">
                             <option value="" disabled selected>Choose from your assignments...</option>
                             <?php if(!empty($schedules)): ?>
                                 <?php foreach($schedules as $s): ?>
@@ -69,14 +69,14 @@
 
             <div>
                 <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Reason / Remarks</label>
-                <textarea name="reason" rows="4" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Please state your reason here..."></textarea>
+                <textarea name="reason" rows="4" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder="Please state your reason here..."></textarea>
             </div>
 
             <div>
                 <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Upload Proof (Optional)</label>
                 <div class="flex items-center gap-4">
                     <label class="flex-1 cursor-pointer group">
-                        <div class="w-full flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50 text-slate-400 hover:bg-slate-100 hover:border-blue-400 hover:text-blue-500 transition-all">
+                        <div class="w-full flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50 text-slate-400 hover:bg-slate-100 hover:border-primary-400 hover:text-primary-500 transition-all">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
@@ -92,7 +92,7 @@
             </div>
 
             <div class="pt-4">
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg shadow-blue-200 transform active:scale-[0.98] flex items-center gap-2">
+                <button type="submit" class="bg-primary hover:bg-primary-700 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg shadow-primary-200 transform active:scale-[0.98] flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                     </svg>
@@ -122,7 +122,7 @@
                         <td class="p-6 text-slate-500"><?= date('M d, Y', strtotime($exc->created_at)) ?></td>
                         <td class="p-6 font-bold text-slate-700"><?= date('M d, Y', strtotime($exc->absence_date)) ?></td>
                         <td class="p-6">
-                            <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-600 uppercase">
+                            <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-primary-50 text-primary uppercase">
                                 <?= h($exc->type) ?>
                             </span>
                         </td>
