@@ -13,6 +13,8 @@ class ScheduleController extends Controller {
     private $serverRepo;
     private $announcementRepo;
     private $templateRepo;
+    private $seasonRepo;
+    private $presetRepo;
     private $userRepo;
     private $db;
 
@@ -22,15 +24,35 @@ class ScheduleController extends Controller {
         $this->serverRepo = new ServerRepository();
         $this->announcementRepo = new AnnouncementRepository();
         $this->templateRepo = new ScheduleTemplateRepository();
+        $this->seasonRepo = new \App\Repositories\LiturgicalSeasonRepository();
+        $this->presetRepo = new \App\Repositories\SchedulePresetRepository();
         $this->userRepo = new \App\Repositories\UserRepository();
         $this->db = \App\Core\Database::getInstance();
     }
 
     public function index() {
+        $seasons = $this->seasonRepo->getAll();
+
         if (isset($_SESSION['role']) && $_SESSION['role'] === 'User') {
             // Get ALL schedules for the general calendar
             $allSchedules = $this->scheduleRepo->getAll();
             
+            // Dynamic Liturgical Override for Users
+            foreach ($allSchedules as $s) {
+                foreach ($seasons as $season) {
+                    if ($s->mass_date >= $season->start_date && $s->mass_date <= $season->end_date) {
+                        $exempted = !empty($season->exempted_types) ? json_decode($season->exempted_types, true) : [];
+                        if (in_array($s->mass_type, $exempted)) continue;
+
+                        $s->color = $season->color;
+                        if ($s->mass_type === 'Sunday Mass' || $s->mass_type === 'Weekday Mass') {
+                            $s->event_name = ($s->event_name ? $s->event_name . " (" . $season->name . ")" : $season->name);
+                        }
+                        break;
+                    }
+                }
+            }
+
             // Get user's assigned IDs
             $assignedIds = $this->scheduleRepo->getAssignedScheduleIds($_SESSION['user_id']);
             
@@ -50,8 +72,21 @@ class ScheduleController extends Controller {
                 ? (new \App\Repositories\SystemSettingRepository())->getActivityTypes() 
                 : [];
 
-            // Attach assignments to schedules
+            // Dynamic Liturgical Override for Admins
             foreach ($schedules as $s) {
+                foreach ($seasons as $season) {
+                    if ($s->mass_date >= $season->start_date && $s->mass_date <= $season->end_date) {
+                        $exempted = !empty($season->exempted_types) ? json_decode($season->exempted_types, true) : [];
+                        if (in_array($s->mass_type, $exempted)) continue;
+
+                        $s->color = $season->color;
+                        if ($s->mass_type === 'Sunday Mass' || $s->mass_type === 'Weekday Mass') {
+                            $s->event_name = ($s->event_name ? $s->event_name . " (" . $season->name . ")" : $season->name);
+                        }
+                        break;
+                    }
+                }
+
                 $assignments = $this->scheduleRepo->getAssignments($s->id);
                 $s->assigned_servers = $assignments;
                 $s->assigned_ids = array_map(function($a) { return (int)$a->id; }, $assignments);
@@ -382,16 +417,25 @@ class ScheduleController extends Controller {
         if ($_SERVER['REQUEST_METHOD'] == 'POST' && !empty($_POST['ids'])) {
             $ids = json_decode($_POST['ids'], true);
             $status = $_POST['status'] ?? null;
+            $color = $_POST['color'] ?? null;
 
-            if ($ids && $status) {
+            if ($ids && ($status || $color)) {
                 $count = 0;
                 foreach ($ids as $id) {
-                    if ($this->scheduleRepo->updateStatus($id, $status)) {
-                        $count++;
+                    if ($status) {
+                        $this->scheduleRepo->updateStatus($id, $status);
                     }
+                    if ($color) {
+                        $this->scheduleRepo->updateColor($id, $color);
+                    }
+                    $count++;
                 }
-                logAction('Update', 'Schedules', "Bulk updated status to $status for $count schedules.");
-                setFlash('msg_success', "Updated $count schedules.");
+                $msg = "Updated $count schedules.";
+                if ($status && $color) $msg = "Updated status and color for $count schedules.";
+                elseif ($color) $msg = "Updated color for $count schedules.";
+                
+                logAction('Update', 'Schedules', "Bulk updated schedules: " . implode(',', $ids));
+                setFlash('msg_success', $msg);
             }
         }
         redirect('schedules');
@@ -400,8 +444,10 @@ class ScheduleController extends Controller {
     public function generate() {
         $startMonth = (int)($_GET['month'] ?? date('m'));
         $startYear = (int)($_GET['year'] ?? date('Y'));
-        $endMonth = isset($_GET['end_month']) && $_GET['end_month'] !== '' ? (int)$_GET['end_month'] : $startMonth;
-        $endYear = isset($_GET['end_year']) && $_GET['end_year'] !== '' ? (int)$_GET['end_year'] : $startYear;
+        
+        // Support Weeks or Months
+        $durationType = $_GET['duration_type'] ?? 'months';
+        $durationValue = (int)($_GET['duration'] ?? 1);
         
         $templates = $this->templateRepo->getAll();
 
@@ -413,67 +459,71 @@ class ScheduleController extends Controller {
 
         try {
             $startDate = new \DateTime("$startYear-$startMonth-01");
-            $endDate = new \DateTime("$endYear-$endMonth-01");
-            $endDate->modify('last day of this month');
+            $endDate = clone $startDate;
+            
+            if ($durationType === 'weeks') {
+                $endDate->modify("+" . ($durationValue * 7) . " days");
+            } else {
+                $endDate->modify("+" . $durationValue . " months");
+                $endDate->modify('last day of this month');
+            }
 
             $current = clone $startDate;
             $count = 0;
-            $monthsProcessed = [];
+            $dateRangeStr = $startDate->format('M d, Y') . " to " . $endDate->format('M d, Y');
 
             while ($current <= $endDate) {
-                $month = $current->format('m');
-                $year = $current->format('Y');
-                $monthsProcessed[] = $current->format('F Y');
-                
-                $monthStart = clone $current;
-                $monthEnd = clone $current;
-                $monthEnd->modify('last day of this month');
+                $dayOfWeek = (int)$current->format('w');
+                $dateStr = $current->format('Y-m-d');
 
-                $dayRunner = clone $monthStart;
-                while ($dayRunner <= $monthEnd) {
-                    $dayOfWeek = (int)$dayRunner->format('w');
-                    $dateStr = $dayRunner->format('Y-m-d');
+                $dayTemplates = array_filter($templates, function($t) use ($dayOfWeek) {
+                    return (int)$t->day_of_week === $dayOfWeek;
+                });
 
-                    $dayTemplates = array_filter($templates, function($t) use ($dayOfWeek) {
-                        return (int)$t->day_of_week === $dayOfWeek;
-                    });
-
-                    foreach ($dayTemplates as $tpl) {
-                        // Check for conflict before auto-generating
-                        if (!$this->scheduleRepo->hasConflict($dateStr, $tpl->mass_time)) {
-                            $data = [
-                                'mass_type' => $tpl->mass_type,
-                                'event_name' => $tpl->event_name,
-                                'color' => $tpl->color,
-                                'mass_date' => $dateStr,
-                                'mass_time' => $tpl->mass_time,
-                                'status' => 'Confirmed'
-                            ];
-                            $this->scheduleRepo->create($data);
-                            $count++;
+                foreach ($dayTemplates as $tpl) {
+                    // Check for conflict
+                    if (!$this->scheduleRepo->hasConflict($dateStr, $tpl->mass_time)) {
+                        // Liturgical Season Override
+                        $color = $tpl->color;
+                        $eventName = $tpl->event_name;
+                        
+                        $season = $this->seasonRepo->getSeasonByDate($dateStr);
+                        if ($season) {
+                            $exempted = !empty($season->exempted_types) ? json_decode($season->exempted_types, true) : [];
+                            
+                            if (!in_array($tpl->mass_type, $exempted)) {
+                                $color = $season->color;
+                                if ($tpl->mass_type === 'Sunday Mass' || $tpl->mass_type === 'Weekday Mass') {
+                                    $eventName = ($eventName ? $eventName . " (" . $season->name . ")" : $season->name);
+                                }
+                            }
                         }
+
+                        $data = [
+                            'mass_type' => $tpl->mass_type,
+                            'event_name' => $eventName,
+                            'color' => $color,
+                            'mass_date' => $dateStr,
+                            'mass_time' => $tpl->mass_time,
+                            'status' => 'Confirmed'
+                        ];
+                        $this->scheduleRepo->create($data);
+                        $count++;
                     }
-                    $dayRunner->modify('+1 day');
                 }
-                
-                $current->modify('first day of next month');
+                $current->modify('+1 day');
             }
 
-            $monthRangeStr = count($monthsProcessed) > 1 
-                ? $monthsProcessed[0] . " to " . end($monthsProcessed)
-                : $monthsProcessed[0];
-
-            logAction('Create', 'Schedules', "Generated $count schedules for $monthRangeStr based on templates.");
+            logAction('Create', 'Schedules', "Generated $count schedules for $dateRangeStr based on templates.");
             
-            // Bulk Announcement
             $this->announcementRepo->create([
                 'title' => 'Schedules Generated',
                 'category' => 'System',
-                'message' => "Schedules for $monthRangeStr have been automatically generated based on the Master Plan.",
+                'message' => "Schedules from $dateRangeStr have been automatically generated based on the Master Plan.",
                 'author' => 'System'
             ]);
 
-            setFlash('msg_success', "Successfully generated $count slots for $monthRangeStr.");
+            setFlash('msg_success', "Successfully generated $count slots for $dateRangeStr.");
         } catch (\Exception $e) {
             setFlash('msg_error', "Error generating schedules: " . $e->getMessage());
         }
@@ -487,14 +537,102 @@ class ScheduleController extends Controller {
         $this->requireRole('Superadmin');
         
         $templates = $this->templateRepo->getAll();
+        $activityTypes = (new \App\Repositories\SystemSettingRepository())->getActivityTypes();
+        $seasons = $this->seasonRepo->getAll();
+        $presets = $this->presetRepo->getAll();
         
         $data = [
             'pageTitle' => 'Auto-Fill Settings',
             'title' => 'Auto-Fill Config | ASMS',
-            'templates' => $templates
+            'templates' => $templates,
+            'activityTypes' => $activityTypes,
+            'seasons' => $seasons,
+            'presets' => $presets
         ];
         
         $this->view('schedules/templates', $data);
+    }
+
+    public function storeSeason() {
+        $this->requireRole('Superadmin');
+        $this->verifyCsrf();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id = $_POST['id'] ?? null;
+            $data = [
+                'name' => $_POST['name'],
+                'start_date' => $_POST['start_date'],
+                'end_date' => $_POST['end_date'],
+                'color' => $_POST['color'],
+                'exempted_types' => isset($_POST['exempted_types']) ? json_encode($_POST['exempted_types']) : null
+            ];
+
+            if ($id) {
+                if ($this->seasonRepo->update($id, $data)) {
+                    setFlash('msg_success', 'Liturgical event updated.');
+                } else {
+                    setFlash('msg_error', 'Failed to update liturgical event.');
+                }
+            } else {
+                if ($this->seasonRepo->create($data)) {
+                    setFlash('msg_success', 'Liturgical event/season added.');
+                } else {
+                    setFlash('msg_error', 'Failed to add liturgical season.');
+                }
+            }
+        }
+        redirect('schedules/templates');
+    }
+
+    public function deleteSeason() {
+        $this->requireRole('Superadmin');
+        $this->verifyCsrf();
+
+        $id = $_POST['id'] ?? null;
+        if ($id && $this->seasonRepo->delete($id)) {
+            setFlash('msg_success', 'Liturgical event removed.');
+        } else {
+            setFlash('msg_error', 'Failed to remove liturgical event.');
+        }
+        redirect('schedules/templates');
+    }
+
+    public function storePreset() {
+        $this->requireRole('Superadmin');
+        $this->verifyCsrf();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id = $_POST['id'] ?? null;
+            $data = [
+                'name' => $_POST['name'],
+                'preset_group' => $_POST['preset_group'],
+                'day_of_week' => $_POST['day_of_week'],
+                'mass_time' => $_POST['mass_time'],
+                'mass_type' => $_POST['mass_type'],
+                'event_name' => $_POST['event_name'] ?? null,
+                'color' => $_POST['color'] ?? 'blue'
+            ];
+
+            if ($id) {
+                $this->presetRepo->update($id, $data);
+                setFlash('msg_success', 'Preset updated.');
+            } else {
+                $this->presetRepo->create($data);
+                setFlash('msg_success', 'New preset added.');
+            }
+        }
+        redirect('schedules/templates');
+    }
+
+    public function deletePreset() {
+        $this->requireRole('Superadmin');
+        $this->verifyCsrf();
+
+        $id = $_POST['id'] ?? null;
+        if ($id && $this->presetRepo->delete($id)) {
+            setFlash('msg_success', 'Preset removed.');
+        }
+        redirect('schedules/templates');
     }
 
     public function storeTemplate() {
@@ -502,6 +640,7 @@ class ScheduleController extends Controller {
         $this->verifyCsrf();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id = $_POST['id'] ?? null;
             $data = [
                 'day_of_week' => $_POST['day_of_week'],
                 'mass_time' => $_POST['mass_time'],
@@ -510,10 +649,18 @@ class ScheduleController extends Controller {
                 'color' => $_POST['color'] ?? 'blue'
             ];
 
-            if ($this->templateRepo->create($data)) {
-                setFlash('msg_success', 'Template slot added.');
+            if ($id) {
+                if ($this->templateRepo->update($id, $data)) {
+                    setFlash('msg_success', 'Template slot updated.');
+                } else {
+                    setFlash('msg_error', 'Failed to update template.');
+                }
             } else {
-                setFlash('msg_error', 'Failed to add template. A slot already exists for this time.');
+                if ($this->templateRepo->create($data)) {
+                    setFlash('msg_success', 'Template slot added.');
+                } else {
+                    setFlash('msg_error', 'Failed to add template. A slot already exists for this time.');
+                }
             }
         }
         redirect('schedules/templates');
@@ -565,6 +712,56 @@ class ScheduleController extends Controller {
         if ($day !== null) {
             $this->templateRepo->clearDay($day);
             setFlash('msg_success', 'Day cleared.');
+        } else {
+            // Clear ALL if no day specified (for reset)
+            for($i=0; $i<=6; $i++) $this->templateRepo->clearDay($i);
+            setFlash('msg_success', 'Master Plan has been reset.');
+        }
+        redirect('schedules/templates');
+    }
+
+    public function applyPresets() {
+        $this->requireRole('Superadmin');
+        $this->verifyCsrf();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $selectedIds = $_POST['presets'] ?? [];
+            $alsoGenerate = isset($_POST['also_generate']);
+            
+            // 1. Clear Master Plan
+            for($i=0; $i<=6; $i++) $this->templateRepo->clearDay($i);
+
+            // 2. Apply dynamic presets from DB
+            foreach ($selectedIds as $id) {
+                $p = $this->presetRepo->getById($id);
+                if ($p) {
+                    $this->templateRepo->create([
+                        'day_of_week' => $p->day_of_week,
+                        'mass_time' => $p->mass_time,
+                        'mass_type' => $p->mass_type,
+                        'event_name' => $p->event_name,
+                        'color' => $p->color
+                    ]);
+                }
+            }
+
+            setFlash('msg_success', 'Master Plan updated with selected presets.');
+
+            // 3. Optional Immediate Generation
+            if ($alsoGenerate) {
+                $month = (int)$_POST['gen_month'];
+                $durationValue = (int)$_POST['gen_duration'];
+                $durationType = $_POST['gen_duration_type'] ?? 'months';
+                $year = (int)date('Y');
+                
+                $_GET['month'] = $month;
+                $_GET['year'] = $year;
+                $_GET['duration'] = $durationValue;
+                $_GET['duration_type'] = $durationType;
+                
+                $this->generate();
+                return;
+            }
         }
         redirect('schedules/templates');
     }

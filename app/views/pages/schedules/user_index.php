@@ -180,18 +180,36 @@
         renderCalendar();
     }
 
+    function getColorClass(color, isPast) {
+        if (isPast) return 'bg-slate-100 text-slate-400 hover:bg-slate-200 grayscale-[0.5] opacity-60';
+
+        const maps = {
+            'green': 'bg-green-100 text-green-700 hover:bg-green-200',
+            'purple': 'bg-purple-100 text-purple-700 hover:bg-purple-200',
+            'yellow': 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200',
+            'blue': 'bg-blue-100 text-blue-700 hover:bg-blue-200',
+            'indigo': 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200',
+            'pink': 'bg-pink-100 text-pink-700 hover:bg-pink-200',
+            'red': 'bg-red-100 text-red-700 hover:bg-red-200',
+            'teal': 'bg-teal-100 text-teal-700 hover:bg-teal-200',
+            'gray': 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+        };
+
+        return maps[color] || maps['blue'];
+    }
+
     function renderCalendar() {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
         document.getElementById('currentMonth').innerText = new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
-        
+
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const grid = document.getElementById('calendarGrid');
         grid.innerHTML = '';
-        
+
         for(let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div'));
-        
+
         for(let day = 1; day <= daysInMonth; day++) {
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const today = new Date();
@@ -199,7 +217,7 @@
 
             const cell = document.createElement('div');
             cell.className = `min-h-[100px] border ${isToday ? 'border-primary-500 ring-2 ring-primary-100 bg-white' : 'border-slate-100 bg-slate-50/30'} rounded-2xl p-2 transition-all hover:border-primary-200 hover:shadow-md flex flex-col gap-1 relative group cursor-pointer`;
-            
+
             cell.onclick = () => {
                 const dayEvents = schedules.filter(s => s.mass_date === dateStr);
                 if (dayEvents.length > 0) {
@@ -225,7 +243,7 @@
                 headerDiv.appendChild(todayLabel);
             }
             cell.appendChild(headerDiv);
-            
+
             let dayEvents = schedules.filter(s => s.mass_date === dateStr);
             if (currentFilter === 'mine') dayEvents = dayEvents.filter(evt => assignedIds.includes(parseInt(evt.id)));
             else if (currentFilter === 'open') dayEvents = dayEvents.filter(evt => !assignedIds.includes(parseInt(evt.id)));
@@ -236,12 +254,15 @@
                 const eventDateTime = new Date(`${evt.mass_date} ${evt.mass_time}`);
                 const isPast = eventDateTime < new Date();
 
-                let colorClass = 'bg-green-100 text-green-700';
-                if (isPast) colorClass = 'bg-slate-100 text-slate-400 grayscale-[0.5] opacity-60';
-                else if (evt.color) colorClass = `bg-${evt.color}-100 text-${evt.color}-700`;
-                else if (evt.mass_type === 'Funeral') colorClass = 'bg-purple-100 text-purple-700';
-                else if (evt.mass_type === 'Wedding') colorClass = 'bg-yellow-100 text-yellow-800';
-                
+                let color = evt.color;
+                if (!color) {
+                    if (evt.mass_type === 'Funeral') color = 'purple';
+                    else if (evt.mass_type === 'Wedding') color = 'yellow';
+                    else color = 'green';
+                }
+
+                let colorClass = getColorClass(color, isPast);
+
                 eventEl.className = `text-[10px] font-bold px-2 py-1 rounded-lg truncate transition-all ${colorClass} ${isAssigned ? 'ring-2 ring-primary ring-offset-1 z-10 shadow-sm' : 'opacity-80'}`;
                 let title = evt.mass_type === 'Special Event' && evt.event_name ? evt.event_name : evt.mass_type;
                 eventEl.innerText = `${evt.mass_time.substring(0,5)} ${title}`;
@@ -253,7 +274,6 @@
             grid.appendChild(cell);
         }
     }
-
     async function viewDetails(evt) {
         const modal = document.getElementById('detailsModal');
         const isAssigned = assignedIds.includes(parseInt(evt.id));

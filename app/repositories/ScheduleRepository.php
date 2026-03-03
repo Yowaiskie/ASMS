@@ -122,6 +122,13 @@ class ScheduleRepository implements RepositoryInterface {
         return $this->db->execute();
     }
 
+    public function updateColor($id, $color) {
+        $this->db->query("UPDATE schedules SET color = :color WHERE id = :id");
+        $this->db->bind(':id', $id);
+        $this->db->bind(':color', $color);
+        return $this->db->execute();
+    }
+
     public function delete($id) {
         $this->db->query("DELETE FROM schedules WHERE id = :id");
         $this->db->bind(':id', $id);

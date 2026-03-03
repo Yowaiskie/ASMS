@@ -53,4 +53,14 @@ class ScheduleTemplateRepository {
         $this->db->bind(':day', $day);
         return $this->db->execute();
     }
+
+    public function update($id, $data) {
+        $this->db->query("UPDATE schedule_templates SET mass_time = :time, mass_type = :type, event_name = :name, color = :color WHERE id = :id");
+        $this->db->bind(':id', $id);
+        $this->db->bind(':time', $data['mass_time']);
+        $this->db->bind(':type', $data['mass_type']);
+        $this->db->bind(':name', $data['event_name'] ?? null);
+        $this->db->bind(':color', $data['color'] ?? 'blue');
+        return $this->db->execute();
+    }
 }

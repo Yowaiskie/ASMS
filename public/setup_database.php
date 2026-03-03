@@ -173,6 +173,42 @@ try {
         is_active BOOLEAN DEFAULT 1
     )");
 
+    // --- Table: liturgical_seasons ---
+    $pdo->exec("CREATE TABLE IF NOT EXISTS liturgical_seasons (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        start_date DATE NOT NULL,
+        end_date DATE NOT NULL,
+        color VARCHAR(20) NOT NULL,
+        is_active TINYINT(1) DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )");
+    addColumn($pdo, 'liturgical_seasons', 'exempted_types', "TEXT AFTER color");
+
+    // --- Table: schedule_presets ---
+    $pdo->exec("CREATE TABLE IF NOT EXISTS schedule_presets (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        preset_group VARCHAR(50) DEFAULT 'General',
+        day_of_week TINYINT NOT NULL,
+        mass_time TIME NOT NULL,
+        mass_type VARCHAR(50) NOT NULL,
+        event_name VARCHAR(100),
+        color VARCHAR(20) DEFAULT 'blue',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY unique_preset (name, day_of_week, mass_time)
+    )");
+
+    // Clean up duplicate presets before adding constraint
+    $pdo->exec("DELETE t1 FROM schedule_presets t1 INNER JOIN schedule_presets t2 WHERE t1.id > t2.id AND t1.name = t2.name AND t1.day_of_week = t2.day_of_week AND t1.mass_time = t2.mass_time");
+    
+    // Safely add UNIQUE constraint to schedule_presets if not exists
+    $checkIndex = $pdo->query("SHOW INDEX FROM schedule_presets WHERE Key_name = 'unique_preset'")->fetch();
+    if (!$checkIndex) {
+        $pdo->exec("ALTER TABLE schedule_presets ADD UNIQUE KEY unique_preset (name, day_of_week, mass_time)");
+        echo "Added UNIQUE constraint to 'schedule_presets'.<br>";
+    }
+
     // --- Seed Activity Types ---
     $activityTypes = ['Sunday Mass', 'Anticipated Mass', 'Weekday Mass', 'Wedding', 'Funeral', 'Baptism', 'Special Event', 'Meeting'];
     $stmt = $pdo->prepare("INSERT IGNORE INTO activity_types (name, default_color) VALUES (?, 'blue')");
@@ -187,6 +223,35 @@ try {
     $categories = ['General', 'Training', 'Schedule', 'Reminder'];
     $stmt = $pdo->prepare("INSERT IGNORE INTO announcement_categories (name) VALUES (?)");
     foreach($categories as $cat) $stmt->execute([$cat]);
+
+    // --- Seed Schedule Presets ---
+    $presets = [
+        // Sunday
+        ['Sunday 6:00 AM', 'Sunday', 0, '06:00:00', 'Sunday Mass', 'green'],
+        ['Sunday 7:30 AM', 'Sunday', 0, '07:30:00', 'Sunday Mass', 'green'],
+        ['Sunday 9:00 AM', 'Sunday', 0, '09:00:00', 'Sunday Mass', 'green'],
+        ['Sunday 4:00 PM', 'Sunday', 0, '16:00:00', 'Sunday Mass', 'green'],
+        ['Sunday 5:00 PM (Holy Hour)', 'Sunday', 0, '17:00:00', 'Meeting', 'yellow'],
+        ['Sunday 5:30 PM', 'Sunday', 0, '17:30:00', 'Sunday Mass', 'green'],
+        ['Sunday 7:00 PM', 'Sunday', 0, '19:00:00', 'Sunday Mass', 'green'],
+
+        // Saturday
+        ['Saturday 6:00 AM', 'Saturday', 6, '06:00:00', 'Weekday Mass', 'blue'],
+        ['Saturday 6:00 PM (Anticipated)', 'Saturday', 6, '18:00:00', 'Anticipated Mass', 'teal'],
+
+        // Weekdays 6AM
+        ['Monday 6:00 AM', 'Weekday Morning', 1, '06:00:00', 'Weekday Mass', 'blue'],
+        ['Tuesday 6:00 AM', 'Weekday Morning', 2, '06:00:00', 'Weekday Mass', 'blue'],
+        ['Wednesday 6:00 AM', 'Weekday Morning', 3, '06:00:00', 'Weekday Mass', 'blue'],
+        ['Thursday 6:00 AM', 'Weekday Morning', 4, '06:00:00', 'Weekday Mass', 'blue'],
+        ['Friday 6:00 AM', 'Weekday Morning', 5, '06:00:00', 'Weekday Mass', 'blue'],
+
+        // Weekdays 6PM
+        ['Wednesday 6:00 PM', 'Weekday Evening', 3, '18:00:00', 'Weekday Mass', 'blue'],
+        ['Friday 6:00 PM', 'Weekday Evening', 5, '18:00:00', 'Weekday Mass', 'blue'],
+    ];
+    $stmt = $pdo->prepare("INSERT IGNORE INTO schedule_presets (name, preset_group, day_of_week, mass_time, mass_type, color) VALUES (?, ?, ?, ?, ?, ?)");
+    foreach($presets as $p) $stmt->execute($p);
 
     // Default System Settings
     $pdo->exec("INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES 

@@ -17,6 +17,15 @@
             </svg>
             Import
         </button>
+
+        <?php if ($_SESSION['role'] === 'Superadmin'): ?>
+        <a href="<?= URLROOT ?>/schedules/templates" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-4 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 font-bold text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            Auto-Fill
+        </a>
+        <?php endif; ?>
         
         <button onclick="openModal('add')" class="bg-primary hover:bg-primary-700 text-white px-4 py-2.5 rounded-xl shadow-lg shadow-primary-200 transition-all flex items-center gap-2 font-semibold text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -282,16 +291,27 @@
             <input type="hidden" name="ids" id="bulkEditIds">
             
             <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Update Status</label>
-            <select name="status" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none mb-6">
+            <select name="status" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none mb-4">
                 <option value="">No Change</option>
                 <option value="Confirmed">Confirmed</option>
                 <option value="Pending">Pending</option>
                 <option value="Cancelled">Cancelled</option>
             </select>
 
-            <div class="flex gap-2">
-                <button type="button" onclick="document.getElementById('bulkEditModal').classList.add('hidden')" class="flex-1 py-2 border rounded-xl text-sm font-bold">Cancel</button>
-                <button type="submit" class="flex-1 py-2 bg-primary text-white rounded-xl text-sm font-bold">Update</button>
+            <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Update Color Label</label>
+            <input type="hidden" name="color" id="bulkColorInput">
+            <div class="flex flex-wrap gap-2 mb-6 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                <button type="button" onclick="selectBulkColor('')" class="w-6 h-6 rounded-full border border-slate-300 flex items-center justify-center text-slate-400 hover:border-slate-400 transition-all" title="No Change">
+                    <i class="ph-bold ph-prohibit text-[10px]"></i>
+                </button>
+                <?php $colors = ['green','purple','yellow','blue','indigo','pink','red','teal','gray']; foreach($colors as $c): $bg = "bg-{$c}-500"; if($c=='yellow') $bg="bg-yellow-400"; ?>
+                    <button type="button" onclick="selectBulkColor('<?= $c ?>')" data-bulk-color="<?= $c ?>" class="bulk-color-btn w-6 h-6 rounded-full <?= $bg ?> ring-offset-1 transition-all hover:scale-110"></button>
+                <?php endforeach; ?>
+            </div>
+
+            <div class="flex gap-3">
+                <button type="button" onclick="document.getElementById('bulkEditModal').classList.add('hidden')" class="flex-1 py-2.5 text-slate-500 font-bold">Cancel</button>
+                <button type="submit" class="flex-1 bg-primary text-white py-2.5 rounded-xl font-bold shadow-lg shadow-primary-200">Apply Changes</button>
             </div>
         </form>
     </div>
@@ -354,6 +374,17 @@
 </div>
 
 <script>
+    function selectBulkColor(color) {
+        document.getElementById('bulkColorInput').value = color;
+        document.querySelectorAll('.bulk-color-btn').forEach(btn => {
+            if (btn.dataset.bulkColor === color && color !== '') {
+                btn.classList.add('ring-2', 'ring-slate-800');
+            } else {
+                btn.classList.remove('ring-2', 'ring-slate-800');
+            }
+        });
+    }
+
     const schedules = <?= json_encode($schedules) ?>;
     const currentServerId = <?= json_encode($currentServerId) ?>;
     let currentDate = new Date();
@@ -385,6 +416,24 @@
 
     const modal = document.getElementById('scheduleModal');
     const modalContent = document.getElementById('modalContent');
+
+    function getColorClass(color, isPast) {
+        if (isPast) return 'bg-slate-100 text-slate-400 hover:bg-slate-200 grayscale-[0.5] opacity-60';
+        
+        const maps = {
+            'green': 'bg-green-100 text-green-700 hover:bg-green-200',
+            'purple': 'bg-purple-100 text-purple-700 hover:bg-purple-200',
+            'yellow': 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200',
+            'blue': 'bg-blue-100 text-blue-700 hover:bg-blue-200',
+            'indigo': 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200',
+            'pink': 'bg-pink-100 text-pink-700 hover:bg-pink-200',
+            'red': 'bg-red-100 text-red-700 hover:bg-red-200',
+            'teal': 'bg-teal-100 text-teal-700 hover:bg-teal-200',
+            'gray': 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+        };
+        
+        return maps[color] || maps['blue'];
+    }
 
     function renderCalendar() {
         const year = currentDate.getFullYear();
@@ -433,16 +482,14 @@
                 const eventDateTime = new Date(`${evt.mass_date} ${evt.mass_time}`);
                 const isPast = eventDateTime < new Date();
 
-                let colorClass = 'bg-green-100 text-green-700 hover:bg-green-200';
-                if (isPast) {
-                    colorClass = 'bg-slate-100 text-slate-400 hover:bg-slate-200 grayscale-[0.5] opacity-60';
-                } else if (evt.color) {
-                    colorClass = `bg-${evt.color}-100 text-${evt.color}-700 hover:bg-${evt.color}-200`;
-                } else if (evt.mass_type === 'Funeral') {
-                    colorClass = 'bg-purple-100 text-purple-700 hover:bg-purple-200';
-                } else if (evt.mass_type === 'Wedding') {
-                    colorClass = 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200';
+                let color = evt.color;
+                if (!color) {
+                    if (evt.mass_type === 'Funeral') color = 'purple';
+                    else if (evt.mass_type === 'Wedding') color = 'yellow';
+                    else color = 'green';
                 }
+
+                let colorClass = getColorClass(color, isPast);
                 
                 // Selection Style
                 const isSelected = selectedIds.includes(evt.id.toString());

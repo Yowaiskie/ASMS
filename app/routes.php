@@ -53,7 +53,12 @@ $router->post('/schedules/store-template', [ScheduleController::class, 'storeTem
 $router->post('/schedules/delete-template', [ScheduleController::class, 'deleteTemplate']);
 $router->post('/schedules/copy-template', [ScheduleController::class, 'copyTemplate']);
 $router->post('/schedules/clear-templates', [ScheduleController::class, 'clearTemplates']);
+$router->post('/schedules/apply-presets', [ScheduleController::class, 'applyPresets']);
+$router->post('/schedules/store-preset', [ScheduleController::class, 'storePreset']);
+$router->post('/schedules/delete-preset', [ScheduleController::class, 'deletePreset']);
 $router->post('/schedules/import', [ScheduleController::class, 'import']);
+$router->post('/schedules/store-season', [ScheduleController::class, 'storeSeason']);
+$router->post('/schedules/delete-season', [ScheduleController::class, 'deleteSeason']);
 
 // Servers
 $router->get('/servers', [ServerController::class, 'index']);
