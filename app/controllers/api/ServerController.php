@@ -293,9 +293,16 @@ class ServerController extends ApiController {
                 $firstRow = true;
                 while (($line = fgetcsv($file, 10000, ",")) !== false) {
                     $column = $line;
-                    if (count($column) == 1 && strpos($column[0], ';') !== false) {
-                        $column = str_getcsv($column[0], ';');
+                    
+                    // Delimiter Detection: If only 1 column found, try semicolon or comma
+                    if (count($column) == 1) {
+                        if (strpos($column[0], ';') !== false) {
+                            $column = str_getcsv($column[0], ';');
+                        } elseif (strpos($column[0], ',') !== false) {
+                            $column = str_getcsv($column[0], ',');
+                        }
                     }
+
                     if ($firstRow) { $firstRow = false; continue; }
 
                     $colCount = count($column);
@@ -357,13 +364,15 @@ class ServerController extends ApiController {
                         $serverId = $db->lastInsertId();
                         $count++;
 
+                        // Username Generation: ONLY First Name
                         $baseUsername = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $payload['first_name']));
                         $username = $baseUsername;
-                        if ($userRepo->findByUsername($username)) {
-                            $username = $baseUsername . '.' . strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $payload['last_name']));
-                            if ($userRepo->findByUsername($username)) {
-                                $username .= $serverId;
-                            }
+                        
+                        // Loop until we find a unique username (e.g., kyle, kyle2, kyle3...)
+                        $suffix = 2;
+                        while ($userRepo->isUsernameTaken($username)) {
+                            $username = $baseUsername . $suffix;
+                            $suffix++;
                         }
 
                         $userData = [

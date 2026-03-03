@@ -82,40 +82,42 @@ class ServerController extends Controller {
                     setFlash('msg_error', 'Update failed.');
                 }
             } else {
-                if ($this->serverRepo->create($data)) {
-                    $db = \App\Core\Database::getInstance();
-                    $serverId = $db->lastInsertId();
-                    
-                    // Create User Account automatically
-                    $userRepo = new \App\Repositories\UserRepository();
-                    
-                    // Username Generation: Primary source is First Name
-                    $baseUsername = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $data['first_name']));
-                    $username = $baseUsername;
-                    
-                    // Check if username exists
-                    if ($userRepo->findByUsername($username)) {
-                        // Try First + Last Name
-                        $username = $baseUsername . '.' . strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $data['last_name']));
+                    if ($this->serverRepo->create($data)) {
+                        $db = \App\Core\Database::getInstance();
+                        $serverId = $db->lastInsertId();
                         
-                        // If still exists, append unique ID
-                        if ($userRepo->findByUsername($username)) {
-                            $username .= $serverId;
+                        // Create User Account automatically
+                        $userRepo = new \App\Repositories\UserRepository();
+                        
+                        // Username Generation: Primary source is First Name
+                        $baseUsername = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $data['first_name']));
+                        $username = $baseUsername;
+                        
+                        // Loop until we find a unique username (including deleted ones)
+                        $suffix = 1;
+                        while ($userRepo->isUsernameTaken($username)) {
+                            if ($suffix == 1) {
+                                // Try First + Last Name
+                                $username = $baseUsername . '.' . strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $data['last_name']));
+                            } else {
+                                // Append number suffix
+                                $username = $baseUsername . $suffix;
+                            }
+                            $suffix++;
                         }
-                    }
 
-                    $userData = [
-                        'username' => $username,
-                        'password' => password_hash(DEFAULT_USER_PASSWORD, PASSWORD_DEFAULT),
-                        'role' => 'User',
-                        'server_id' => $serverId
-                    ];
-                    
-                    $userRepo->create($userData);
+                        $userData = [
+                            'username' => $username,
+                            'password' => password_hash(DEFAULT_USER_PASSWORD, PASSWORD_DEFAULT),
+                            'role' => 'User',
+                            'server_id' => $serverId
+                        ];
+                        
+                        $userRepo->create($userData);
 
-                    logAction('Create', 'Servers', 'Registered new server and user account: ' . $data['first_name'] . ' ' . $data['last_name']);
-                    setFlash('msg_success', 'Server registered and user account created! (Pass: 12345)');
-                } else {
+                        logAction('Create', 'Servers', 'Registered new server and user account: ' . $data['first_name'] . ' ' . $data['last_name']);
+                        setFlash('msg_success', 'Server registered and user account created! (Pass: 12345)');
+                    } else {
                     setFlash('msg_error', 'Registration failed.');
                 }
             }
@@ -313,9 +315,13 @@ class ServerController extends Controller {
                 while (($line = fgetcsv($file, 10000, ",")) !== FALSE) {
                     $column = $line;
                     
-                    // Delimiter Detection: If only 1 column found, try semicolon
-                    if (count($column) == 1 && strpos($column[0], ';') !== false) {
-                        $column = str_getcsv($column[0], ';');
+                    // Delimiter Detection: If only 1 column found, try semicolon or comma
+                    if (count($column) == 1) {
+                        if (strpos($column[0], ';') !== false) {
+                            $column = str_getcsv($column[0], ';');
+                        } elseif (strpos($column[0], ',') !== false) {
+                            $column = str_getcsv($column[0], ',');
+                        }
                     }
 
                     if ($firstRow) { $firstRow = false; continue; } // Skip Header
@@ -326,8 +332,50 @@ class ServerController extends Controller {
                     // Clean BOM from first column
                     $column[0] = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $column[0]);
 
-                    if ($colCount <= 14) {
-                        // --- OLD FORMAT (1 Name Column + 13 others = 14 total) ---
+                    $colCount = count($column);
+                    
+                    if ($colCount == 15) {
+                        // --- 15 COLUMNS (Your Format: No Team) ---
+                        $data = [
+                            'first_name' => trim($column[0] ?? ''),
+                            'middle_name' => trim($column[1] ?? ''),
+                            'last_name' => trim($column[2] ?? ''),
+                            'nickname' => trim($column[3] ?? ''),
+                            'address' => trim($column[4] ?? ''),
+                            'dob' => !empty($column[5]) ? date('Y-m-d', strtotime($column[5])) : null,
+                            'age' => trim($column[6] ?? ''),
+                            'phone' => trim($column[7] ?? ''),
+                            'month_joined' => trim($column[8] ?? ''),
+                            'investiture_date' => !empty($column[9]) ? date('Y-m-d', strtotime($column[9])) : null,
+                            'order_name' => trim($column[10] ?? ''),
+                            'position' => trim($column[11] ?? ''),
+                            'rank' => trim($column[12] ?? 'Server'),
+                            'team' => 'Unassigned', // Default since missing in CSV
+                            'status' => trim($column[13] ?? 'Active'),
+                            'email' => trim($column[14] ?? '')
+                        ];
+                    } elseif ($colCount >= 16) {
+                        // --- 16+ COLUMNS (Standard New Format) ---
+                        $data = [
+                            'first_name' => trim($column[0] ?? ''),
+                            'middle_name' => trim($column[1] ?? ''),
+                            'last_name' => trim($column[2] ?? ''),
+                            'nickname' => trim($column[3] ?? ''),
+                            'address' => trim($column[4] ?? ''),
+                            'dob' => !empty($column[5]) ? date('Y-m-d', strtotime($column[5])) : null,
+                            'age' => trim($column[6] ?? ''),
+                            'phone' => trim($column[7] ?? ''),
+                            'month_joined' => trim($column[8] ?? ''),
+                            'investiture_date' => !empty($column[9]) ? date('Y-m-d', strtotime($column[9])) : null,
+                            'order_name' => trim($column[10] ?? ''),
+                            'position' => trim($column[11] ?? ''),
+                            'rank' => trim($column[12] ?? 'Server'),
+                            'team' => trim($column[13] ?? 'Unassigned'),
+                            'status' => trim($column[14] ?? 'Active'),
+                            'email' => trim($column[15] ?? '')
+                        ];
+                    } else {
+                        // --- OLD FORMAT (1 Name Column or less than 15) ---
                         $fullName = trim($column[0]);
                         if (empty($fullName)) { $skipped++; continue; }
 
@@ -354,26 +402,6 @@ class ServerController extends Controller {
                             'status' => trim($column[12] ?? 'Active'),
                             'email' => trim($column[13] ?? '')
                         ];
-                    } else {
-                        // --- NEW FORMAT (3 Name Columns + 13 others = 16 total) ---
-                        $data = [
-                            'first_name' => trim($column[0] ?? ''),
-                            'middle_name' => trim($column[1] ?? ''),
-                            'last_name' => trim($column[2] ?? ''),
-                            'nickname' => trim($column[3] ?? ''),
-                            'address' => trim($column[4] ?? ''),
-                            'dob' => !empty($column[5]) ? date('Y-m-d', strtotime($column[5])) : null,
-                            'age' => trim($column[6] ?? ''),
-                            'phone' => trim($column[7] ?? ''),
-                            'month_joined' => trim($column[8] ?? ''),
-                            'investiture_date' => !empty($column[9]) ? date('Y-m-d', strtotime($column[9])) : null,
-                            'order_name' => trim($column[10] ?? ''),
-                            'position' => trim($column[11] ?? ''),
-                            'rank' => trim($column[12] ?? 'Server'),
-                            'team' => trim($column[13] ?? 'Unassigned'),
-                            'status' => trim($column[14] ?? 'Active'),
-                            'email' => trim($column[15] ?? '')
-                        ];
                     }
 
                     if (empty($data['first_name'])) { $skipped++; continue; }
@@ -382,19 +410,15 @@ class ServerController extends Controller {
                         $serverId = $db->lastInsertId();
                         $count++;
 
-                        // Username Generation: Primary source is First Name
+                        // Username Generation: ONLY First Name
                         $baseUsername = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $data['first_name']));
                         $username = $baseUsername;
                         
-                        // Check if username exists
-                        if ($userRepo->findByUsername($username)) {
-                            // Try First + Last Name
-                            $username = $baseUsername . '.' . strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $data['last_name']));
-                            
-                            // If still exists, append unique ID
-                            if ($userRepo->findByUsername($username)) {
-                                $username .= $serverId;
-                            }
+                        // Loop until we find a unique username (e.g., kyle, kyle2, kyle3...)
+                        $suffix = 2;
+                        while ($userRepo->isUsernameTaken($username)) {
+                            $username = $baseUsername . $suffix;
+                            $suffix++;
                         }
 
                         $userData = [

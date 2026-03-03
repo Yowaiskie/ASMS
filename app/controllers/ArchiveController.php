@@ -49,4 +49,22 @@ class ArchiveController extends Controller {
         }
         redirect('archives');
     }
+
+    public function bulkDelete() {
+        $this->verifyCsrf();
+        if ($_SERVER['REQUEST_METHOD'] == 'POST' && !empty($_POST['ids'])) {
+            $ids = $_POST['ids'];
+            $count = 0;
+            foreach ($ids as $id) {
+                if ($this->userRepo->deletePermanently($id)) {
+                    $count++;
+                }
+            }
+            logAction('Delete Permanent', 'Archives', "Bulk permanently deleted $count accounts.");
+            setFlash('msg_success', "Permanently deleted $count accounts successfully.");
+        } else {
+            setFlash('msg_error', "No accounts selected.");
+        }
+        redirect('archives');
+    }
 }

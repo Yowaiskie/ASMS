@@ -64,7 +64,7 @@ $router->post('/schedules/delete-season', [ScheduleController::class, 'deleteSea
 $router->get('/servers', [ServerController::class, 'index']);
 $router->post('/servers/store', [ServerController::class, 'store']);
 $router->post('/servers/import', [ServerController::class, 'import']);
-$router->get('/servers/delete', [ServerController::class, 'delete']);
+$router->post('/servers/delete', [ServerController::class, 'delete']);
 $router->post('/servers/bulk-delete', [ServerController::class, 'bulkDelete']);
 $router->post('/servers/update-status', [ServerController::class, 'updateStatus']);
 $router->get('/servers/download', [ServerController::class, 'download_pdf']);
@@ -123,6 +123,7 @@ $router->get('/settings/toggle_edit/:id', [SettingsController::class, 'toggle_ed
 $router->get('/archives', [\App\Controllers\ArchiveController::class, 'index']);
 $router->get('/archives/restore/:id', [\App\Controllers\ArchiveController::class, 'restore']);
 $router->get('/archives/delete/:id', [\App\Controllers\ArchiveController::class, 'delete']);
+$router->post('/archives/bulk-delete', [\App\Controllers\ArchiveController::class, 'bulkDelete']);
 
 // API Routes
 // Auth

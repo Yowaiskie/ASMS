@@ -74,15 +74,20 @@ class UserRepository implements RepositoryInterface {
 
     public function findByUsername($username) {
         $this->db->query("
-            SELECT u.*, CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) as full_name 
-            FROM users u 
-            LEFT JOIN servers s ON u.server_id = s.id 
+            SELECT u.*, CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) as full_name
+            FROM users u
+            LEFT JOIN servers s ON u.server_id = s.id
             WHERE u.username = :username AND u.deleted_at IS NULL
         ");
         $this->db->bind(':username', $username);
         return $this->db->single();
     }
 
+    public function isUsernameTaken($username) {
+        $this->db->query("SELECT id FROM users WHERE username = :username LIMIT 1");
+        $this->db->bind(':username', $username);
+        return $this->db->single() ? true : false;
+    }
     public function getAll($limit = 1000, $offset = 0) {
         $this->db->query("
             SELECT u.*, s.first_name, s.middle_name, s.last_name 
