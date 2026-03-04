@@ -197,7 +197,16 @@ $nav_items = [
                             // Dropdown Logic
                             $hasActiveChild = false;
                             foreach ($visible_items as $item) {
-                                if (strpos($current_path, parse_url($item['url'], PHP_URL_PATH)) === 0) { $hasActiveChild = true; break; }
+                                $itemPath = parse_url($item['url'], PHP_URL_PATH);
+                                if ($current_path === $itemPath) {
+                                    $hasActiveChild = true;
+                                    break;
+                                }
+                                // Fallback for subpaths but exclusive for Schedules
+                                if ($item['label'] !== 'Schedules' && strpos($current_path, $itemPath) === 0) {
+                                    $hasActiveChild = true;
+                                    break;
+                                }
                             }
                         ?>
                             <div class="space-y-1 dropdown-group">
@@ -210,7 +219,14 @@ $nav_items = [
                                 
                                 <div class="dropdown-content pl-4 space-y-1 mt-1 border-l-2 border-slate-100 ml-6 <?= $hasActiveChild ? '' : 'hidden' ?>">
                                     <?php foreach ($visible_items as $item): 
-                                        $isActive = (strpos($current_path, parse_url($item['url'], PHP_URL_PATH)) === 0);
+                                        $itemPath = parse_url($item['url'], PHP_URL_PATH);
+                                        // Exact match or sub-path match, but avoid matching parent paths when a more specific child exists
+                                        $isActive = ($current_path === $itemPath);
+                                        
+                                        // Special case for schedules vs templates
+                                        if ($item['label'] === 'Schedules' && $current_path !== $itemPath) {
+                                            $isActive = false; 
+                                        }
                                     ?>
                                         <a href="<?= $item['url'] ?>" 
                                            class="flex items-center gap-3 px-4 py-2 rounded-xl transition-all <?= $isActive ? 'bg-primary-50 text-primary font-bold' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50' ?>">

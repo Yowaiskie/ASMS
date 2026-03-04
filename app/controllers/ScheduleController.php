@@ -462,9 +462,9 @@ class ScheduleController extends Controller {
             $endDate = clone $startDate;
             
             if ($durationType === 'weeks') {
-                $endDate->modify("+" . ($durationValue * 7) . " days");
+                $endDate->modify("+" . ($durationValue * 7 - 1) . " days");
             } else {
-                $endDate->modify("+" . $durationValue . " months");
+                $endDate->modify("+" . ($durationValue - 1) . " months");
                 $endDate->modify('last day of this month');
             }
 
@@ -597,17 +597,48 @@ class ScheduleController extends Controller {
         redirect('schedules/templates');
     }
 
+    private function normalizeDayOfWeek($day) {
+        if ($day === null || $day === '') {
+            return null;
+        }
+        $day = (int)$day;
+        if ($day < 0) {
+            return 0;
+        }
+        if ($day > 6) {
+            $day = $day % 7;
+        }
+        return $day;
+    }
+
+    private function normalizeTime($time) {
+        if (!$time) {
+            return null;
+        }
+        $formats = ['H:i:s', 'H:i', 'g:i A', 'g:i a'];
+        foreach ($formats as $format) {
+            $dt = \DateTime::createFromFormat($format, $time);
+            if ($dt) {
+                return $dt->format('H:i:s');
+            }
+        }
+        $ts = strtotime($time);
+        return $ts === false ? $time : date('H:i:s', $ts);
+    }
+
     public function storePreset() {
         $this->requireRole('Superadmin');
         $this->verifyCsrf();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = $_POST['id'] ?? null;
+            $dayOfWeek = $this->normalizeDayOfWeek($_POST['day_of_week'] ?? null);
+            $massTime = $this->normalizeTime($_POST['mass_time'] ?? null);
             $data = [
                 'name' => $_POST['name'],
                 'preset_group' => $_POST['preset_group'],
-                'day_of_week' => $_POST['day_of_week'],
-                'mass_time' => $_POST['mass_time'],
+                'day_of_week' => $dayOfWeek ?? $_POST['day_of_week'],
+                'mass_time' => $massTime ?? $_POST['mass_time'],
                 'mass_type' => $_POST['mass_type'],
                 'event_name' => $_POST['event_name'] ?? null,
                 'color' => $_POST['color'] ?? 'blue'
@@ -735,9 +766,11 @@ class ScheduleController extends Controller {
             foreach ($selectedIds as $id) {
                 $p = $this->presetRepo->getById($id);
                 if ($p) {
+                    $dayOfWeek = $this->normalizeDayOfWeek($p->day_of_week);
+                    $massTime = $this->normalizeTime($p->mass_time);
                     $this->templateRepo->create([
-                        'day_of_week' => $p->day_of_week,
-                        'mass_time' => $p->mass_time,
+                        'day_of_week' => $dayOfWeek ?? $p->day_of_week,
+                        'mass_time' => $massTime ?? $p->mass_time,
                         'mass_type' => $p->mass_type,
                         'event_name' => $p->event_name,
                         'color' => $p->color
@@ -750,9 +783,9 @@ class ScheduleController extends Controller {
             // 3. Optional Immediate Generation
             if ($alsoGenerate) {
                 $month = (int)$_POST['gen_month'];
+                $year = (int)($_POST['gen_year'] ?? date('Y'));
                 $durationValue = (int)$_POST['gen_duration'];
                 $durationType = $_POST['gen_duration_type'] ?? 'months';
-                $year = (int)date('Y');
                 
                 $_GET['month'] = $month;
                 $_GET['year'] = $year;

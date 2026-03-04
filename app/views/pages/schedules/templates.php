@@ -371,16 +371,23 @@
                         <span class="text-sm font-black text-primary-800 tracking-tight">Auto-generate schedules immediately?</span>
                     </label>
                     
-                    <div id="genFields" class="hidden grid grid-cols-2 gap-4 animate-fade-in">
+                    <div id="genFields" class="hidden grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-in">
                         <div class="space-y-1.5">
                             <label class="text-[9px] font-black text-primary-400 uppercase tracking-widest ml-1">Start Month</label>
-                            <select name="gen_month" class="w-full px-4 py-3 bg-white border border-primary-100 rounded-2xl text-xs font-bold text-slate-700">
-                                <?php foreach($months as $i => $m): ?>
-                                    <option value="<?= $i+1 ?>" <?= ($i+1) == ($currentM) ? 'selected' : '' ?>><?= $m ?></option>
-                                <?php endforeach; ?>
-                            </select>
+                            <div class="grid grid-cols-2 gap-2">
+                                <select name="gen_month" class="w-full px-4 py-3 bg-white border border-primary-100 rounded-2xl text-xs font-bold text-slate-700">
+                                    <?php foreach($months as $i => $m): ?>
+                                        <option value="<?= $i+1 ?>" <?= ($i+1) == ($currentM) ? 'selected' : '' ?>><?= $m ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <select name="gen_year" class="w-full px-4 py-3 bg-white border border-primary-100 rounded-2xl text-xs font-bold text-slate-700">
+                                    <?php for($y = $currentY; $y <= $currentY + 2; $y++): ?>
+                                        <option value="<?= $y ?>"><?= $y ?></option>
+                                    <?php endfor; ?>
+                                </select>
+                            </div>
                         </div>
-                        <div class="space-y-1.5">
+                        <div class="md:col-span-2 space-y-1.5">
                             <label class="text-[9px] font-black text-primary-400 uppercase tracking-widest ml-1">Generate for...</label>
                             <div class="grid grid-cols-2 gap-2">
                                 <select name="gen_duration_type" onchange="toggleGenValueOptions('presetGenValue', this.value)" class="w-full px-3 py-3 bg-white border border-primary-100 rounded-2xl text-xs font-bold text-slate-700">
