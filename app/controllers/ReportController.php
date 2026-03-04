@@ -111,7 +111,12 @@ class ReportController extends Controller {
         $currentYear = date('Y');
 
         // 1. Stats Summary
-        $this->db->query("SELECT COUNT(*) as total FROM servers WHERE status = 'Active'");
+        $this->db->query("
+            SELECT COUNT(*) as total 
+            FROM servers s
+            LEFT JOIN users u ON s.id = u.server_id
+            WHERE s.status = 'Active' AND s.deleted_at IS NULL AND (u.role IS NULL OR u.role != 'Superadmin')
+        ");
         $activeServersCount = $this->db->single()->total;
 
         $this->db->query("
@@ -145,9 +150,11 @@ class ReportController extends Controller {
                 SUM(CASE WHEN a.status = 'Absent' THEN 1 ELSE 0 END) as absent,
                 COUNT(*) as total
             FROM servers s
+            LEFT JOIN users u ON s.id = u.server_id
             JOIN attendance a ON s.id = a.server_id
             JOIN schedules sch ON a.schedule_id = sch.id
             WHERE MONTH(sch.mass_date) = :m AND YEAR(sch.mass_date) = :y
+            AND (u.role IS NULL OR u.role != 'Superadmin')
             GROUP BY s.id
             ORDER BY s.last_name ASC, s.first_name ASC
         ");

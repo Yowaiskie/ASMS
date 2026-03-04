@@ -93,7 +93,7 @@ class UserRepository implements RepositoryInterface {
             SELECT u.*, s.first_name, s.middle_name, s.last_name 
             FROM users u 
             LEFT JOIN servers s ON u.server_id = s.id 
-            WHERE u.role != 'Superadmin' AND u.deleted_at IS NULL
+            WHERE u.deleted_at IS NULL
             ORDER BY s.last_name ASC, s.first_name ASC 
             LIMIT :limit OFFSET :offset
         ");
@@ -103,7 +103,7 @@ class UserRepository implements RepositoryInterface {
     }
 
     public function countAll() {
-        $this->db->query("SELECT COUNT(*) as count FROM users WHERE role != 'Superadmin' AND deleted_at IS NULL");
+        $this->db->query("SELECT COUNT(*) as count FROM users WHERE deleted_at IS NULL");
         $row = $this->db->single();
         return $row ? (int)$row->count : 0;
     }
