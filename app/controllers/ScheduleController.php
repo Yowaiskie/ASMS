@@ -214,6 +214,15 @@ class ScheduleController extends Controller {
                     ]);
                 }
 
+                // In-App Notification (The User itself)
+                $notifRepo->create([
+                    'user_id' => $_SESSION['user_id'],
+                    'title' => 'Schedule Confirmed',
+                    'message' => "You have successfully joined the {$schedule->mass_type} on " . date('M d', strtotime($schedule->mass_date)) . ".",
+                    'link' => '/notifications',
+                    'type' => 'success'
+                ]);
+
                 if ($srv && $srv->email) {
                     sendEmailNotification(
                         $srv->email,

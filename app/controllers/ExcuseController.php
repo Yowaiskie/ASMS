@@ -215,7 +215,19 @@ class ExcuseController extends Controller {
             if ($this->excuseRepo->create($data)) {
                 // Notify Admins
                 $admins = $this->userRepo->getAdmins();
+                $notifRepo = new \App\Repositories\NotificationRepository();
+                
                 foreach ($admins as $admin) {
+                    // In-App Notification
+                    $notifRepo->create([
+                        'user_id' => $admin->id,
+                        'title' => 'New Excuse Letter',
+                        'message' => "{$_SESSION['full_name']} submitted an excuse for " . date('M d', strtotime($data['absence_date'])) . ".",
+                        'link' => '/excuses',
+                        'type' => 'warning'
+                    ]);
+
+                    // Email Notification
                     sendEmailNotification(
                         $admin->email,
                         'New Excuse Letter Filed',

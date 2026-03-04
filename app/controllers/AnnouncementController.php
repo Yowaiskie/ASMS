@@ -64,8 +64,9 @@ class AnnouncementController extends Controller {
             ];
 
             if ($this->announcementRepo->create($data)) {
-                // In-App Notification for all users
-                $this->db->query("SELECT id FROM users WHERE role = 'User'");
+                // In-App Notification for all users EXCEPT the author
+                $this->db->query("SELECT id FROM users WHERE role = 'User' AND id != :current_id");
+                $this->db->bind(':current_id', $_SESSION['user_id']);
                 $users = $this->db->resultSet();
 
                 $notifRepo = new \App\Repositories\NotificationRepository();

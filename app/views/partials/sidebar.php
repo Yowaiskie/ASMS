@@ -133,7 +133,7 @@ $nav_items = [
         ]
     ],
     [
-        'label' => 'System',
+        'label' => 'System Settings',
         'type' => 'dropdown',
         'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />',
         'items' => [
@@ -182,40 +182,56 @@ $nav_items = [
                 <?php 
                     $role = $_SESSION['role'] ?? 'User';
                     
-                    // Filter visible items in this group
-                    $visible_items = array_filter($group['items'], function($item) use ($role) {
-                        if (isset($item['role']) && $item['role'] !== $role) return false;
-                        
-                        if ($role === 'User') {
-                            if (in_array($item['label'], ['Server Profiles', 'Server Accounts', 'Reports', 'Audit Logs', 'Archive Center'])) return false;
-                        }
-                        if ($role === 'Admin') {
-                            if (in_array($item['label'], ['Server Accounts', 'Audit Logs', 'Archive Center'])) return false;
-                        }
-                        return true;
-                    });
+                    // 1. If it's a direct link (no dropdown), handle visibility directly
+                    if (!isset($group['type']) || $group['type'] !== 'dropdown') {
+                        if (isset($group['role']) && $group['role'] !== $role) continue;
+                        $visible_items = []; // Not needed for single link but prevents error
+                    } else {
+                        // 2. If it's a dropdown, filter the sub-items
+                        $visible_items = array_filter($group['items'] ?? [], function($item) use ($role) {
+                            if (isset($item['role']) && $item['role'] !== $role) return false;
+                            
+                            if ($role === 'User') {
+                                if (in_array($item['label'], ['Server Profiles', 'Server Accounts', 'Reports', 'Audit Logs', 'Archive Center', 'Database Management'])) return false;
+                            }
+                            if ($role === 'Admin') {
+                                if (in_array($item['label'], ['Server Accounts', 'Audit Logs', 'Archive Center', 'Database Management'])) return false;
+                            }
+                            return true;
+                        });
 
-                    if (empty($visible_items)) continue;
+                        if (empty($visible_items)) continue;
+                    }
                 ?>
 
                 <div>
                     <div class="space-y-1">
                         <?php 
-                            // Dropdown Logic
-                            $hasActiveChild = false;
-                            foreach ($visible_items as $item) {
-                                $itemPath = parse_url($item['url'], PHP_URL_PATH);
-                                if ($current_path === $itemPath) {
-                                    $hasActiveChild = true;
-                                    break;
-                                }
-                                // Fallback for subpaths but exclusive for Schedules
-                                if ($item['label'] !== 'Schedules' && strpos($current_path, $itemPath) === 0) {
-                                    $hasActiveChild = true;
-                                    break;
-                                }
-                            }
+                            $isDropdown = (isset($group['type']) && $group['type'] === 'dropdown');
+                            $visibleCount = count($visible_items);
+                            
+                            // If it's a dropdown but only has 1 item, treat it as a single link
+                            if ($isDropdown && $visibleCount === 1): 
+                                $singleItem = reset($visible_items);
+                                $itemPath = parse_url($singleItem['url'], PHP_URL_PATH);
+                                $isActive = ($current_path === $itemPath);
                         ?>
+                            <a href="<?= $singleItem['url'] ?>" 
+                               class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all <?= $isActive ? 'bg-primary-50 text-primary font-bold shadow-sm shadow-primary/5' : 'text-slate-600 hover:bg-slate-50' ?>">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><?= $singleItem['icon'] ?></svg>
+                                <span class="font-bold text-xs flex-1 text-left"><?= $singleItem['label'] ?></span>
+                            </a>
+
+                        <?php elseif ($isDropdown && $visibleCount > 1): ?>
+                            <?php 
+                                // Standard Dropdown Logic
+                                $hasActiveChild = false;
+                                foreach ($visible_items as $item) {
+                                    $itemPath = parse_url($item['url'], PHP_URL_PATH);
+                                    if ($current_path === $itemPath) { $hasActiveChild = true; break; }
+                                    if ($item['label'] !== 'Schedules' && strpos($current_path, $itemPath) === 0) { $hasActiveChild = true; break; }
+                                }
+                            ?>
                             <div class="space-y-1 dropdown-group">
                                 <button onclick="toggleSidebarDropdown(this)" 
                                         class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all text-slate-600 hover:bg-slate-50 <?= $hasActiveChild ? 'bg-slate-50/50' : '' ?>">
@@ -227,13 +243,8 @@ $nav_items = [
                                 <div class="dropdown-content pl-4 space-y-1 mt-1 border-l-2 border-slate-100 ml-6 <?= $hasActiveChild ? '' : 'hidden' ?>">
                                     <?php foreach ($visible_items as $item): 
                                         $itemPath = parse_url($item['url'], PHP_URL_PATH);
-                                        // Exact match or sub-path match, but avoid matching parent paths when a more specific child exists
                                         $isActive = ($current_path === $itemPath);
-                                        
-                                        // Special case for schedules vs templates
-                                        if ($item['label'] === 'Schedules' && $current_path !== $itemPath) {
-                                            $isActive = false; 
-                                        }
+                                        if ($item['label'] === 'Schedules' && $current_path !== $itemPath) { $isActive = false; }
                                     ?>
                                         <a href="<?= $item['url'] ?>" 
                                            class="flex items-center gap-3 px-4 py-2 rounded-xl transition-all <?= $isActive ? 'bg-primary-50 text-primary font-bold' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50' ?>">
@@ -246,6 +257,18 @@ $nav_items = [
                                     <?php endforeach; ?>
                                 </div>
                             </div>
+                        <?php else: ?>
+                            <?php 
+                                // Direct Link Logic
+                                $groupPath = parse_url($group['url'], PHP_URL_PATH);
+                                $isActive = ($current_path === $groupPath);
+                            ?>
+                            <a href="<?= $group['url'] ?>" 
+                               class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all <?= $isActive ? 'bg-primary-50 text-primary font-bold shadow-sm shadow-primary/5' : 'text-slate-600 hover:bg-slate-50' ?>">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><?= $group['icon'] ?></svg>
+                                <span class="font-bold text-xs flex-1 text-left"><?= $group['label'] ?></span>
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
             <?php endforeach; ?>

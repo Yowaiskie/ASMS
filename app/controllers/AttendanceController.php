@@ -193,6 +193,22 @@ class AttendanceController extends Controller {
                         "Hi {$info->name}, your attendance for <b>{$info->mass_type}</b> on <b>" . date('M d, Y', strtotime($info->mass_date)) . "</b> has been marked as <b style='color:{$color}'>{$status}</b>."
                     );
 
+                    // In-App Notification
+                    $this->db->query("SELECT id FROM users WHERE server_id = :sid");
+                    $this->db->bind(':sid', $info->server_id);
+                    $targetUser = $this->db->single();
+
+                    if ($targetUser) {
+                        $notifRepo = new \App\Repositories\NotificationRepository();
+                        $notifRepo->create([
+                            'user_id' => $targetUser->id,
+                            'title' => 'Attendance Marked: ' . $status,
+                            'message' => "Your attendance for {$info->mass_type} on " . date('M d') . " has been marked as {$status}.",
+                            'link' => '/attendance?view=personal',
+                            'type' => ($status === 'Present' || $status === 'Excused') ? 'success' : ($status === 'Late' ? 'warning' : 'danger')
+                        ]);
+                    }
+
                     // --- START SUSPENSION LOGIC ---
                     if ($status === 'Absent' && stripos($info->mass_type, 'Meeting') === false) {
                         // Count absences for this month (excluding meetings)

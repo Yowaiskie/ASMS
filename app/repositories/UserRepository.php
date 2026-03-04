@@ -303,7 +303,7 @@ class UserRepository implements RepositoryInterface {
 
     public function getAdmins() {
         $this->db->query("
-            SELECT u.username, s.email 
+            SELECT u.id, u.username, s.email 
             FROM users u
             JOIN servers s ON u.server_id = s.id
             WHERE u.role IN ('Admin', 'Superadmin') AND s.email IS NOT NULL AND s.email != ''
