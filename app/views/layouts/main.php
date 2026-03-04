@@ -171,7 +171,54 @@
                 </div>
             </div>
             
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-3">
+                <!-- Mobile Notification Bell -->
+                <div class="relative">
+                    <button onclick="toggleNotifications('mobile')" class="p-2 text-slate-400 hover:text-primary transition-colors relative">
+                        <i class="ph-bold ph-bell text-2xl"></i>
+                        <span id="notif-badge-mobile" class="hidden absolute top-1.5 right-1.5 w-4 h-4 bg-primary text-white text-[10px] font-black flex items-center justify-center rounded-full border-2 border-white animate-bounce">0</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Desktop Header (Internal Pages) -->
+        <header class="hidden md:flex h-16 bg-white/80 backdrop-blur-md border-b border-slate-100 items-center justify-end px-8 shrink-0 z-40 sticky top-0">
+            <div class="flex items-center gap-4">
+                <!-- Notification Bell -->
+                <div class="relative" id="notif-dropdown-container">
+                    <button onclick="toggleNotifications('desktop')" class="w-10 h-10 bg-slate-50 text-slate-400 hover:bg-primary-50 hover:text-primary rounded-xl flex items-center justify-center transition-all relative group">
+                        <i class="ph-bold ph-bell text-xl group-hover:animate-swing"></i>
+                        <span id="notif-badge-desktop" class="hidden absolute -top-1 -right-1 w-5 h-5 bg-primary text-white text-[10px] font-black flex items-center justify-center rounded-full border-2 border-white animate-bounce">0</span>
+                    </button>
+
+                    <!-- Dropdown -->
+                    <div id="notif-dropdown" class="absolute right-0 mt-3 w-80 bg-white rounded-3xl shadow-2xl border border-slate-100 hidden flex-col overflow-hidden animate-fade-in-up origin-top-right z-50">
+                        <div class="p-4 border-b border-slate-50 flex items-center justify-between">
+                            <h5 class="font-bold text-slate-800">Notifications</h5>
+                            <a href="<?= URLROOT ?>/notifications" class="text-[10px] font-black text-primary uppercase tracking-widest hover:underline">View All</a>
+                        </div>
+                        <div id="notif-items" class="max-h-96 overflow-y-auto custom-scrollbar">
+                            <!-- Items populated via JS -->
+                            <div class="p-8 text-center">
+                                <i class="ph-bold ph-bell-slash text-3xl text-slate-200 mb-2"></i>
+                                <p class="text-xs text-slate-400 font-medium">No new notifications</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="h-8 w-px bg-slate-100 mx-2"></div>
+
+                <div class="flex items-center gap-3 px-3 py-1.5 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div class="w-8 h-8 bg-primary/10 text-primary rounded-xl flex items-center justify-center font-bold text-xs uppercase">
+                        <?= substr($_SESSION['username'] ?? 'U', 0, 1) ?>
+                    </div>
+                    <div class="hidden lg:block text-left">
+                        <p class="text-xs font-bold text-slate-800 truncate max-w-[100px]"><?= h($_SESSION['username'] ?? 'User') ?></p>
+                        <p class="text-[9px] font-medium text-slate-400 uppercase tracking-tighter"><?= h($_SESSION['role'] ?? 'Member') ?></p>
+                    </div>
+                </div>
             </div>
         </header>
 
@@ -341,6 +388,101 @@
             setTimeout(() => {
                 mobileOverlay.classList.add('hidden');
             }, 300);
+        }
+
+        // Notification System Logic
+        const notifDropdown = document.getElementById('notif-dropdown');
+        const notifItems = document.getElementById('notif-items');
+        const notifBadgeDesktop = document.getElementById('notif-badge-desktop');
+        const notifBadgeMobile = document.getElementById('notif-badge-mobile');
+
+        function toggleNotifications(type) {
+            if (notifDropdown.classList.contains('hidden')) {
+                fetchNotifications();
+                notifDropdown.classList.remove('hidden');
+                notifDropdown.classList.add('flex');
+            } else {
+                notifDropdown.classList.add('hidden');
+                notifDropdown.classList.remove('flex');
+            }
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const container = document.getElementById('notif-dropdown-container');
+            if (container && !container.contains(e.target)) {
+                notifDropdown.classList.add('hidden');
+                notifDropdown.classList.remove('flex');
+            }
+        });
+
+        function fetchNotifications() {
+            fetch('<?= URLROOT ?>/notifications/latest')
+                .then(response => response.json())
+                .then(data => {
+                    updateNotificationUI(data);
+                });
+        }
+
+        function updateNotificationUI(data) {
+            // Update Badges
+            if (data.count > 0) {
+                notifBadgeDesktop.innerText = data.count;
+                notifBadgeDesktop.classList.remove('hidden');
+                notifBadgeMobile.innerText = data.count;
+                notifBadgeMobile.classList.remove('hidden');
+            } else {
+                notifBadgeDesktop.classList.add('hidden');
+                notifBadgeMobile.classList.add('hidden');
+            }
+
+            // Update Dropdown Items
+            if (data.notifications && data.notifications.length > 0) {
+                let html = '';
+                data.notifications.forEach(n => {
+                    let iconClass = 'ph-info';
+                    let iconBg = 'bg-blue-50 text-blue-500';
+                    if (n.type === 'success') { iconClass = 'ph-check-circle'; iconBg = 'bg-emerald-50 text-emerald-500'; }
+                    if (n.type === 'warning') { iconClass = 'ph-warning'; iconBg = 'bg-amber-50 text-amber-500'; }
+                    if (n.type === 'danger') { iconClass = 'ph-warning-octagon'; iconBg = 'bg-red-50 text-red-500'; }
+                    if (n.type === 'schedule') { iconClass = 'ph-calendar'; iconBg = 'bg-indigo-50 text-indigo-500'; }
+
+                    html += `
+                        <a href="<?= URLROOT ?>${n.link || '/notifications'}" class="p-4 border-b border-slate-50 flex gap-4 hover:bg-slate-50 transition-colors group">
+                            <div class="shrink-0 w-10 h-10 ${iconBg} rounded-xl flex items-center justify-center text-xl">
+                                <i class="ph-bold ${iconClass}"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-bold text-slate-800 truncate">${n.title}</p>
+                                <p class="text-[10px] text-slate-500 line-clamp-2 mt-0.5">${n.message}</p>
+                                <p class="text-[9px] font-medium text-slate-400 mt-1 uppercase tracking-tighter">${timeAgo(n.created_at)}</p>
+                            </div>
+                        </a>
+                    `;
+                });
+                notifItems.innerHTML = html;
+            }
+        }
+
+        function timeAgo(date) {
+            const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+            let interval = seconds / 31536000;
+            if (interval > 1) return Math.floor(interval) + "y ago";
+            interval = seconds / 2592000;
+            if (interval > 1) return Math.floor(interval) + "mo ago";
+            interval = seconds / 86400;
+            if (interval > 1) return Math.floor(interval) + "d ago";
+            interval = seconds / 3600;
+            if (interval > 1) return Math.floor(interval) + "h ago";
+            interval = seconds / 60;
+            if (interval > 1) return Math.floor(interval) + "m ago";
+            return "just now";
+        }
+
+        // Poll every 30 seconds
+        if (<?= isset($_SESSION['user_id']) ? 'true' : 'false' ?>) {
+            fetchNotifications();
+            setInterval(fetchNotifications, 30000);
         }
     </script>
 </body>

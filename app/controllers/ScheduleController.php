@@ -201,6 +201,19 @@ class ScheduleController extends Controller {
                 $this->db->bind(':uid', $_SESSION['user_id']);
                 $srv = $this->db->single();
                 
+                // In-App Notification (Admins)
+                $admins = $this->userRepo->getAdmins();
+                $notifRepo = new \App\Repositories\NotificationRepository();
+                foreach ($admins as $admin) {
+                    $notifRepo->create([
+                        'user_id' => $admin->id,
+                        'title' => 'New Self-Assignment',
+                        'message' => "{$_SESSION['username']} has self-assigned to the {$schedule->mass_type} on " . date('M d', strtotime($schedule->mass_date)) . ".",
+                        'link' => '/attendance',
+                        'type' => 'schedule'
+                    ]);
+                }
+
                 if ($srv && $srv->email) {
                     sendEmailNotification(
                         $srv->email,

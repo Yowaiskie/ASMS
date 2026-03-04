@@ -26,6 +26,8 @@ use App\Controllers\Api\LogController as ApiLogController;
 use App\Controllers\Api\ArchiveController as ApiArchiveController;
 use App\Controllers\Api\TrainingController as ApiTrainingController;
 
+use App\Controllers\NotificationController;
+
 // Auth Routes
 $router->get('/login', [AuthController::class, 'login']);
 $router->get('/maintenance', [AuthController::class, 'maintenance']);
@@ -102,6 +104,12 @@ $router->get('/logs', [LogController::class, 'index']);
 
 // Trainings
 $router->get('/trainings', [TrainingController::class, 'index']);
+
+// Notifications
+$router->get('/notifications', [NotificationController::class, 'index']);
+$router->post('/notifications/mark-read', [NotificationController::class, 'markAsRead']);
+$router->post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+$router->get('/notifications/latest', [NotificationController::class, 'getLatest']);
 
 // Settings
 $router->get('/settings', [SettingsController::class, 'index']);

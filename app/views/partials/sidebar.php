@@ -6,26 +6,33 @@ $root = URLROOT; // /ASMS/public
 // Check for unread announcements (for Users)
 $unreadAnnouncements = 0;
 $pendingExcuses = 0;
+$notifCount = 0;
 
 try {
     $db = \App\Core\Database::getInstance();
     $role = $_SESSION['role'] ?? 'User';
 
-    // 1. Unread Announcements Count
+    // 1. Unread Activity Count (Announcements + Notifications)
+    $totalUnread = 0;
     if (isset($_SESSION['user_id'])) {
+        // Announcements
         $db->query("SELECT last_read_announcements FROM users WHERE id = :id");
         $db->bind(':id', $_SESSION['user_id']);
         $res = $db->single();
-        if ($res) {
-            $lastRead = $res->last_read_announcements;
-            if (!$lastRead) {
-                 $db->query("SELECT COUNT(*) as count FROM announcements");
-            } else {
-                 $db->query("SELECT COUNT(*) as count FROM announcements WHERE created_at > :last_read");
-                 $db->bind(':last_read', $lastRead);
-            }
-            $unreadAnnouncements = $db->single()->count;
+        $lastRead = $res ? $res->last_read_announcements : null;
+        
+        if (!$lastRead) {
+             $db->query("SELECT COUNT(*) as count FROM announcements");
+        } else {
+             $db->query("SELECT COUNT(*) as count FROM announcements WHERE created_at > :last_read");
+             $db->bind(':last_read', $lastRead);
         }
+        $totalUnread += $db->single()->count;
+
+        // Notifications
+        $db->query("SELECT COUNT(*) as count FROM notifications WHERE user_id = :id AND is_read = 0");
+        $db->bind(':id', $_SESSION['user_id']);
+        $totalUnread += $db->single()->count;
     }
 
     // 2. Pending Excuses Count (For Admins/Superadmins)
@@ -57,9 +64,9 @@ $nav_items = [
                 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6zM14 6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2V6zM4 16a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2zM14 16a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2z" />'
             ],
             [
-                'label' => 'Announcements',
-                'url' => $root . '/announcements',
-                'badge' => $unreadAnnouncements,
+                'label' => 'Activity Center',
+                'url' => $root . '/notifications',
+                'badge' => $totalUnread,
                 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />'
             ],
         ]

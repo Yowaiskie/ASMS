@@ -77,6 +77,27 @@ class ExcuseController extends Controller {
             $status = $_POST['status'];
 
             if ($this->excuseRepo->updateStatus($id, $status)) {
+                // In-App Notification
+                $this->db->query("
+                    SELECT u.id as user_id, e.absence_date
+                    FROM excuses e
+                    JOIN users u ON e.server_id = u.server_id
+                    WHERE e.id = :id
+                ");
+                $this->db->bind(':id', $id);
+                $userData = $this->db->single();
+
+                if ($userData) {
+                    $notifRepo = new \App\Repositories\NotificationRepository();
+                    $notifRepo->create([
+                        'user_id' => $userData->user_id,
+                        'title' => 'Excuse Letter ' . $status,
+                        'message' => "Your excuse letter for " . date('M d, Y', strtotime($userData->absence_date)) . " has been " . strtolower($status) . ".",
+                        'link' => '/excuses',
+                        'type' => $status === 'Approved' ? 'success' : 'danger'
+                    ]);
+                }
+
                 // Email Notification
                 $this->db->query("
                     SELECT s.email, CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) as name, e.reason 

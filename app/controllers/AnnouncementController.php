@@ -64,7 +64,22 @@ class AnnouncementController extends Controller {
             ];
 
             if ($this->announcementRepo->create($data)) {
-                logAction('Create', 'Announcements', "Created announcement: " . $data['title']);
+                // In-App Notification for all users
+                $this->db->query("SELECT id FROM users WHERE role = 'User'");
+                $users = $this->db->resultSet();
+
+                $notifRepo = new \App\Repositories\NotificationRepository();
+                foreach ($users as $user) {
+                    $notifRepo->create([
+                        'user_id' => $user->id,
+                        'title' => 'New Announcement: ' . $data['title'],
+                        'message' => substr(strip_tags($data['message']), 0, 100) . '...',
+                        'link' => '/announcements',
+                        'type' => 'info'
+                    ]);
+                }
+
+                logAction('Create', 'Announcements', 'Created new announcement: ' . $data['title']);
                 setFlash('msg_success', 'Announcement posted successfully!');
             } else {
                 setFlash('msg_error', 'Failed to post announcement.');
