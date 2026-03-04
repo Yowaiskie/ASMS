@@ -89,21 +89,24 @@ class ServerController extends Controller {
                         // Create User Account automatically
                         $userRepo = new \App\Repositories\UserRepository();
                         
-                        // Username Generation: Primary source is First Name
-                        $baseUsername = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $data['first_name']));
+                        // Username Generation: Dynamic (Lastname + Firstname letters)
+                        $baseUsername = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $data['last_name']));
+                        $firstNameClean = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $data['first_name']));
                         $username = $baseUsername;
                         
-                        // Loop until we find a unique username (including deleted ones)
-                        $suffix = 1;
+                        $charCount = 0;
+                        $numSuffix = 2;
+                        
                         while ($userRepo->isUsernameTaken($username)) {
-                            if ($suffix == 1) {
-                                // Try First + Last Name
-                                $username = $baseUsername . '.' . strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $data['last_name']));
+                            if ($charCount < strlen($firstNameClean)) {
+                                // Try adding letters from first name one by one
+                                $charCount++;
+                                $username = $baseUsername . substr($firstNameClean, 0, $charCount);
                             } else {
-                                // Append number suffix
-                                $username = $baseUsername . $suffix;
+                                // If all letters used, start adding numbers
+                                $username = $baseUsername . $firstNameClean . $numSuffix;
+                                $numSuffix++;
                             }
-                            $suffix++;
                         }
 
                         $userData = [
@@ -410,15 +413,24 @@ class ServerController extends Controller {
                         $serverId = $db->lastInsertId();
                         $count++;
 
-                        // Username Generation: ONLY First Name
-                        $baseUsername = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $data['first_name']));
+                        // Username Generation: Dynamic (Lastname + Firstname letters)
+                        $baseUsername = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $data['last_name']));
+                        $firstNameClean = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $data['first_name']));
                         $username = $baseUsername;
                         
-                        // Loop until we find a unique username (e.g., kyle, kyle2, kyle3...)
-                        $suffix = 2;
+                        $charCount = 0;
+                        $numSuffix = 2;
+                        
                         while ($userRepo->isUsernameTaken($username)) {
-                            $username = $baseUsername . $suffix;
-                            $suffix++;
+                            if ($charCount < strlen($firstNameClean)) {
+                                // Try adding letters from first name one by one
+                                $charCount++;
+                                $username = $baseUsername . substr($firstNameClean, 0, $charCount);
+                            } else {
+                                // If all letters used, start adding numbers
+                                $username = $baseUsername . $firstNameClean . $numSuffix;
+                                $numSuffix++;
+                            }
                         }
 
                         $userData = [

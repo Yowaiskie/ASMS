@@ -80,13 +80,24 @@ class ServerController extends ApiController {
             $serverId = $db->lastInsertId();
 
             $userRepo = new UserRepository();
-            $baseUsername = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $payload['first_name']));
+            
+            // Username Generation: Dynamic (Lastname + Firstname letters)
+            $baseUsername = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $payload['last_name']));
+            $firstNameClean = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $payload['first_name']));
             $username = $baseUsername;
-
-            if ($userRepo->findByUsername($username)) {
-                $username = $baseUsername . '.' . strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $payload['last_name']));
-                if ($userRepo->findByUsername($username)) {
-                    $username .= $serverId;
+            
+            $charCount = 0;
+            $numSuffix = 2;
+            
+            while ($userRepo->isUsernameTaken($username)) {
+                if ($charCount < strlen($firstNameClean)) {
+                    // Try adding letters from first name one by one
+                    $charCount++;
+                    $username = $baseUsername . substr($firstNameClean, 0, $charCount);
+                } else {
+                    // If all letters used, start adding numbers
+                    $username = $baseUsername . $firstNameClean . $numSuffix;
+                    $numSuffix++;
                 }
             }
 
@@ -364,15 +375,24 @@ class ServerController extends ApiController {
                         $serverId = $db->lastInsertId();
                         $count++;
 
-                        // Username Generation: ONLY First Name
-                        $baseUsername = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $payload['first_name']));
+                        // Username Generation: Dynamic (Lastname + Firstname letters)
+                        $baseUsername = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $payload['last_name']));
+                        $firstNameClean = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $payload['first_name']));
                         $username = $baseUsername;
                         
-                        // Loop until we find a unique username (e.g., kyle, kyle2, kyle3...)
-                        $suffix = 2;
+                        $charCount = 0;
+                        $numSuffix = 2;
+                        
                         while ($userRepo->isUsernameTaken($username)) {
-                            $username = $baseUsername . $suffix;
-                            $suffix++;
+                            if ($charCount < strlen($firstNameClean)) {
+                                // Try adding letters from first name one by one
+                                $charCount++;
+                                $username = $baseUsername . substr($firstNameClean, 0, $charCount);
+                            } else {
+                                // If all letters used, start adding numbers
+                                $username = $baseUsername . $firstNameClean . $numSuffix;
+                                $numSuffix++;
+                            }
                         }
 
                         $userData = [
