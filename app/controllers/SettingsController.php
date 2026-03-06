@@ -23,7 +23,12 @@ class SettingsController extends Controller {
 
     public function index() {
         $userProfile = $this->userRepo->getUserProfile($_SESSION['user_id']);
-        $systemSettings = $this->settingModel->getAll();
+        
+        $systemSettings = [
+            'system_name' => $this->systemRepo->get('system_name', 'Altar Servers Management System'),
+            'admin_email' => $this->systemRepo->get('admin_email', ''),
+            'parish_name' => $this->systemRepo->get('parish_name', 'Our Parish')
+        ];
 
         // Fallback if no profile found
         if (!$userProfile) {
@@ -56,7 +61,7 @@ class SettingsController extends Controller {
     }
 
     public function system() {
-        $this->requireRole('Superadmin');
+        $this->requireRole(['Admin', 'Superadmin']);
         
         $data = [
             'pageTitle' => 'System Configuration',
@@ -66,7 +71,15 @@ class SettingsController extends Controller {
             'categories' => $this->systemRepo->getCategories(false),
             'system_name' => $this->systemRepo->get('system_name', 'Altar Servers Management System'),
             'admin_email' => $this->systemRepo->get('admin_email', ''),
-            'parish_name' => $this->systemRepo->get('parish_name', 'Our Parish')
+            'parish_name' => $this->systemRepo->get('parish_name', 'Our Parish'),
+            // Policy Settings
+            'policy_suspension_threshold' => $this->systemRepo->get('policy_suspension_threshold', 3),
+            'policy_suspension_warning' => $this->systemRepo->get('policy_suspension_warning', 2),
+            'policy_suspension_duration' => $this->systemRepo->get('policy_suspension_duration', 30),
+            'policy_late_to_absent_ratio' => $this->systemRepo->get('policy_late_to_absent_ratio', 2),
+            'policy_excuse_lead_time' => $this->systemRepo->get('policy_excuse_lead_time', 24),
+            'policy_auto_remove_on_suspension' => $this->systemRepo->get('policy_auto_remove_on_suspension', 1),
+            'policy_suspension_activity_types' => json_decode($this->systemRepo->get('policy_suspension_activity_types', '[]'), true)
         ];
         
         $this->view('settings/system', $data);
@@ -80,6 +93,19 @@ class SettingsController extends Controller {
             $this->systemRepo->set('system_name', $_POST['system_name']);
             $this->systemRepo->set('parish_name', $_POST['parish_name']);
             $this->systemRepo->set('admin_email', $_POST['admin_email']);
+            
+            // Policy Settings
+            if (isset($_POST['policy_suspension_threshold'])) {
+                $this->systemRepo->set('policy_suspension_threshold', (int)$_POST['policy_suspension_threshold']);
+                $this->systemRepo->set('policy_suspension_warning', (int)$_POST['policy_suspension_warning']);
+                $this->systemRepo->set('policy_suspension_duration', (int)$_POST['policy_suspension_duration']);
+                $this->systemRepo->set('policy_late_to_absent_ratio', (int)$_POST['policy_late_to_absent_ratio']);
+                $this->systemRepo->set('policy_excuse_lead_time', (int)$_POST['policy_excuse_lead_time']);
+                $this->systemRepo->set('policy_auto_remove_on_suspension', isset($_POST['policy_auto_remove_on_suspension']) ? 1 : 0);
+                
+                $activityTypes = $_POST['policy_activity_types'] ?? [];
+                $this->systemRepo->set('policy_suspension_activity_types', json_encode($activityTypes));
+            }
             
             setFlash('msg_success', 'System settings updated.');
         }

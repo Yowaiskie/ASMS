@@ -5,12 +5,14 @@ namespace App\Controllers\Api;
 use App\Repositories\AttendanceRepository;
 use App\Repositories\ServerRepository;
 use App\Repositories\ScheduleRepository;
+use App\Repositories\SystemSettingRepository;
 use App\Core\Database;
 
 class AttendanceController extends ApiController {
     private $attendanceRepo;
     private $serverRepo;
     private $scheduleRepo;
+    private $systemRepo;
     private $db;
 
     public function __construct() {
@@ -18,6 +20,7 @@ class AttendanceController extends ApiController {
         $this->attendanceRepo = new AttendanceRepository();
         $this->serverRepo = new ServerRepository();
         $this->scheduleRepo = new ScheduleRepository();
+        $this->systemRepo = new SystemSettingRepository();
         $this->db = Database::getInstance();
     }
 
@@ -160,7 +163,36 @@ class AttendanceController extends ApiController {
                     "Hi {$info->name}, your attendance for <b>{$info->mass_type}</b> on <b>" . date('M d, Y', strtotime($info->mass_date)) . "</b> has been marked as <b style='color:{$color}'>{$status}</b>."
                 );
 
-                if ($status === 'Absent' && stripos($info->mass_type, 'Meeting') === false) {
+                // --- START DYNAMIC SUSPENSION LOGIC ---
+                $monitoredTypes = json_decode($this->systemRepo->get('policy_suspension_activity_types', '[]'), true);
+                
+                // Check if current activity is monitored
+                $isMonitored = false;
+                foreach ($monitoredTypes as $mt) {
+                    if (stripos($info->mass_type, $mt) !== false) {
+                        $isMonitored = true;
+                        break;
+                    }
+                }
+
+                if ($isMonitored && ($status === 'Absent' || $status === 'Late')) {
+                    $threshold = (int)$this->systemRepo->get('policy_suspension_threshold', 3);
+                    $warning = (int)$this->systemRepo->get('policy_suspension_warning', 2);
+                    $duration = (int)$this->systemRepo->get('policy_suspension_duration', 30);
+                    $lateRatio = (int)$this->systemRepo->get('policy_late_to_absent_ratio', 2);
+
+                    // Build query for monitored types
+                    $typePlaceholders = [];
+                    $params = [':sid' => $info->server_id];
+                    foreach ($monitoredTypes as $i => $mt) {
+                        $typePlaceholders[] = "sch.mass_type LIKE :type$i";
+                        $params[":type$i"] = "%$mt%";
+                    }
+                    $typeSql = count($typePlaceholders) > 0 
+                        ? "AND (" . implode(" OR ", $typePlaceholders) . ")" 
+                        : "AND 1=0";
+
+                    // Count Absences
                     $this->db->query("
                         SELECT COUNT(*) as count 
                         FROM attendance a
@@ -169,30 +201,55 @@ class AttendanceController extends ApiController {
                         AND a.status = 'Absent'
                         AND MONTH(sch.mass_date) = MONTH(CURRENT_DATE())
                         AND YEAR(sch.mass_date) = YEAR(CURRENT_DATE())
-                        AND sch.mass_type NOT LIKE '%Meeting%'
+                        $typeSql
                     ");
-                    $this->db->bind(':sid', $info->server_id);
-                    $absenceCount = $this->db->single()->count;
+                    foreach ($params as $p => $v) $this->db->bind($p, $v);
+                    $absentCount = (int)$this->db->single()->count;
 
-                    if ($absenceCount == 2) {
+                    // Count Lates
+                    $this->db->query("
+                        SELECT COUNT(*) as count 
+                        FROM attendance a
+                        JOIN schedules sch ON a.schedule_id = sch.id
+                        WHERE a.server_id = :sid 
+                        AND a.status = 'Late'
+                        AND MONTH(sch.mass_date) = MONTH(CURRENT_DATE())
+                        AND YEAR(sch.mass_date) = YEAR(CURRENT_DATE())
+                        $typeSql
+                    ");
+                    foreach ($params as $p => $v) $this->db->bind($p, $v);
+                    $lateCount = (int)$this->db->single()->count;
+
+                    // Calculate effective absences
+                    $effectiveAbsences = $absentCount + ($lateRatio > 0 ? floor($lateCount / $lateRatio) : 0);
+
+                    if ($effectiveAbsences == $warning) {
+                        // WARNING
                         sendEmailNotification(
                             $info->email,
                             'URGENT: Attendance Warning',
-                            'Second Absence Recorded',
-                            "Hi {$info->name}, you have recorded your <b>2nd absence</b> this month. Please be reminded that a 3rd absence will result in an automatic 30-day suspension from joining schedules. Keep serving!"
+                            'Attendance Policy Threshold Reached',
+                            "Hi {$info->name}, you have reached the warning threshold for absences/lates this month. Please be reminded that reaching {$threshold} effective absences will result in an automatic {$duration}-day suspension. Keep serving!"
                         );
-                    } elseif ($absenceCount >= 3) {
-                        $until = date('Y-m-d', strtotime('+30 days'));
+                    } elseif ($effectiveAbsences >= $threshold) {
+                        // SUSPENSION
+                        $until = date('Y-m-d', strtotime("+$duration days"));
                         $this->serverRepo->suspendServer($info->server_id, $until);
+                        
+                        // Auto-removal logic
+                        if ((int)$this->systemRepo->get('policy_auto_remove_on_suspension', 1) === 1) {
+                            $this->scheduleRepo->removeFutureSchedules($info->server_id);
+                        }
 
                         sendEmailNotification(
                             $info->email,
                             'Account Suspended',
                             'Automatic Suspension Triggered',
-                            "Hi {$info->name}, you have recorded your <b>3rd absence</b> this month. As per system rules, your account has been <b>Suspended until " . date('M d, Y', strtotime($until)) . "</b>. You will not be able to join new schedules during this period."
+                            "Hi {$info->name}, you have reached the threshold of {$threshold} effective absences this month. As per system rules, your account has been <b>Suspended until " . date('M d, Y', strtotime($until)) . "</b>. You have been removed from future schedules during this period."
                         );
                     }
                 }
+                // --- END DYNAMIC SUSPENSION LOGIC ---
             }
 
             $logName = $info ? $info->name : "ID: $id";

@@ -5,16 +5,19 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Repositories\ExcuseRepository;
 use App\Repositories\UserRepository;
+use App\Repositories\SystemSettingRepository;
 
 class ExcuseController extends Controller {
     private $excuseRepo;
     private $userRepo;
+    private $systemRepo;
     private $db;
 
     public function __construct() {
         $this->requireLogin();
         $this->excuseRepo = new ExcuseRepository();
         $this->userRepo = new UserRepository();
+        $this->systemRepo = new SystemSettingRepository();
         $this->db = \App\Core\Database::getInstance();
     }
 
@@ -180,6 +183,18 @@ class ExcuseController extends Controller {
                 redirect('excuses');
                 return;
             }
+
+            // --- START DEADLINE CHECK ---
+            $leadTime = (int)$this->systemRepo->get('policy_excuse_lead_time', 24);
+            $scheduleDateTime = $date . ($time ? ' ' . $time : ' 00:00:00');
+            $deadlineTimestamp = strtotime($scheduleDateTime) - ($leadTime * 3600);
+            
+            if (time() > $deadlineTimestamp) {
+                setFlash('msg_error', "Excuses must be filed at least $leadTime hours before the schedule.");
+                redirect('excuses');
+                return;
+            }
+            // --- END DEADLINE CHECK ---
 
             $data = [
                 'server_id' => $user->server_id,

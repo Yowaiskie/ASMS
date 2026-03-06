@@ -58,8 +58,16 @@ class Controller {
 
     protected function requireRole($role) {
         $this->requireLogin();
-        if (($_SESSION['role'] ?? '') !== $role) {
-            $this->forbidden();
+        $userRole = $_SESSION['role'] ?? '';
+        
+        if (is_array($role)) {
+            if (!in_array($userRole, $role)) {
+                $this->forbidden();
+            }
+        } else {
+            if ($userRole !== $role) {
+                $this->forbidden();
+            }
         }
     }
 

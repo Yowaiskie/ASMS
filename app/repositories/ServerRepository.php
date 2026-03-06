@@ -193,8 +193,14 @@ class ServerRepository implements RepositoryInterface {
     }
 
     public function suspendServer($id, $untilDate) {
-        $this->db->query("UPDATE servers SET status = 'Suspended', suspension_until = :until WHERE id = :id");
+        $this->db->query("UPDATE servers SET status = 'Suspended', suspension_until = :until, suspended_at = CURRENT_DATE() WHERE id = :id");
         $this->db->bind(':until', $untilDate);
+        $this->db->bind(':id', $id);
+        return $this->db->execute();
+    }
+
+    public function unsuspendServer($id) {
+        $this->db->query("UPDATE servers SET status = 'Active', suspension_until = NULL, suspended_at = NULL WHERE id = :id");
         $this->db->bind(':id', $id);
         return $this->db->execute();
     }

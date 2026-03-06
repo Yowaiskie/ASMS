@@ -205,4 +205,16 @@ class ScheduleRepository implements RepositoryInterface {
         
         return true;
     }
+
+    public function removeFutureSchedules($serverId) {
+        $this->db->query("
+            DELETE a FROM attendance a
+            JOIN schedules s ON a.schedule_id = s.id
+            WHERE a.server_id = :sid 
+            AND (s.mass_date > CURRENT_DATE() 
+                 OR (s.mass_date = CURRENT_DATE() AND s.mass_time > CURRENT_TIME()))
+        ");
+        $this->db->bind(':sid', $serverId);
+        return $this->db->execute();
+    }
 }
