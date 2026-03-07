@@ -224,20 +224,27 @@
                 </div>
 
                 <div>
-                    <div class="flex justify-between items-end mb-1.5">
-                        <div class="flex items-center gap-2">
-                            <label class="block text-xs font-bold text-slate-500 ml-1">Assigned Servers</label>
-                            <label class="flex items-center gap-1 cursor-pointer group">
-                                <input type="checkbox" id="assignAllCheckbox" onclick="toggleAssignAll(this)" class="rounded text-primary border-gray-300 w-3 h-3 focus:ring-primary-500">
-                                <span class="text-[9px] font-bold text-slate-400 group-hover:text-primary-500 transition-colors uppercase tracking-tighter">Assign All</span>
+                    <div class="flex justify-between items-end mb-1.5 px-1">
+                        <div class="flex items-center gap-3">
+                            <label class="block text-xs font-bold text-slate-500">Assigned Servers <span id="assignedCounter" class="text-primary-600 ml-0.5"></span></label>
+                            <div class="h-3 w-px bg-slate-200"></div>
+                            <label class="flex items-center gap-1.5 cursor-pointer group">
+                                <input type="checkbox" id="assignedOnlyCheckbox" onclick="toggleAssignedFilter(this)" class="rounded text-primary border-slate-300 w-3 h-3 focus:ring-primary-500 cursor-pointer">
+                                <span class="text-[9px] font-bold text-slate-400 group-hover:text-primary-500 transition-colors uppercase tracking-tighter">View Assigned Only</span>
                             </label>
                         </div>
-                        <input type="text" id="serverSearch" onkeyup="filterServers()" placeholder="Search..." class="text-[10px] px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none">
+                        <div class="flex items-center gap-3">
+                            <label class="flex items-center gap-1.5 cursor-pointer group">
+                                <input type="checkbox" id="assignAllCheckbox" onclick="toggleAssignAll(this)" class="rounded text-primary border-slate-300 w-3 h-3 focus:ring-primary-500 cursor-pointer">
+                                <span class="text-[9px] font-bold text-slate-400 group-hover:text-primary-500 transition-colors uppercase tracking-tighter">Select All</span>
+                            </label>
+                            <input type="text" id="serverSearch" onkeyup="filterServers()" placeholder="Search..." class="text-[10px] px-2.5 py-1 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-500 transition-all w-24">
+                        </div>
                     </div>
                     <div class="max-h-32 overflow-y-auto border border-slate-200 rounded-xl p-2 bg-slate-50 custom-scrollbar" id="serverList">
                         <?php foreach($servers as $svr): ?>
                             <label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg cursor-pointer server-item transition-colors">
-                                <input type="checkbox" name="assigned_servers[]" value="<?= $svr->id ?>" class="server-checkbox rounded text-primary border-gray-300 w-4 h-4 focus:ring-primary-500">
+                                <input type="checkbox" name="assigned_servers[]" value="<?= $svr->id ?>" onchange="sortServers()" class="server-checkbox rounded text-primary border-gray-300 w-4 h-4 focus:ring-primary-500">
                                 <span class="text-xs text-slate-700 font-medium server-name"><?= h($svr->name) ?></span>
                             </label>
                         <?php endforeach; ?>
@@ -659,10 +666,23 @@
         }
     }
 
+    let showAssignedOnly = false;
+
+    function toggleAssignedFilter(checkbox) {
+        showAssignedOnly = checkbox.checked;
+        filterServers();
+    }
+
     function filterServers() {
         const query = document.getElementById('serverSearch').value.toLowerCase();
         document.querySelectorAll('.server-item').forEach(item => {
-            item.style.display = item.querySelector('.server-name').innerText.toLowerCase().includes(query) ? 'flex' : 'none';
+            const name = item.querySelector('.server-name').innerText.toLowerCase();
+            const isChecked = item.querySelector('input').checked;
+            
+            let matchesSearch = name.includes(query);
+            let matchesFilter = !showAssignedOnly || isChecked;
+            
+            item.style.display = (matchesSearch && matchesFilter) ? 'flex' : 'none';
         });
     }
 
@@ -671,6 +691,8 @@
         document.querySelectorAll('.server-checkbox').forEach(cb => {
             cb.checked = checked;
         });
+        updateAssignedCounter();
+        sortServers();
     }
 
     function toggleMasterPlan(checkbox) {
@@ -705,6 +727,30 @@
         }
     }
 
+    function sortServers() {
+        const list = document.getElementById('serverList');
+        const items = Array.from(list.querySelectorAll('.server-item'));
+        
+        items.sort((a, b) => {
+            const aChecked = a.querySelector('input').checked;
+            const bChecked = b.querySelector('input').checked;
+            if (aChecked && !bChecked) return -1;
+            if (!aChecked && bChecked) return 1;
+            return 0;
+        });
+        
+        items.forEach(item => list.appendChild(item));
+        updateAssignedCounter();
+    }
+
+    function updateAssignedCounter() {
+        const count = document.querySelectorAll('.server-checkbox:checked').length;
+        const counterEl = document.getElementById('assignedCounter');
+        if (counterEl) {
+            counterEl.innerText = count > 0 ? `(${count} Assigned)` : '';
+        }
+    }
+
     function openModal(mode, date = null, event = null) {
         // Reset form first
         document.getElementById('scheduleForm').reset();
@@ -725,6 +771,11 @@
         const masterPlanCb = document.getElementById('masterPlanCheckbox');
         if(masterPlanCb) masterPlanCb.checked = false;
 
+        // Reset Filter
+        const assignedOnlyCb = document.getElementById('assignedOnlyCheckbox');
+        if(assignedOnlyCb) assignedOnlyCb.checked = false;
+        showAssignedOnly = false;
+
         const joinBtn = document.getElementById('joinBtnContainer');
         joinBtn.classList.add('hidden');
 
@@ -734,6 +785,7 @@
             document.getElementById('deleteBtnContainer').classList.add('hidden');
             if(date) document.getElementById('mass_date').value = date;
             document.getElementById('recurringSection').classList.remove('hidden');
+            sortServers(); // Refresh list to default
         } else {
             document.getElementById('modalTitle').innerText = 'Edit Schedule'; 
             document.getElementById('scheduleId').value = event.id;
@@ -750,12 +802,15 @@
                 if (r) r.checked = true; 
             }
             
-            if (event.assigned_servers) {
-                event.assigned_servers.forEach(id => { 
+            if (event.assigned_ids) {
+                event.assigned_ids.forEach(id => { 
                     const cb = document.querySelector(`.server-checkbox[value="${id}"]`); 
                     if (cb) cb.checked = true; 
                 });
             }
+
+            // Move checked servers to top
+            sortServers();
 
             document.getElementById('deleteBtnContainer').classList.remove('hidden');
             document.getElementById('deleteLink').onclick = () => showConfirm('Delete this schedule?', 'Delete Schedule', function() {
@@ -763,11 +818,12 @@
                 document.getElementById('singleDeleteForm').submit();
             });
 
-            // Check if past
+            // Check if past or if user is Superadmin
             const eventDateTime = new Date(`${event.mass_date} ${event.mass_time}`);
             const isPast = eventDateTime < new Date();
+            const isSuperadmin = <?= json_encode($_SESSION['role'] === 'Superadmin') ?>;
 
-            if (!isPast && currentServerId && event.assigned_ids && !event.assigned_ids.includes(parseInt(currentServerId))) {
+            if (!isPast && !isSuperadmin && currentServerId && event.assigned_ids && !event.assigned_ids.includes(parseInt(currentServerId))) {
                 joinBtn.classList.remove('hidden');
                 document.getElementById('selfAssignId').value = event.id;
             }

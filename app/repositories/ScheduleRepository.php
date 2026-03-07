@@ -14,13 +14,23 @@ class ScheduleRepository implements RepositoryInterface {
     }
 
     public function getAll() {
-        $this->db->query("SELECT * FROM schedules ORDER BY mass_date ASC, mass_time ASC");
+        $this->db->query("
+            SELECT s.*, 
+                   GROUP_CONCAT(srv.id) as assigned_ids,
+                   GROUP_CONCAT(CONCAT(srv.first_name, ' ', srv.last_name)) as assigned_names
+            FROM schedules s
+            LEFT JOIN attendance a ON s.id = a.schedule_id
+            LEFT JOIN servers srv ON a.server_id = srv.id
+            GROUP BY s.id
+            ORDER BY s.mass_date ASC, s.mass_time ASC
+        ");
+        
         $results = $this->db->resultSet();
         
-        // Populate assigned_ids for each schedule
+        // Convert comma-separated strings to arrays
         foreach ($results as $row) {
-            $assignments = $this->getAssignments($row->id);
-            $row->assigned_ids = array_map(function($a) { return (int)$a->id; }, $assignments);
+            $row->assigned_ids = $row->assigned_ids ? array_map('intval', explode(',', $row->assigned_ids)) : [];
+            // assigned_names remains a string for the frontend split(',')
         }
         
         return $results;
