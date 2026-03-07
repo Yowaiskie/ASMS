@@ -124,9 +124,15 @@
                     <input type="number" name="policy_late_to_absent_ratio" value="<?= $policy_late_to_absent_ratio ?>" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-700 focus:outline-none">
                 </div>
             </div>
-            <div class="space-y-1">
+            <div class="space-y-1.5">
                 <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Excuse Deadline (Hours)</label>
                 <input type="number" name="policy_excuse_lead_time" value="<?= $policy_excuse_lead_time ?>" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-700 focus:outline-none">
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Master Plan Duration (Months)</label>
+                <input type="number" name="policy_schedule_duration" value="<?= $policy_schedule_duration ?>" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-700 focus:outline-none">
+                <p class="text-[9px] text-slate-400 ml-1">Default number of months when applying recurring schedules.</p>
             </div>
             <div class="space-y-2">
                 <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 text-center block">Monitored Activities</label>

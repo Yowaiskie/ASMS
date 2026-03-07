@@ -12,7 +12,7 @@ try {
     if ($stmt->rowCount() == 0) {
         $sql = "ALTER TABLE excuses ADD COLUMN absence_time VARCHAR(50) DEFAULT NULL AFTER absence_date";
         $pdo->exec($sql);
-        echo "Column 'absence_time' added to 'excuses' table.\n";
+        echo "Column 'absence_time' added to 'excuses' table.\n";   
     } else {
         echo "Column 'absence_time' already exists.\n";
     }

@@ -86,6 +86,25 @@ class ScheduleRepository implements RepositoryInterface {
         return $this->db->single();
     }
 
+    public function getFutureMatchingSchedules($startDate, $dayOfWeek, $massTime) {
+        // MySQL DAYOFWEEK: 1=Sun, 2=Mon... 7=Sat
+        // PHP DateTime 'w': 0=Sun, 1=Mon... 6=Sat
+        $mysqlDayOfWeek = (int)$dayOfWeek + 1;
+
+        $this->db->query("SELECT * FROM schedules 
+                         WHERE mass_date > :start_date 
+                         AND DAYOFWEEK(mass_date) = :day_of_week 
+                         AND mass_time = :mass_time 
+                         AND status != 'Cancelled'
+                         ORDER BY mass_date ASC");
+        
+        $this->db->bind(':start_date', $startDate);
+        $this->db->bind(':day_of_week', $mysqlDayOfWeek);
+        $this->db->bind(':mass_time', $massTime);
+        
+        return $this->db->resultSet();
+    }
+
     public function create(array $data) {
         if ($this->hasConflict($data['mass_date'], $data['mass_time'])) {
             return false;

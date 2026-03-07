@@ -190,51 +190,31 @@
                     <div><label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">Time</label><input type="time" name="mass_time" id="mass_time" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"></div>
                 </div>
 
-                <!-- Recurring Options -->
-                <div id="recurringSection" class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                    <div class="flex items-center justify-between mb-3">
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" name="is_recurring" id="is_recurring" class="rounded text-primary border-gray-300 w-4 h-4 focus:ring-primary-500" onchange="toggleRecurringOptions()">
-                            <span class="text-xs font-bold text-slate-700">Recurring Schedule</span>
-                        </label>
-                    </div>
-
-                    <div id="recurringOptions" class="hidden space-y-3 pt-2 border-t border-slate-200">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Frequency</label>
-                                <select name="frequency" id="frequency" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500" onchange="toggleFrequencyOptions()">
-                                    <option value="daily">Daily</option>
-                                    <option value="weekly">Weekly</option>
-                                    <option value="monthly">Monthly</option>
-                                </select>
+                <!-- Smart Recurring Assignment (Checkbox Style) -->
+                <div id="recurringSection" class="p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                    <label class="flex items-center justify-between cursor-pointer group">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-slate-100 group-hover:border-primary/30 transition-colors">
+                                <i class="ph-bold ph-magic-wand text-primary text-xl"></i>
                             </div>
                             <div>
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Repeat Every</label>
-                                <div class="flex items-center gap-2">
-                                    <input type="number" name="interval" id="interval" value="1" min="1" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500">
-                                    <span id="intervalUnit" class="text-[10px] font-bold text-slate-400">days</span>
-                                </div>
+                                <p class="text-sm font-bold text-slate-800">Apply to Master Plan</p>
+                                <p class="text-[10px] text-slate-500 font-medium">Sync assignment to all future similar slots</p>
                             </div>
                         </div>
-
-                        <div id="weeklyOptions" class="hidden">
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">On these days</label>
-                            <div class="flex flex-wrap gap-2">
-                                <?php $days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']; 
-                                foreach($days as $i => $d): ?>
-                                    <label class="cursor-pointer">
-                                        <input type="checkbox" name="recurring_days[]" value="<?= $i ?>" class="peer hidden">
-                                        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-white border border-slate-200 text-[10px] font-bold text-slate-500 peer-checked:bg-primary peer-checked:text-white peer-checked:border-primary transition-all uppercase tracking-tighter"><?= $d ?></span>
-                                    </label>
-                                <?php endforeach; ?>
-                            </div>
+                        <div class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="masterPlanCheckbox" onchange="toggleMasterPlan(this)" class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                         </div>
+                    </label>
 
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">End Recurrence</label>
-                            <input type="date" name="end_date" id="end_date" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500">
-                        </div>
+                    <input type="hidden" name="is_recurring" id="is_recurring_hidden">
+                    <input type="hidden" name="frequency" id="frequency_hidden" value="weekly">
+                    <input type="hidden" name="end_date" id="end_date_hidden">
+
+                    <div id="pattern-desc" class="mt-3 px-3 py-2.5 bg-primary/5 rounded-xl hidden flex items-start gap-2 border border-primary/10">
+                        <i class="ph-bold ph-info text-primary mt-0.5 text-xs"></i>
+                        <p class="text-[11px] font-bold text-primary leading-tight"></p>
                     </div>
                 </div>
                 
@@ -383,6 +363,81 @@
                 btn.classList.remove('ring-2', 'ring-slate-800');
             }
         });
+    }
+
+    function setEndDuration(months) {
+        const startDateInput = document.getElementById('mass_date');
+        const endDateInput = document.getElementById('end_date');
+        
+        if (!startDateInput.value) {
+            alert('Please select a start date first.');
+            return;
+        }
+
+        const date = new Date(startDateInput.value);
+        date.setMonth(date.getMonth() + months);
+        
+        // Format to YYYY-MM-DD
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        
+        endDateInput.value = `${year}-${month}-${day}`;
+    }
+
+    function setPattern(frequency) {
+        const isRecHidden = document.getElementById('is_recurring_hidden');
+        const freqHidden = document.getElementById('frequency_hidden');
+        const endDateHidden = document.getElementById('end_date_hidden');
+        const descDiv = document.getElementById('pattern-desc');
+        const startDateVal = document.getElementById('mass_date').value;
+        const configMonths = <?= (int)($policy_schedule_duration ?? 1) ?>;
+
+        // Reset All Buttons
+        document.querySelectorAll('.pattern-btn').forEach(btn => {
+            btn.classList.remove('bg-primary', 'text-white', 'shadow-md', 'shadow-primary/20');
+            btn.classList.add('text-slate-600');
+        });
+
+        if (frequency === 'none') {
+            isRecHidden.value = '';
+            const btn = document.getElementById('btn-pattern-none');
+            btn.classList.add('bg-primary', 'text-white', 'shadow-md', 'shadow-primary/20');
+            btn.classList.remove('text-slate-600');
+            descDiv.classList.add('hidden');
+            return;
+        }
+
+        if (!startDateVal) {
+            showAlert('Please select a start date first.');
+            return;
+        }
+
+        // Active state for chosen button
+        const patternKey = (frequency === 'master') ? 'master' : frequency;
+        const activeBtn = document.getElementById('btn-pattern-' + patternKey);
+        if(activeBtn) {
+            activeBtn.classList.add('bg-primary', 'text-white', 'shadow-md', 'shadow-primary/20');
+            activeBtn.classList.remove('text-slate-600');
+        }
+        
+        isRecHidden.value = '1';
+        const actualFreq = (frequency === 'master') ? 'weekly' : frequency;
+        freqHidden.value = actualFreq;
+
+        const date = new Date(startDateVal);
+        date.setMonth(date.getMonth() + configMonths);
+        const endStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        endDateHidden.value = endStr;
+
+        let desc = '';
+        if (frequency === 'master') {
+            const dayName = new Date(startDateVal).toLocaleDateString('en-US', {weekday: 'long'});
+            desc = `Repeats every ${dayName} until ${date.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})} (${configMonths}m Master Plan)`;
+        }
+
+        descDiv.querySelector('p').innerText = desc;
+        descDiv.classList.remove('hidden');
     }
 
     const schedules = <?= json_encode($schedules) ?>;
@@ -618,60 +673,90 @@
         });
     }
 
-    function toggleRecurringOptions() {
-        const isRecurring = document.getElementById('is_recurring').checked;
-        const options = document.getElementById('recurringOptions');
-        if (isRecurring) {
-            options.classList.remove('hidden');
-            toggleFrequencyOptions();
-        } else {
-            options.classList.add('hidden');
-        }
-    }
+    function toggleMasterPlan(checkbox) {
+        const isRecHidden = document.getElementById('is_recurring_hidden');
+        const freqHidden = document.getElementById('frequency_hidden');
+        const endDateHidden = document.getElementById('end_date_hidden');
+        const descDiv = document.getElementById('pattern-desc');
+        const startDateVal = document.getElementById('mass_date').value;
+        const configMonths = <?= (int)($policy_schedule_duration ?? 1) ?>;
 
-    function toggleFrequencyOptions() {
-        const freq = document.getElementById('frequency').value;
-        const weekly = document.getElementById('weeklyOptions');
-        const unit = document.getElementById('intervalUnit');
-        
-        if (freq === 'weekly') {
-            weekly.classList.remove('hidden');
-            unit.innerText = 'weeks';
+        if (checkbox.checked) {
+            if (!startDateVal) {
+                showAlert('Please select a date first.');
+                checkbox.checked = false;
+                return;
+            }
+
+            isRecHidden.value = '1';
+            freqHidden.value = 'weekly';
+
+            const date = new Date(startDateVal);
+            date.setMonth(date.getMonth() + configMonths);
+            const endStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            endDateHidden.value = endStr;
+
+            const dayName = new Date(startDateVal).toLocaleDateString('en-US', {weekday: 'long'});
+            descDiv.querySelector('p').innerText = `Syncing to all future ${dayName} slots until ${date.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})}`;
+            descDiv.classList.remove('hidden');
         } else {
-            weekly.classList.add('hidden');
-            unit.innerText = freq === 'daily' ? 'days' : 'months';
+            isRecHidden.value = '';
+            descDiv.classList.add('hidden');
         }
     }
 
     function openModal(mode, date = null, event = null) {
-        modal.classList.remove('hidden'); setTimeout(() => { modal.classList.remove('opacity-0'); modalContent.classList.remove('scale-95'); }, 10);
+        // Reset form first
+        document.getElementById('scheduleForm').reset();
+        
+        modal.classList.remove('hidden'); 
+        setTimeout(() => { 
+            modal.classList.remove('opacity-0'); 
+            modalContent.classList.remove('scale-95'); 
+        }, 10);
+
         document.querySelectorAll('.server-checkbox').forEach(cb => cb.checked = false);
         if(document.getElementById('assignAllCheckbox')) document.getElementById('assignAllCheckbox').checked = false;
         document.querySelectorAll('.color-radio').forEach(r => r.checked = false);
         
-        // Reset Recurring
-        document.getElementById('is_recurring').checked = false;
-        document.getElementById('recurringOptions').classList.add('hidden');
-        document.getElementById('recurringSection').classList.remove('hidden');
-        document.querySelectorAll('input[name="recurring_days[]"]').forEach(cb => cb.checked = false);
+        // Reset Recurring UI
+        document.getElementById('is_recurring_hidden').value = '';
+        document.getElementById('pattern-desc').classList.add('hidden');
+        const masterPlanCb = document.getElementById('masterPlanCheckbox');
+        if(masterPlanCb) masterPlanCb.checked = false;
 
         const joinBtn = document.getElementById('joinBtnContainer');
         joinBtn.classList.add('hidden');
 
         if (mode === 'add') {
-            document.getElementById('modalTitle').innerText = 'Add Schedule'; document.getElementById('scheduleForm').reset();
-            document.getElementById('scheduleId').value = ''; document.getElementById('deleteBtnContainer').classList.add('hidden');
+            document.getElementById('modalTitle').innerText = 'Add Schedule'; 
+            document.getElementById('scheduleId').value = ''; 
+            document.getElementById('deleteBtnContainer').classList.add('hidden');
             if(date) document.getElementById('mass_date').value = date;
+            document.getElementById('recurringSection').classList.remove('hidden');
         } else {
-            document.getElementById('modalTitle').innerText = 'Edit Schedule'; document.getElementById('scheduleId').value = event.id;
+            document.getElementById('modalTitle').innerText = 'Edit Schedule'; 
+            document.getElementById('scheduleId').value = event.id;
+            document.getElementById('recurringSection').classList.remove('hidden');
             
-            // Hide recurring for edit mode for now to keep it simple (editing series is complex)
-            document.getElementById('recurringSection').classList.add('hidden');
-            document.getElementById('mass_type').value = event.mass_type; document.getElementById('event_name').value = event.event_name || '';
-            document.getElementById('mass_date').value = event.mass_date; document.getElementById('mass_time').value = event.mass_time;
+            document.getElementById('mass_type').value = event.mass_type; 
+            document.getElementById('event_name').value = event.event_name || '';
+            document.getElementById('mass_date').value = event.mass_date; 
+            document.getElementById('mass_time').value = event.mass_time;
             document.getElementById('status').value = event.status;
-            if (event.color) { const r = document.querySelector(`.color-radio[value="${event.color}"]`); if (r) r.checked = true; }
-            if (event.assigned_servers) event.assigned_servers.forEach(id => { const cb = document.querySelector(`.server-checkbox[value="${id}"]`); if (cb) cb.checked = true; });
+            
+            if (event.color) { 
+                const r = document.querySelector(`.color-radio[value="${event.color}"]`); 
+                if (r) r.checked = true; 
+            }
+            
+            if (event.assigned_servers) {
+                event.assigned_servers.forEach(id => { 
+                    const cb = document.querySelector(`.server-checkbox[value="${id}"]`); 
+                    if (cb) cb.checked = true; 
+                });
+            }
+
             document.getElementById('deleteBtnContainer').classList.remove('hidden');
             document.getElementById('deleteLink').onclick = () => showConfirm('Delete this schedule?', 'Delete Schedule', function() {
                 document.getElementById('deleteScheduleId').value = event.id;
@@ -682,7 +767,6 @@
             const eventDateTime = new Date(`${event.mass_date} ${event.mass_time}`);
             const isPast = eventDateTime < new Date();
 
-            // Self-Assign Logic for Admin (Only if not past)
             if (!isPast && currentServerId && event.assigned_ids && !event.assigned_ids.includes(parseInt(currentServerId))) {
                 joinBtn.classList.remove('hidden');
                 document.getElementById('selfAssignId').value = event.id;

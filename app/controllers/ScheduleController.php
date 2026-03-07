@@ -98,13 +98,15 @@ class ScheduleController extends Controller {
             $cu = $this->db->single();
             $currentServerId = $cu ? $cu->server_id : null;
             
+            $systemRepo = new \App\Repositories\SystemSettingRepository();
             $data = [
                 'pageTitle' => 'Mass Schedules',
                 'title' => 'Schedules | ASMS',
                 'schedules' => $schedules,
                 'servers' => $servers,
                 'activityTypes' => $activityTypes,
-                'currentServerId' => $currentServerId
+                'currentServerId' => $currentServerId,
+                'policy_schedule_duration' => $systemRepo->get('policy_schedule_duration', 1)
             ];
             
             $this->view('schedules/index', $data);
@@ -267,18 +269,34 @@ class ScheduleController extends Controller {
             ];
             
             $assignedServers = $_POST['assigned_servers'] ?? [];
-            $isRecurring = isset($_POST['is_recurring']);
+            $isRecurring = !empty($_POST['is_recurring']);
 
             if (!empty($id)) {
-                // Update (Single)
+                // Update (Single or Propagate)
                 if ($this->scheduleRepo->update($id, $data)) {
                     $this->scheduleRepo->syncAssignments($id, $assignedServers);
-                    
-                    // Email newly assigned servers
                     $this->notifyAssignedServers($id, $data, $assignedServers);
 
-                    logAction('Update', 'Schedules', "Updated schedule ID: $id (" . $data['mass_type'] . ")");
-                    setFlash('msg_success', 'Schedule updated successfully!');
+                    // Propagate to future schedules if Master Plan (isRecurring) is checked
+                    if ($isRecurring) {
+                        $startDate = new \DateTime($data['mass_date']);
+                        $dayOfWeek = (int)$startDate->format('w');
+                        $massTime = $data['mass_time'];
+                        
+                        // Get all future schedules with same day and time
+                        $futureSchedules = $this->scheduleRepo->getFutureMatchingSchedules($data['mass_date'], $dayOfWeek, $massTime);
+                        
+                        foreach ($futureSchedules as $fs) {
+                            $this->scheduleRepo->syncAssignments($fs->id, $assignedServers);
+                            // Optional: notify them for each? (might be too many emails, maybe just one summary)
+                        }
+                        
+                        logAction('Update', 'Schedules', "Propagated assignments for $id to " . count($futureSchedules) . " future schedules.");
+                        setFlash('msg_success', 'Assignments propagated to all future ' . $startDate->format('l') . ' ' . date('h:i A', strtotime($massTime)) . ' slots!');
+                    } else {
+                        logAction('Update', 'Schedules', "Updated schedule ID: $id (" . $data['mass_type'] . ")");
+                        setFlash('msg_success', 'Schedule updated successfully!');
+                    }
                 } else {
                     setFlash('msg_error', 'Failed to update schedule. A schedule already exists for this date and time.');
                 }
@@ -303,18 +321,19 @@ class ScheduleController extends Controller {
                     $count = 0;
                     $skipped = 0;
 
+                    // If weekly and no specific days selected, use the start date's day of week
+                    if ($frequency === 'weekly' && empty($recurringDays)) {
+                        $recurringDays = [(int)$startDate->format('w')];
+                    }
+
                     while ($current <= $end) {
                         $shouldCreate = false;
                         
                         if ($frequency === 'daily') {
                             $shouldCreate = true;
                         } elseif ($frequency === 'weekly') {
-                            if (empty($recurringDays)) {
-                                $shouldCreate = true; // If no days selected, just repeat the start day
-                            } else {
-                                if (in_array($current->format('w'), $recurringDays)) {
-                                    $shouldCreate = true;
-                                }
+                            if (in_array((int)$current->format('w'), $recurringDays)) {
+                                $shouldCreate = true;
                             }
                         } elseif ($frequency === 'monthly') {
                             $shouldCreate = true;
@@ -337,24 +356,8 @@ class ScheduleController extends Controller {
                             }
                         }
 
-                        // Increment based on frequency
-                        if ($frequency === 'daily') {
-                            $current->modify("+$interval day");
-                        } elseif ($frequency === 'weekly') {
-                            if (empty($recurringDays)) {
-                                $current->modify("+$interval week");
-                            } else {
-                                $current->modify("+1 day");
-                                if ($current->format('w') == $startDate->format('w')) {
-                                    if ($interval > 1) {
-                                        $skip = $interval - 1;
-                                        $current->modify("+$skip week");
-                                    }
-                                }
-                            }
-                        } elseif ($frequency === 'monthly') {
-                            $current->modify("+$interval month");
-                        }
+                        // Simply move day by day
+                        $current->modify("+1 day");
                     }
 
                     $this->db->commit();
@@ -363,6 +366,7 @@ class ScheduleController extends Controller {
                     if ($skipped > 0) $msg .= " ($skipped slots were skipped due to conflicts).";
                     
                     setFlash('msg_success', $msg);
+                    logAction('Create', 'Schedules', "Created $count recurring schedules for " . $data['mass_type']);
                 } catch (\Exception $e) {
                     $this->db->rollBack();
                     setFlash('msg_error', 'Error creating recurring schedules: ' . $e->getMessage());
