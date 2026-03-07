@@ -94,7 +94,7 @@ class AttendanceRepository implements RepositoryInterface {
                 SELECT s.id, s.first_name, s.middle_name, s.last_name 
                 FROM servers s
                 LEFT JOIN users u ON s.id = u.server_id
-                WHERE s.status IN ('Active', 'Suspended') AND s.deleted_at IS NULL" . (!empty($search) ? "AND (s.first_name LIKE :search OR s.last_name LIKE :search)" : "") . "
+                WHERE s.status IN ('Active', 'Suspended') AND s.deleted_at IS NULL " . (!empty($search) ? "AND (s.first_name LIKE :search OR s.last_name LIKE :search)" : "") . "
                 ORDER BY s.last_name ASC, s.first_name ASC 
                 LIMIT :limit OFFSET :offset
             ) s
