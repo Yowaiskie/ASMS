@@ -304,62 +304,6 @@
     </div>
 </div>
 
-<!-- Auto-Fill Configuration Modal -->
-<div id="configModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10">
-            <div>
-                <h3 class="text-xl font-bold text-slate-800 tracking-tight">Auto-Fill Settings</h3>
-                <p class="text-xs text-slate-500 font-medium mt-0.5">Define default mass slots for each day of the week.</p>
-            </div>
-            <button onclick="closeConfigModal()" class="p-2 hover:bg-slate-50 rounded-xl text-slate-400 transition-colors">
-                <i class="ph-bold ph-x text-xl"></i>
-            </button>
-        </div>
-
-        <div class="flex-1 overflow-y-auto p-6 bg-slate-50/50">
-            <div class="flex gap-1 mb-6 bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto custom-scrollbar">
-                <?php $days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']; 
-                foreach($days as $index => $day): ?>
-                    <button onclick="switchConfigDay(<?= $index ?>)" 
-                            class="day-tab flex-1 min-w-[80px] py-2 px-3 rounded-xl text-xs font-bold transition-all whitespace-nowrap <?= $index === 0 ? 'bg-primary text-white shadow-md' : 'text-slate-500 hover:bg-slate-50' ?>"
-                            data-day="<?= $index ?>">
-                        <?= $day ?>
-                    </button>
-                <?php endforeach; ?>
-            </div>
-
-            <div id="templatesList" class="space-y-3">
-                <div class="text-center py-12 bg-white rounded-3xl border border-dashed border-slate-200">
-                    <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-300">
-                        <i class="ph-bold ph-calendar-blank text-3xl"></i>
-                    </div>
-                    <p class="text-sm font-bold text-slate-400 uppercase tracking-widest">No default slots for this day</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="p-6 border-t border-slate-100 bg-white">
-            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Add New Slot Template</h4>
-            <form id="addTemplateForm" class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <select name="mass_type" required class="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500">
-                    <option value="Sunday Mass">Sunday Mass</option>
-                    <option value="Anticipated Mass">Anticipated Mass</option>
-                    <option value="Weekday Mass">Weekday Mass</option>
-                    <option value="Wedding">Wedding</option>
-                    <option value="Funeral">Funeral</option>
-                    <option value="Baptism">Baptism</option>
-                    <option value="Meeting">Meeting</option>
-                </select>
-                <input type="time" name="mass_time" required class="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500">
-                <button type="submit" class="bg-primary text-white px-4 py-2.5 rounded-xl font-bold text-xs hover:bg-primary-700 shadow-lg shadow-primary-200 transition-all flex items-center justify-center gap-2">
-                    <i class="ph-bold ph-plus"></i> Add Slot
-                </button>
-            </form>
-        </div>
-    </div>
-</div>
-
 <script>
     function selectBulkColor(color) {
         document.getElementById('bulkColorInput').value = color;
@@ -372,116 +316,17 @@
         });
     }
 
-    function setEndDuration(months) {
-        const startDateInput = document.getElementById('mass_date');
-        const endDateInput = document.getElementById('end_date');
-        
-        if (!startDateInput.value) {
-            showAlert('Please select a start date first.');
-            return;
-        }
-
-        const date = new Date(startDateInput.value);
-        date.setMonth(date.getMonth() + months);
-        
-        // Format to YYYY-MM-DD
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        
-        endDateInput.value = `${year}-${month}-${day}`;
-    }
-
-    function setPattern(frequency) {
-        const isRecHidden = document.getElementById('is_recurring_hidden');
-        const freqHidden = document.getElementById('frequency_hidden');
-        const endDateHidden = document.getElementById('end_date_hidden');
-        const descDiv = document.getElementById('pattern-desc');
-        const startDateVal = document.getElementById('mass_date').value;
-        const configMonths = <?= (int)($policy_schedule_duration ?? 1) ?>;
-
-        // Reset All Buttons
-        document.querySelectorAll('.pattern-btn').forEach(btn => {
-            btn.classList.remove('bg-primary', 'text-white', 'shadow-md', 'shadow-primary/20');
-            btn.classList.add('text-slate-600');
-        });
-
-        if (frequency === 'none') {
-            isRecHidden.value = '';
-            const btn = document.getElementById('btn-pattern-none');
-            btn.classList.add('bg-primary', 'text-white', 'shadow-md', 'shadow-primary/20');
-            btn.classList.remove('text-slate-600');
-            descDiv.classList.add('hidden');
-            return;
-        }
-
-        if (!startDateVal) {
-            showAlert('Please select a start date first.');
-            return;
-        }
-
-        // Active state for chosen button
-        const patternKey = (frequency === 'master') ? 'master' : frequency;
-        const activeBtn = document.getElementById('btn-pattern-' + patternKey);
-        if(activeBtn) {
-            activeBtn.classList.add('bg-primary', 'text-white', 'shadow-md', 'shadow-primary/20');
-            activeBtn.classList.remove('text-slate-600');
-        }
-        
-        isRecHidden.value = '1';
-        const actualFreq = (frequency === 'master') ? 'weekly' : frequency;
-        freqHidden.value = actualFreq;
-
-        const date = new Date(startDateVal);
-        date.setMonth(date.getMonth() + configMonths);
-        const endStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-        endDateHidden.value = endStr;
-
-        let desc = '';
-        if (frequency === 'master') {
-            const dayName = new Date(startDateVal).toLocaleDateString('en-US', {weekday: 'long'});
-            desc = `Repeats every ${dayName} until ${date.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})} (${configMonths}m Master Plan)`;
-        }
-
-        descDiv.querySelector('p').innerText = desc;
-        descDiv.classList.remove('hidden');
-    }
-
     const schedules = <?= json_encode($schedules) ?>;
     const currentServerId = <?= json_encode($currentServerId) ?>;
     let currentDate = new Date();
     let isSelectionMode = false;
     let selectedIds = [];
-    let activeConfigDay = 0;
-
-    function openConfigModal() {
-        document.getElementById('configModal').classList.remove('hidden');
-    }
-
-    function closeConfigModal() {
-        document.getElementById('configModal').classList.add('hidden');
-    }
-
-    function switchConfigDay(dayIndex) {
-        activeConfigDay = dayIndex;
-        document.querySelectorAll('.day-tab').forEach(tab => {
-            if (parseInt(tab.dataset.day) === dayIndex) {
-                tab.classList.add('bg-primary', 'text-white', 'shadow-md');
-                tab.classList.remove('text-slate-500', 'hover:bg-slate-50');
-            } else {
-                tab.classList.remove('bg-primary', 'text-white', 'shadow-md');
-                tab.classList.add('text-slate-500', 'hover:bg-slate-50');
-            }
-        });
-        // Logic to load templates for this day will go here
-    }
 
     const modal = document.getElementById('scheduleModal');
     const modalContent = document.getElementById('modalContent');
 
     function getColorClass(color, isPast) {
         if (isPast) return 'bg-slate-100 text-slate-400 hover:bg-slate-200 grayscale-[0.5] opacity-60';
-        
         const maps = {
             'green': 'bg-green-100 text-green-700 hover:bg-green-200',
             'purple': 'bg-purple-100 text-purple-700 hover:bg-purple-200',
@@ -493,7 +338,6 @@
             'teal': 'bg-teal-100 text-teal-700 hover:bg-teal-200',
             'gray': 'bg-gray-100 text-gray-700 hover:bg-gray-200'
         };
-        
         return maps[color] || maps['blue'];
     }
 
@@ -515,82 +359,53 @@
             
             const cell = document.createElement('div');
             cell.className = `min-h-[100px] border ${isToday ? 'border-primary-500 ring-2 ring-primary-100 bg-white' : 'border-slate-100 bg-slate-50/30'} rounded-2xl p-2 transition-all hover:border-primary-300 hover:shadow-md cursor-pointer flex flex-col gap-1 relative group`;            
-            // Add schedule
             cell.onclick = (e) => { 
                 if(!isSelectionMode && (e.target === cell || e.target.classList.contains('day-num') || e.target.classList.contains('today-label'))) openModal('add', dateStr); 
             };
             
             const headerDiv = document.createElement('div');
             headerDiv.className = "flex justify-between items-start mb-1";
-
             const dayNum = document.createElement('span');
             dayNum.className = `text-sm font-bold ${isToday ? 'text-primary' : 'text-slate-400'} day-num`; dayNum.innerText = day;
             headerDiv.appendChild(dayNum);
-
             if (isToday) {
                 const todayLabel = document.createElement('span');
                 todayLabel.className = "text-[9px] font-extrabold uppercase tracking-tighter text-primary bg-primary-50 px-1.5 py-0.5 rounded today-label";
                 todayLabel.innerText = "Today";
                 headerDiv.appendChild(todayLabel);
             }
-
             cell.appendChild(headerDiv);
             
             const dayEvents = schedules.filter(s => s.mass_date === dateStr);
             dayEvents.forEach(evt => {
                 const eventEl = document.createElement('div');
-                
-                // Check if past
                 const eventDateTime = new Date(`${evt.mass_date} ${evt.mass_time}`);
                 const isPast = eventDateTime < new Date();
-
                 let color = evt.color;
                 if (!color) {
                     if (evt.mass_type === 'Funeral') color = 'purple';
                     else if (evt.mass_type === 'Wedding') color = 'yellow';
                     else color = 'green';
                 }
-
                 let colorClass = getColorClass(color, isPast);
-                
-                // Selection Style
                 const isSelected = selectedIds.includes(evt.id.toString());
                 if (isSelectionMode) {
-                    if (isSelected) {
-                        eventEl.className = `text-[10px] font-bold px-2 py-1 rounded-lg truncate transition-all ring-2 ring-primary-500 ring-offset-1 bg-white text-primary relative`;
-                    } else {
-                        eventEl.className = `text-[10px] font-bold px-2 py-1 rounded-lg truncate transition-all opacity-60 hover:opacity-100 ${colorClass}`;
-                    }
-                } else {
-                    eventEl.className = `text-[10px] font-bold px-2 py-1 rounded-lg truncate transition-colors ${colorClass}`;
-                }
-
-                // Format Time to 12h
+                    if (isSelected) { eventEl.className = `text-[10px] font-bold px-2 py-1 rounded-lg truncate transition-all ring-2 ring-primary-500 ring-offset-1 bg-white text-primary relative`; }
+                    else { eventEl.className = `text-[10px] font-bold px-2 py-1 rounded-lg truncate transition-all opacity-60 hover:opacity-100 ${colorClass}`; }
+                } else { eventEl.className = `text-[10px] font-bold px-2 py-1 rounded-lg truncate transition-colors ${colorClass}`; }
                 const [h, m] = evt.mass_time.substring(0,5).split(':');
                 const h12 = h % 12 || 12;
                 const ampm = h >= 12 ? 'PM' : 'AM';
                 const time12 = `${h12}:${m} ${ampm}`;
-
                 eventEl.innerText = `${time12} ${evt.mass_type === 'Special Event' ? (evt.event_name || evt.mass_type) : evt.mass_type}`;
-                
-                // Add Check Icon if Selected
                 if (isSelectionMode && isSelected) {
                     eventEl.className += ' ring-2 ring-primary-500 ring-offset-1 bg-white text-primary relative';
                     eventEl.innerHTML += ' <span class="absolute right-1 top-1 text-primary">✓</span>';
                 } else if (currentServerId && evt.assigned_ids && evt.assigned_ids.includes(parseInt(currentServerId))) {
-                    // Admin Assigned: Highlight and add star
                     eventEl.className += ' ring-2 ring-primary ring-offset-1 z-10 shadow-sm';
                     eventEl.innerHTML = `<span class="flex items-center gap-1"><span>⭐</span> ${eventEl.innerText}</span>`;
                 }
-
-                eventEl.onclick = (e) => { 
-                    e.stopPropagation(); 
-                    if (isSelectionMode) {
-                        toggleSelection(evt.id.toString());
-                    } else {
-                        openModal('edit', null, evt); 
-                    }
-                };
+                eventEl.onclick = (e) => { e.stopPropagation(); if (isSelectionMode) { toggleSelection(evt.id.toString()); } else { openModal('edit', null, evt); } };
                 cell.appendChild(eventEl);
             });
             grid.appendChild(cell);
@@ -602,11 +417,10 @@
         const btn = document.getElementById('selectModeBtn');
         const bar = document.getElementById('selectionBar');
         const header = document.getElementById('calendarHeader');
-        
         if (isSelectionMode) {
             btn.classList.add('bg-primary-50', 'text-primary', 'border-primary-200', 'ring-2', 'ring-primary-200');
             bar.classList.remove('hidden');
-            header.classList.add('pt-16'); // Push header down
+            header.classList.add('pt-16');
         } else {
             btn.classList.remove('bg-primary-50', 'text-primary', 'border-primary-200', 'ring-2', 'ring-primary-200');
             bar.classList.add('hidden');
@@ -618,38 +432,26 @@
     }
 
     function toggleSelection(id) {
-        if (selectedIds.includes(id)) {
-            selectedIds = selectedIds.filter(i => i !== id);
-        } else {
-            selectedIds.push(id);
-        }
+        if (selectedIds.includes(id)) { selectedIds = selectedIds.filter(i => i !== id); }
+        else { selectedIds.push(id); }
         renderCalendar();
         updateSelectedCount();
     }
 
     function selectAllCalendar(check) {
-        if (!check) {
-            selectedIds = [];
-        } // Add true case if needed to select ALL currently visible? Maybe later.
+        if (!check) { selectedIds = []; }
         renderCalendar();
         updateSelectedCount();
     }
 
-    function updateSelectedCount() {
-        document.getElementById('selectedCount').innerText = `${selectedIds.length} Selected`;
-    }
+    function updateSelectedCount() { document.getElementById('selectedCount').innerText = `${selectedIds.length} Selected`; }
 
     function submitBulk(action) {
         if (selectedIds.length === 0) return showAlert('No items selected');
-
         if (action === 'delete') {
             showConfirm(`Delete ${selectedIds.length} selected schedules?`, 'Confirm Bulk Delete', function() {
-                const form = document.getElementById('bulkForm');
-                form.action = "<?= URLROOT ?>/schedules/bulk-delete";
-                
-                // Let's create inputs:
                 const formEl = document.getElementById('bulkForm');
-                formEl.innerHTML = '<?php csrf_field(); ?>'; // Reset form content to token
+                formEl.innerHTML = '<?php csrf_field(); ?>';
                 selectedIds.forEach(id => {
                     const input = document.createElement('input');
                     input.type = 'hidden';
@@ -657,7 +459,6 @@
                     input.value = id;
                     formEl.appendChild(input);
                 });
-                
                 formEl.submit();
             });
         } else if (action === 'edit') {
@@ -667,30 +468,22 @@
     }
 
     let showAssignedOnly = false;
-
-    function toggleAssignedFilter(checkbox) {
-        showAssignedOnly = checkbox.checked;
-        filterServers();
-    }
+    function toggleAssignedFilter(checkbox) { showAssignedOnly = checkbox.checked; filterServers(); }
 
     function filterServers() {
         const query = document.getElementById('serverSearch').value.toLowerCase();
         document.querySelectorAll('.server-item').forEach(item => {
             const name = item.querySelector('.server-name').innerText.toLowerCase();
             const isChecked = item.querySelector('input').checked;
-            
             let matchesSearch = name.includes(query);
             let matchesFilter = !showAssignedOnly || isChecked;
-            
             item.style.display = (matchesSearch && matchesFilter) ? 'flex' : 'none';
         });
     }
 
     function toggleAssignAll(checkbox) {
         const checked = checkbox.checked;
-        document.querySelectorAll('.server-checkbox').forEach(cb => {
-            cb.checked = checked;
-        });
+        document.querySelectorAll('.server-checkbox').forEach(cb => { cb.checked = checked; });
         updateAssignedCounter();
         sortServers();
     }
@@ -705,38 +498,21 @@
         const configEndDate = <?= json_encode($policy_schedule_end_date) ?>;
 
         if (checkbox.checked) {
-            if (!startDateVal) {
-                showAlert('Please select a date first.');
-                checkbox.checked = false;
-                return;
-            }
-
-            if (!configEndDate) {
-                showAlert('Master Plan End Date is not set in System Configuration.');
-                checkbox.checked = false;
-                return;
-            }
-
-            isRecHidden.value = '1';
-            freqHidden.value = 'weekly';
-            endDateHidden.value = configEndDate;
-
+            if (!startDateVal) { showAlert('Please select a date first.'); checkbox.checked = false; return; }
+            if (!configEndDate) { showAlert('Master Plan End Date is not set in System Configuration.'); checkbox.checked = false; return; }
+            isRecHidden.value = '1'; freqHidden.value = 'weekly'; endDateHidden.value = configEndDate;
             const dayName = new Date(startDateVal).toLocaleDateString('en-US', {weekday: 'long'});
             const formattedStart = configStartDate ? new Date(configStartDate).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : 'now';
             const formattedEnd = new Date(configEndDate).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
-            
             descDiv.querySelector('p').innerText = `Syncing to all future ${dayName} slots (Period: ${formattedStart} to ${formattedEnd})`;
             descDiv.classList.remove('hidden');
-        } else {
-            isRecHidden.value = '';
-            descDiv.classList.add('hidden');
-        }
+        } else { isRecHidden.value = ''; descDiv.classList.add('hidden'); }
     }
 
     function sortServers() {
         const list = document.getElementById('serverList');
+        if(!list) return;
         const items = Array.from(list.querySelectorAll('.server-item'));
-        
         items.sort((a, b) => {
             const aChecked = a.querySelector('input').checked;
             const bChecked = b.querySelector('input').checked;
@@ -744,7 +520,6 @@
             if (!aChecked && bChecked) return 1;
             return 0;
         });
-        
         items.forEach(item => list.appendChild(item));
         updateAssignedCounter();
     }
@@ -752,36 +527,23 @@
     function updateAssignedCounter() {
         const count = document.querySelectorAll('.server-checkbox:checked').length;
         const counterEl = document.getElementById('assignedCounter');
-        if (counterEl) {
-            counterEl.innerText = count > 0 ? `(${count} Assigned)` : '';
-        }
+        if (counterEl) { counterEl.innerText = count > 0 ? `(${count} Assigned)` : ''; }
     }
 
     function openModal(mode, date = null, event = null) {
-        // Reset form first
         document.getElementById('scheduleForm').reset();
-        
         modal.classList.remove('hidden'); 
-        setTimeout(() => { 
-            modal.classList.remove('opacity-0'); 
-            modalContent.classList.remove('scale-95'); 
-        }, 10);
-
+        setTimeout(() => { modal.classList.remove('opacity-0'); modalContent.classList.remove('scale-95'); }, 10);
         document.querySelectorAll('.server-checkbox').forEach(cb => cb.checked = false);
         if(document.getElementById('assignAllCheckbox')) document.getElementById('assignAllCheckbox').checked = false;
         document.querySelectorAll('.color-radio').forEach(r => r.checked = false);
-        
-        // Reset Recurring UI
         document.getElementById('is_recurring_hidden').value = '';
         document.getElementById('pattern-desc').classList.add('hidden');
         const masterPlanCb = document.getElementById('masterPlanCheckbox');
         if(masterPlanCb) masterPlanCb.checked = false;
-
-        // Reset Filter
         const assignedOnlyCb = document.getElementById('assignedOnlyCheckbox');
         if(assignedOnlyCb) assignedOnlyCb.checked = false;
         showAssignedOnly = false;
-
         const joinBtn = document.getElementById('joinBtnContainer');
         joinBtn.classList.add('hidden');
 
@@ -791,44 +553,27 @@
             document.getElementById('deleteBtnContainer').classList.add('hidden');
             if(date) document.getElementById('mass_date').value = date;
             document.getElementById('recurringSection').classList.remove('hidden');
-            sortServers(); // Refresh list to default
+            sortServers();
         } else {
             document.getElementById('modalTitle').innerText = 'Edit Schedule'; 
             document.getElementById('scheduleId').value = event.id;
             document.getElementById('recurringSection').classList.remove('hidden');
-            
             document.getElementById('mass_type').value = event.mass_type; 
             document.getElementById('event_name').value = event.event_name || '';
             document.getElementById('mass_date').value = event.mass_date; 
             document.getElementById('mass_time').value = event.mass_time;
             document.getElementById('status').value = event.status;
-            
-            if (event.color) { 
-                const r = document.querySelector(`.color-radio[value="${event.color}"]`); 
-                if (r) r.checked = true; 
-            }
-            
-            if (event.assigned_ids) {
-                event.assigned_ids.forEach(id => { 
-                    const cb = document.querySelector(`.server-checkbox[value="${id}"]`); 
-                    if (cb) cb.checked = true; 
-                });
-            }
-
-            // Move checked servers to top
+            if (event.color) { const r = document.querySelector(`.color-radio[value="${event.color}"]`); if (r) r.checked = true; }
+            if (event.assigned_ids) { event.assigned_ids.forEach(id => { const cb = document.querySelector(`.server-checkbox[value="${id}"]`); if (cb) cb.checked = true; }); }
             sortServers();
-
             document.getElementById('deleteBtnContainer').classList.remove('hidden');
             document.getElementById('deleteLink').onclick = () => showConfirm('Delete this schedule?', 'Delete Schedule', function() {
                 document.getElementById('deleteScheduleId').value = event.id;
                 document.getElementById('singleDeleteForm').submit();
             });
-
-            // Check if past or if user is Superadmin
             const eventDateTime = new Date(`${event.mass_date} ${event.mass_time}`);
             const isPast = eventDateTime < new Date();
             const isSuperadmin = <?= json_encode($_SESSION['role'] === 'Superadmin') ?>;
-
             if (!isPast && !isSuperadmin && currentServerId && event.assigned_ids && !event.assigned_ids.includes(parseInt(currentServerId))) {
                 joinBtn.classList.remove('hidden');
                 document.getElementById('selfAssignId').value = event.id;
@@ -836,43 +581,22 @@
         }
     }
 
-    function selfAssign() {
-        document.getElementById('selfAssignForm').submit();
-    }
-
+    function selfAssign() { document.getElementById('selfAssignForm').submit(); }
     function closeModal() { modal.classList.add('opacity-0'); modalContent.classList.add('scale-95'); setTimeout(() => modal.classList.add('hidden'), 300); }
     function changeMonth(d) { currentDate.setMonth(currentDate.getMonth() + d); renderCalendar(); }
     
-    // Drag and Drop Logic
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
     const fileInfo = document.getElementById('fileInfo');
     const fileNameDisplay = document.getElementById('fileName');
     const submitBtn = document.getElementById('submitImport');
-
-    dropZone.addEventListener('click', () => fileInput.click());
-
-    dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.classList.add('border-primary-400', 'bg-primary-50');
-    });
-
-    ['dragleave', 'drop'].forEach(event => {
-        dropZone.addEventListener(event, () => {
-            dropZone.classList.remove('border-primary-400', 'bg-primary-50');
-        });
-    });
-
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        if (e.dataTransfer.files.length) {
-            fileInput.files = e.dataTransfer.files;
-            handleFileSelect();
-        }
-    });
-
-    fileInput.addEventListener('change', handleFileSelect);
-
+    if(dropZone) {
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-primary-400', 'bg-primary-50'); });
+        ['dragleave', 'drop'].forEach(event => { dropZone.addEventListener(event, () => { dropZone.classList.remove('border-primary-400', 'bg-primary-50'); }); });
+        dropZone.addEventListener('drop', (e) => { e.preventDefault(); if (e.dataTransfer.files.length) { fileInput.files = e.dataTransfer.files; handleFileSelect(); } });
+        fileInput.addEventListener('change', handleFileSelect);
+    }
     function handleFileSelect() {
         if (fileInput.files.length) {
             fileNameDisplay.textContent = fileInput.files[0].name;

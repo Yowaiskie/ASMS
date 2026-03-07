@@ -86,10 +86,6 @@ class ScheduleController extends Controller {
                         break;
                     }
                 }
-
-                $assignments = $this->scheduleRepo->getAssignments($s->id);
-                $s->assigned_servers = $assignments;
-                $s->assigned_ids = array_map(function($a) { return (int)$a->id; }, $assignments);
             }
 
             // Get Current Admin's Server ID
@@ -106,7 +102,8 @@ class ScheduleController extends Controller {
                 'servers' => $servers,
                 'activityTypes' => $activityTypes,
                 'currentServerId' => $currentServerId,
-                'policy_schedule_duration' => $systemRepo->get('policy_schedule_duration', 1)
+                'policy_schedule_start_date' => $systemRepo->get('policy_schedule_start_date', date('Y-m-01')),
+                'policy_schedule_end_date' => $systemRepo->get('policy_schedule_end_date', date('Y-m-t', strtotime('+2 months')))
             ];
             
             $this->view('schedules/index', $data);
