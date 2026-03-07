@@ -219,7 +219,7 @@
                 <?php foreach($ranks as $rank): ?>
                     <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
                         <span class="text-sm font-bold text-slate-700 uppercase tracking-widest"><?= h($rank->name) ?></span>
-                        <a href="<?= URLROOT ?>/settings/rank/delete/<?= $rank->id ?>" onclick="return confirm('Delete?')" class="text-red-400"><i class="ph-bold ph-trash text-lg"></i></a>
+                        <button type="button" onclick="showConfirm('Delete this rank?', 'Confirm Delete', () => window.location.href='<?= URLROOT ?>/settings/rank/delete/<?= $rank->id ?>')" class="text-red-400 hover:opacity-80 transition-all"><i class="ph-bold ph-trash text-lg"></i></button>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -244,7 +244,7 @@
                 <?php foreach($categories as $cat): ?>
                     <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
                         <span class="text-sm font-bold text-slate-700"><?= h($cat->name) ?></span>
-                        <a href="<?= URLROOT ?>/settings/category/delete/<?= $cat->id ?>" onclick="return confirm('Delete?')" class="text-red-400"><i class="ph-bold ph-trash text-lg"></i></a>
+                        <button type="button" onclick="showConfirm('Delete this category?', 'Confirm Delete', () => window.location.href='<?= URLROOT ?>/settings/category/delete/<?= $cat->id ?>')" class="text-red-400 hover:opacity-80 transition-all"><i class="ph-bold ph-trash text-lg"></i></button>
                     </div>
                 <?php endforeach; ?>
             </div>

@@ -377,7 +377,7 @@
         const endDateInput = document.getElementById('end_date');
         
         if (!startDateInput.value) {
-            alert('Please select a start date first.');
+            showAlert('Please select a start date first.');
             return;
         }
 

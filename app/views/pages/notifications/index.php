@@ -27,9 +27,10 @@
     </div>
 
     <?php if ($personalCount > 0): ?>
-    <form action="<?= URLROOT ?>/notifications/mark-all-read" method="POST" onsubmit="return confirm('Mark all notifications as read?')">
+    <form id="markAllReadForm" action="<?= URLROOT ?>/notifications/mark-all-read" method="POST">
         <?php csrf_field(); ?>
-        <button type="submit" class="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-50 hover:text-primary hover:border-primary/30 transition-all shadow-sm">
+        <button type="button" onclick="showConfirm('Mark all notifications as read?', 'Confirm Action', () => document.getElementById('markAllReadForm').submit())" 
+                class="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-50 hover:text-primary hover:border-primary/30 transition-all shadow-sm">
             <i class="ph-bold ph-checks text-base"></i>
             Mark all as Read
         </button>
