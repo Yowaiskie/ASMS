@@ -3,8 +3,8 @@
     <p class="text-slate-500 text-sm mt-1 font-medium">Your central hub for updates, announcements, and personal alerts.</p>
 </div>
 
-<!-- Segmented Control Tabs -->
-<div class="mb-8 overflow-x-auto pb-2 custom-scrollbar">
+<!-- Segmented Control Tabs & Actions -->
+<div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
     <div class="inline-flex bg-slate-100/80 p-1.5 rounded-2xl gap-1 min-w-max">
         <button onclick="filterUpdates('all')" id="tab-all" class="relative px-6 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 tab-btn text-white bg-primary shadow-sm">
             <span class="relative z-10">All Updates</span>
@@ -20,11 +20,21 @@
                 <i class="ph-bold ph-bell-ringing text-sm"></i>
                 Personal Alerts
                 <?php if ($personalCount > 0): ?>
-                    <span class="bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-md ml-1 animate-pulse"><?= $personalCount ?> new</span>
+                    <span id="tab-badge-personal" class="bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-md ml-1 animate-pulse"><?= $personalCount ?> new</span>
                 <?php endif; ?>
             </span>
         </button>
     </div>
+
+    <?php if ($personalCount > 0): ?>
+    <form action="<?= URLROOT ?>/notifications/mark-all-read" method="POST" onsubmit="return confirm('Mark all notifications as read?')">
+        <?php csrf_field(); ?>
+        <button type="submit" class="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-50 hover:text-primary hover:border-primary/30 transition-all shadow-sm">
+            <i class="ph-bold ph-checks text-base"></i>
+            Mark all as Read
+        </button>
+    </form>
+    <?php endif; ?>
 </div>
 
 <div class="max-w-4xl space-y-4 pb-20">
@@ -191,7 +201,7 @@
                 if (btn) btn.remove();
                 
                 // Update badge count in tab if exists
-                const badge = document.querySelector('#tab-personal span.bg-red-500');
+                const badge = document.getElementById('tab-badge-personal');
                 if(badge) {
                     let count = parseInt(badge.innerText);
                     if(count > 1) {
@@ -200,6 +210,23 @@
                         badge.remove();
                     }
                 }
+
+                // Update Sidebar and Mobile Badges
+                updateGlobalBadges(-1);
+            }
+        });
+    }
+
+    function updateGlobalBadges(diff) {
+        // This targets the red dots/numbers in the sidebar
+        const sidebarBadges = document.querySelectorAll('.unread-badge-count');
+        sidebarBadges.forEach(b => {
+            let current = parseInt(b.innerText) || 0;
+            let newVal = current + diff;
+            if(newVal > 0) {
+                b.innerText = newVal;
+            } else {
+                b.classList.add('hidden');
             }
         });
     }

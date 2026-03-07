@@ -269,7 +269,7 @@ $nav_items = [
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><?= $item['icon'] ?></svg>
                                             <span class="font-bold text-[11px] flex-1"><?= $item['label'] ?></span>
                                             <?php if (isset($item['badge']) && $item['badge'] > 0): ?>
-                                                <span class="bg-red-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full"><?= $item['badge'] ?></span>
+                                                <span class="bg-red-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full unread-badge-count"><?= $item['badge'] ?></span>
                                             <?php endif; ?>
                                         </a>
                                     <?php endforeach; ?>

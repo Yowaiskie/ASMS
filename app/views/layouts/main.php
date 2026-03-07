@@ -172,44 +172,13 @@
             </div>
             
             <div class="flex items-center gap-3">
-                <!-- Mobile Notification Bell -->
-                <div class="relative">
-                    <button onclick="toggleNotifications('mobile')" class="p-2 text-slate-400 hover:text-primary transition-colors relative">
-                        <i class="ph-bold ph-bell text-2xl"></i>
-                        <span id="notif-badge-mobile" class="hidden absolute top-1.5 right-1.5 w-4 h-4 bg-primary text-white text-[10px] font-black flex items-center justify-center rounded-full border-2 border-white animate-bounce">0</span>
-                    </button>
-                </div>
+                <!-- Mobile Menu Button Only -->
             </div>
         </header>
 
         <!-- Desktop Header (Internal Pages) -->
         <header class="hidden md:flex h-16 bg-white/80 backdrop-blur-md border-b border-slate-100 items-center justify-end px-8 shrink-0 z-40 sticky top-0">
             <div class="flex items-center gap-4">
-                <!-- Notification Bell -->
-                <div class="relative" id="notif-dropdown-container">
-                    <button onclick="toggleNotifications('desktop')" class="w-10 h-10 bg-slate-50 text-slate-400 hover:bg-primary-50 hover:text-primary rounded-xl flex items-center justify-center transition-all relative group">
-                        <i class="ph-bold ph-bell text-xl group-hover:animate-swing"></i>
-                        <span id="notif-badge-desktop" class="hidden absolute -top-1 -right-1 w-5 h-5 bg-primary text-white text-[10px] font-black flex items-center justify-center rounded-full border-2 border-white animate-bounce">0</span>
-                    </button>
-
-                    <!-- Dropdown -->
-                    <div id="notif-dropdown" class="absolute right-0 mt-3 w-80 bg-white rounded-3xl shadow-2xl border border-slate-100 hidden flex-col overflow-hidden animate-fade-in-up origin-top-right z-50">
-                        <div class="p-4 border-b border-slate-50 flex items-center justify-between">
-                            <h5 class="font-bold text-slate-800">Notifications</h5>
-                            <a href="<?= URLROOT ?>/notifications" class="text-[10px] font-black text-primary uppercase tracking-widest hover:underline">View All</a>
-                        </div>
-                        <div id="notif-items" class="max-h-96 overflow-y-auto custom-scrollbar">
-                            <!-- Items populated via JS -->
-                            <div class="p-8 text-center">
-                                <i class="ph-bold ph-bell-slash text-3xl text-slate-200 mb-2"></i>
-                                <p class="text-xs text-slate-400 font-medium">No new notifications</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="h-8 w-px bg-slate-100 mx-2"></div>
-
                 <div class="flex items-center gap-3 px-3 py-1.5 bg-slate-50 rounded-2xl border border-slate-100">
                     <div class="w-8 h-8 bg-primary/10 text-primary rounded-xl flex items-center justify-center font-bold text-xs uppercase">
                         <?= substr($_SESSION['username'] ?? 'U', 0, 1) ?>
