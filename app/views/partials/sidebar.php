@@ -167,7 +167,7 @@ $nav_items = [
                 <img src="<?= URLROOT ?>/images/logo.png" alt="Logo" class="w-full h-full object-contain">
             </div>
             <div>
-                <h1 class="font-bold text-slate-900 leading-tight text-sm"><?= h($parish_name) ?></h1>
+                <h1 class="font-bold text-slate-900 leading-tight text-sm tracking-tight"><?= h($system_name ?? 'Altar Servers') ?></h1>
                 <p class="text-[9px] text-slate-400 font-medium uppercase tracking-wide">Management System</p>
             </div>
         </div>

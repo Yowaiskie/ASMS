@@ -78,7 +78,8 @@ class SettingsController extends Controller {
             'policy_suspension_duration' => $this->systemRepo->get('policy_suspension_duration', 30),
             'policy_late_to_absent_ratio' => $this->systemRepo->get('policy_late_to_absent_ratio', 2),
             'policy_excuse_lead_time' => $this->systemRepo->get('policy_excuse_lead_time', 24),
-            'policy_schedule_duration' => $this->systemRepo->get('policy_schedule_duration', 1),
+            'policy_schedule_start_date' => $this->systemRepo->get('policy_schedule_start_date', date('Y-m-01')),
+            'policy_schedule_end_date' => $this->systemRepo->get('policy_schedule_end_date', date('Y-m-t', strtotime('+2 months'))),
             'policy_auto_remove_on_suspension' => $this->systemRepo->get('policy_auto_remove_on_suspension', 1),
             'policy_suspension_activity_types' => json_decode($this->systemRepo->get('policy_suspension_activity_types', '[]'), true)
         ];
@@ -102,7 +103,8 @@ class SettingsController extends Controller {
                 $this->systemRepo->set('policy_suspension_duration', (int)$_POST['policy_suspension_duration']);
                 $this->systemRepo->set('policy_late_to_absent_ratio', (int)$_POST['policy_late_to_absent_ratio']);
                 $this->systemRepo->set('policy_excuse_lead_time', (int)$_POST['policy_excuse_lead_time']);
-                $this->systemRepo->set('policy_schedule_duration', (int)$_POST['policy_schedule_duration']);
+                $this->systemRepo->set('policy_schedule_start_date', $_POST['policy_schedule_start_date'] ?? date('Y-m-01'));
+                $this->systemRepo->set('policy_schedule_end_date', $_POST['policy_schedule_end_date'] ?? date('Y-m-t'));
                 $this->systemRepo->set('policy_auto_remove_on_suspension', isset($_POST['policy_auto_remove_on_suspension']) ? 1 : 0);
                 
                 $activityTypes = $_POST['policy_activity_types'] ?? [];

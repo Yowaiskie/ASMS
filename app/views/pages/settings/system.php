@@ -35,7 +35,24 @@
         </div>
     </div>
 
-    <!-- 3. Server Ranks Card -->
+    <!-- 3. Scheduling Policies Card -->
+    <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-8 flex flex-col h-full">
+        <div class="w-14 h-14 bg-blue-50 text-primary rounded-2xl flex items-center justify-center text-2xl mb-6">
+            <i class="ph-bold ph-calendar-check"></i>
+        </div>
+        <h3 class="text-xl font-black text-slate-800">Scheduling Policies</h3>
+        <p class="text-slate-500 text-sm mt-2 leading-relaxed flex-1">
+            Define default durations for master plans, recurring assignment propagation, and schedule generation rules.
+        </p>
+        <div class="mt-6 pt-6 border-t border-slate-50 flex items-center justify-between">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate mr-2">
+                Period: <?= date('M j', strtotime($policy_schedule_start_date)) ?> - <?= date('M j, Y', strtotime($policy_schedule_end_date)) ?>
+            </span>
+            <button onclick="openModal('schedulePolicyModal')" class="px-6 py-3 bg-slate-900 text-white rounded-xl font-bold text-xs hover:bg-black transition-all shrink-0">Manage Config</button>
+        </div>
+    </div>
+
+    <!-- 4. Server Ranks Card -->
     <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-8 flex flex-col h-full">
         <div class="w-14 h-14 bg-teal-50 text-teal-500 rounded-2xl flex items-center justify-center text-2xl mb-6">
             <i class="ph-bold ph-medal"></i>
@@ -50,7 +67,7 @@
         </div>
     </div>
 
-    <!-- 4. Announcement Categories Card -->
+    <!-- 5. Announcement Categories Card -->
     <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-8 flex flex-col h-full">
         <div class="w-14 h-14 bg-orange-50 text-orange-500 rounded-2xl flex items-center justify-center text-2xl mb-6">
             <i class="ph-bold ph-megaphone"></i>
@@ -129,11 +146,6 @@
                 <input type="number" name="policy_excuse_lead_time" value="<?= $policy_excuse_lead_time ?>" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-700 focus:outline-none">
             </div>
 
-            <div class="space-y-1.5">
-                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Master Plan Duration (Months)</label>
-                <input type="number" name="policy_schedule_duration" value="<?= $policy_schedule_duration ?>" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-700 focus:outline-none">
-                <p class="text-[9px] text-slate-400 ml-1">Default number of months when applying recurring schedules.</p>
-            </div>
             <div class="space-y-2">
                 <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 text-center block">Monitored Activities</label>
                 <div class="grid grid-cols-2 gap-2 max-h-28 overflow-y-auto custom-scrollbar p-1">
@@ -153,6 +165,44 @@
                 </label>
             </div>
             <button type="submit" class="w-full bg-primary text-white py-3.5 rounded-xl font-black text-xs shadow-lg shadow-primary/20 active:scale-[0.98] transition-all">Save All Rules</button>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: Scheduling Policy -->
+<div id="schedulePolicyModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+    <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden animate-fade-in-up">
+        <div class="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+            <div>
+                <h3 class="font-black text-slate-800 text-lg">Scheduling Policy</h3>
+                <p class="text-[10px] text-slate-500 font-medium uppercase tracking-tight">Recurring & Master Plan Rules</p>
+            </div>
+            <button onclick="closeModal('schedulePolicyModal')" class="p-2 text-slate-400 hover:text-slate-600 transition-colors"><i class="ph-bold ph-x text-lg"></i></button>
+        </div>
+        <form action="<?= URLROOT ?>/settings/system/update" method="POST" class="p-6 space-y-6">
+            <?php csrf_field(); ?>
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Start Date</label>
+                        <input type="date" name="policy_schedule_start_date" value="<?= h($policy_schedule_start_date) ?>" 
+                               class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">End Date</label>
+                        <input type="date" name="policy_schedule_end_date" value="<?= h($policy_schedule_end_date) ?>" 
+                               class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                    </div>
+                </div>
+                <div class="p-4 bg-primary/5 rounded-2xl border border-primary/10 flex items-start gap-3">
+                    <i class="ph-bold ph-info text-primary mt-0.5"></i>
+                    <p class="text-[10px] text-slate-600 leading-relaxed">
+                        Define the **active period** for the current master plan. Recurring assignments and auto-fill operations will operate within this date range.
+                    </p>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full bg-primary text-white py-4 rounded-2xl font-black text-xs shadow-lg shadow-primary-200 active:scale-[0.98] transition-all">Update Scheduling Rules</button>
         </form>
     </div>
 </div>

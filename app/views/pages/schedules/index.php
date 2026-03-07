@@ -701,7 +701,8 @@
         const endDateHidden = document.getElementById('end_date_hidden');
         const descDiv = document.getElementById('pattern-desc');
         const startDateVal = document.getElementById('mass_date').value;
-        const configMonths = <?= (int)($policy_schedule_duration ?? 1) ?>;
+        const configStartDate = <?= json_encode($policy_schedule_start_date) ?>;
+        const configEndDate = <?= json_encode($policy_schedule_end_date) ?>;
 
         if (checkbox.checked) {
             if (!startDateVal) {
@@ -710,16 +711,21 @@
                 return;
             }
 
+            if (!configEndDate) {
+                showAlert('Master Plan End Date is not set in System Configuration.');
+                checkbox.checked = false;
+                return;
+            }
+
             isRecHidden.value = '1';
             freqHidden.value = 'weekly';
-
-            const date = new Date(startDateVal);
-            date.setMonth(date.getMonth() + configMonths);
-            const endStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-            endDateHidden.value = endStr;
+            endDateHidden.value = configEndDate;
 
             const dayName = new Date(startDateVal).toLocaleDateString('en-US', {weekday: 'long'});
-            descDiv.querySelector('p').innerText = `Syncing to all future ${dayName} slots until ${date.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})}`;
+            const formattedStart = configStartDate ? new Date(configStartDate).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : 'now';
+            const formattedEnd = new Date(configEndDate).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+            
+            descDiv.querySelector('p').innerText = `Syncing to all future ${dayName} slots (Period: ${formattedStart} to ${formattedEnd})`;
             descDiv.classList.remove('hidden');
         } else {
             isRecHidden.value = '';
