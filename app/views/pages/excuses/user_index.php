@@ -1,6 +1,21 @@
 <div class="mb-8 animate-fade-in-up">
     <h2 class="text-2xl font-bold text-slate-800">Excuse Letter</h2>
     <p class="text-slate-500 text-sm mt-1">Submit an excuse for your absence</p>
+
+    <?php 
+        $userObj = (new \App\Repositories\UserRepository())->getById($_SESSION['user_id']);
+        if ($userObj->excuse_override_until && strtotime($userObj->excuse_override_until) > time()): 
+    ?>
+    <div class="mt-4 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-3 animate-pulse">
+        <div class="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-emerald-200">
+            <i class="ph-bold ph-timer text-xl"></i>
+        </div>
+        <div>
+            <p class="text-sm font-bold text-emerald-800">Late Filing Enabled</p>
+            <p class="text-xs text-emerald-600">You can submit an excuse past the deadline until <b><?= date('M d, h:i A', strtotime($userObj->excuse_override_until)) ?></b>.</p>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>
 
 <!-- View Toggle -->

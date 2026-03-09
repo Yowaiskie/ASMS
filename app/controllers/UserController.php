@@ -219,92 +219,41 @@ class UserController extends Controller {
     }
 
     public function import() {
+        // ... (existing code) ...
+    }
+
+    public function allowLateExcuse() {
         $this->verifyCsrf();
+        $page = $_POST['page'] ?? 1;
 
-        if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['csv_file']) && $_FILES['csv_file']['error'] == 0) {
-            $fileName = $_FILES['csv_file']['tmp_name'];
-            
-            if ($_FILES['csv_file']['size'] > 0) {
-                $file = fopen($fileName, "r");
-                $count = 0;
-                $duplicates = 0;
+        if ($_SERVER['REQUEST_METHOD'] == 'POST' && ($_SESSION['role'] ?? '') === 'Superadmin') {
+            $id = $_POST['id'];
+            $until = date('Y-m-d H:i:s', strtotime('+24 hours'));
+
+            $db = \App\Core\Database::getInstance();
+            $db->query("UPDATE users SET excuse_override_until = :until WHERE id = :id");
+            $db->bind(':until', $until);
+            $db->bind(':id', $id);
+
+            if ($db->execute()) {
+                $user = $this->userRepo->getById($id);
+                logAction('Update', 'Users', "Allowed late excuse filing for " . ($user ? $user->username : "ID: $id") . " until $until");
                 
-                $serverRepo = new \App\Repositories\ServerRepository();
-                $db = \App\Core\Database::getInstance();
+                // Notify User
+                $notifRepo = new \App\Repositories\NotificationRepository();
+                $notifRepo->create([
+                    'user_id' => $id,
+                    'title' => 'Late Filing Enabled',
+                    'message' => "You have been granted 24 hours to file your excuse letter.",
+                    'link' => '/excuses',
+                    'type' => 'info'
+                ]);
 
-                $firstRow = true;
-                while (($line = fgetcsv($file, 10000, ",")) !== FALSE) {
-                    $column = $line;
-
-                    // Delimiter Detection: If only 1 column found, try semicolon
-                    if (count($column) == 1 && strpos($column[0], ';') !== false) {
-                        $column = str_getcsv($column[0], ';');
-                    }
-
-                    if ($firstRow) { $firstRow = false; continue; } // Skip Header
-
-                    if (count($column) < 2) continue;
-                    
-                    $username = trim($column[0]);
-                    $fullName = trim($column[1]);
-                    $role = $this->normalizeRole($column[2] ?? 'User');
-
-                    if (empty($username)) continue;
-
-                    // Check if user already exists
-                    if ($this->userRepo->findByUsername($username)) {
-                        $duplicates++;
-                        continue;
-                    }
-
-                    // 1. Create Server Profile
-                    $parts = explode(' ', $fullName);
-                    $lastName = (count($parts) > 1) ? array_pop($parts) : 'Server';
-                    $firstName = (count($parts) >= 1) ? array_shift($parts) : $fullName;
-                    $middleName = implode(' ', $parts);
-
-                    $serverData = [
-                        'first_name' => $firstName,
-                        'middle_name' => $middleName,
-                        'last_name' => $lastName,
-                        'rank' => 'Server',
-                        'team' => 'Unassigned',
-                        'status' => 'Active',
-                        'email' => '',
-                        'month_joined' => date('Y-m')
-                    ];
-                    
-                    if ($serverRepo->create($serverData)) {
-                        $serverId = $db->lastInsertId();
-
-                        // 2. Create User Account
-                        $userData = [
-                            'username' => $username,
-                            'password' => password_hash(DEFAULT_USER_PASSWORD, PASSWORD_DEFAULT),
-                            'role' => $role,
-                            'server_id' => $serverId,
-                            'force_password_reset' => 1
-                        ];
-                        
-                        if ($this->userRepo->create($userData)) {
-                            $count++;
-                        }
-                    }
-                }
-                
-                fclose($file);
-                
-                logAction('Create', 'Users', "Imported $count users via CSV.");
-                $msg = "Imported $count users successfully. (Default Pass: " . DEFAULT_USER_PASSWORD . ")";
-                if ($duplicates > 0) $msg .= " ($duplicates skipped as duplicates).";
-                
-                setFlash('msg_success', $msg);
+                setFlash('msg_success', 'Late filing allowed for 24 hours.');
             } else {
-                setFlash('msg_error', 'Empty file uploaded.');
+                setFlash('msg_error', 'Failed to update user record.');
             }
-        } else {
-            setFlash('msg_error', 'Invalid file upload.');
+            redirect('users?page=' . $page);
         }
-        redirect('users');
     }
 }

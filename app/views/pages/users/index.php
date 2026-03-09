@@ -212,6 +212,18 @@
                             <td class="px-6 py-4 text-center">
                                 <div class="flex items-center justify-center gap-2">
                                     <?php if($user->role === 'User'): ?>
+                                        <form action="<?= URLROOT ?>/users/allow-late-excuse" method="POST" id="allow-late-<?= $user->id ?>" class="inline action-btn">
+                                            <?php csrf_field(); ?>
+                                            <input type="hidden" name="id" value="<?= $user->id ?>">
+                                            <input type="hidden" name="page" value="<?= $pagination['page'] ?? 1 ?>">
+                                            <button type="button" 
+                                                    onclick="showConfirm('Allow this user to file excuses past the deadline for the next 24 hours?', 'Allow Late Filing', () => document.getElementById('allow-late-<?= $user->id ?>').submit())"
+                                                    class="p-2 <?= ($user->excuse_override_until && strtotime($user->excuse_override_until) > time()) ? 'text-emerald-500 bg-emerald-50' : 'text-slate-400 hover:bg-slate-50' ?> rounded-lg transition-colors"
+                                                    title="Allow Late Excuse Filing">
+                                                <i class="ph-bold ph-timer text-base"></i>
+                                            </button>
+                                        </form>
+
                                         <a href="<?= URLROOT ?>/settings/toggle_edit/<?= $user->id ?>" 
                                            class="p-2 <?= $user->can_edit_profile ? 'text-amber-500 hover:bg-amber-50' : 'text-slate-400 hover:bg-slate-50' ?> rounded-lg transition-colors action-btn"
                                            title="<?= $user->can_edit_profile ? 'Lock Profile Edit' : 'Allow Profile Edit' ?>">

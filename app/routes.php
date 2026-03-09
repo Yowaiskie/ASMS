@@ -77,6 +77,7 @@ $router->post('/users/store', [UserController::class, 'store']);
 $router->post('/users/update', [UserController::class, 'update']);
 $router->post('/users/delete', [UserController::class, 'delete']);
 $router->post('/users/bulk-delete', [UserController::class, 'bulkDelete']);
+$router->post('/users/allow-late-excuse', [UserController::class, 'allowLateExcuse']);
 $router->post('/users/import', [UserController::class, 'import']);
 
 // Attendance

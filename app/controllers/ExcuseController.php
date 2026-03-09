@@ -189,7 +189,9 @@ class ExcuseController extends Controller {
             $scheduleDateTime = $date . ($time ? ' ' . $time : ' 00:00:00');
             $deadlineTimestamp = strtotime($scheduleDateTime) - ($leadTime * 3600);
             
-            if (time() > $deadlineTimestamp) {
+            $hasOverride = ($user->excuse_override_until && strtotime($user->excuse_override_until) > time());
+
+            if (time() > $deadlineTimestamp && !$hasOverride) {
                 setFlash('msg_error', "Excuses must be filed at least $leadTime hours before the schedule.");
                 redirect('excuses');
                 return;
