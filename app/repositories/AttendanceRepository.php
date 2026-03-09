@@ -94,8 +94,11 @@ class AttendanceRepository implements RepositoryInterface {
                 SELECT s.id, s.first_name, s.middle_name, s.last_name 
                 FROM servers s
                 LEFT JOIN users u ON s.id = u.server_id
-                WHERE s.status IN ('Active', 'Suspended') AND s.deleted_at IS NULL " . (!empty($search) ? "AND (s.first_name LIKE :search OR s.last_name LIKE :search)" : "") . "
-                ORDER BY s.last_name ASC, s.first_name ASC 
+                WHERE s.status IN ('Active', 'Suspended') 
+                AND s.deleted_at IS NULL 
+                AND (u.role IS NULL OR u.role != 'Superadmin')
+                " . (!empty($search) ? "AND (s.first_name LIKE :search OR s.last_name LIKE :search)" : "") . "
+                ORDER BY s.last_name ASC, first_name ASC 
                 LIMIT :limit OFFSET :offset
             ) s
             LEFT JOIN attendance a ON s.id = a.server_id
@@ -118,7 +121,9 @@ class AttendanceRepository implements RepositoryInterface {
         $sql = "SELECT COUNT(*) as count 
                 FROM servers s 
                 LEFT JOIN users u ON s.id = u.server_id
-                WHERE s.status IN ('Active', 'Suspended') AND s.deleted_at IS NULL";
+                WHERE s.status IN ('Active', 'Suspended') 
+                AND s.deleted_at IS NULL
+                AND (u.role IS NULL OR u.role != 'Superadmin')";
         if (!empty($search)) {
             $sql .= " AND (s.first_name LIKE :search OR s.last_name LIKE :search)";
         }
@@ -145,6 +150,7 @@ class AttendanceRepository implements RepositoryInterface {
             WHERE MONTH(sch.mass_date) = :month 
             AND YEAR(sch.mass_date) = :year
             AND s.status = 'Active' AND s.deleted_at IS NULL
+            AND (u.role IS NULL OR u.role != 'Superadmin')
             ORDER BY s.last_name ASC, s.first_name ASC, sch.mass_date ASC
         ");
         $this->db->bind(':month', $month);

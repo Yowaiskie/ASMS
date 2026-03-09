@@ -90,7 +90,7 @@ class AttendanceController extends Controller {
                     $attendanceList[$sid] = [
                         'id' => $sid,
                         'name' => $row->name,
-                        'mass' => null,
+                        'masses' => [], // Changed to array to support multiple
                         'meeting' => null,
                         'others' => []
                     ];
@@ -101,9 +101,12 @@ class AttendanceController extends Controller {
                     if (stripos($type, 'Meeting') !== false) {
                         $attendanceList[$sid]['meeting'] = $row;
                     } else {
-                        if ($attendanceList[$sid]['mass'] === null) {
-                            $attendanceList[$sid]['mass'] = $row;
+                        // Avoid duplicates in the list if the same record appears twice
+                        $exists = false;
+                        foreach($attendanceList[$sid]['masses'] as $m) {
+                            if ($m->attendance_id == $row->attendance_id) { $exists = true; break; }
                         }
+                        if (!$exists) $attendanceList[$sid]['masses'][] = $row;
                     }
                 }
             }
@@ -128,6 +131,7 @@ class AttendanceController extends Controller {
                 'pageTitle' => 'Attendance Management',
                 'title' => 'Attendance | ASMS',
                 'attendanceList' => $attendanceList,
+                'dailySchedules' => $dailySchedules,
                 'date' => $date,
                 'search' => $search,
                 'pagination' => [

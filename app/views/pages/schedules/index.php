@@ -18,6 +18,13 @@
             Import
         </button>
         
+        <?php if($_SESSION['role'] === 'Admin' || $_SESSION['role'] === 'Superadmin'): ?>
+        <a href="<?= URLROOT ?>/schedules/templates" class="bg-white hover:bg-slate-50 text-indigo-600 border border-slate-200 px-4 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 font-bold text-sm">
+            <i class="ph-bold ph-sparkle text-lg"></i>
+            Master Plan
+        </a>
+        <?php endif; ?>
+
         <button onclick="openModal('add')" class="bg-primary hover:bg-primary-700 text-white px-4 py-2.5 rounded-xl shadow-lg shadow-primary-200 transition-all flex items-center gap-2 font-semibold text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
