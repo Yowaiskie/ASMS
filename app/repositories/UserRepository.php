@@ -83,6 +83,17 @@ class UserRepository implements RepositoryInterface {
         return $this->db->single();
     }
 
+    public function findByEmail($email) {
+        $this->db->query("
+            SELECT u.*, s.email
+            FROM users u
+            JOIN servers s ON u.server_id = s.id
+            WHERE s.email = :email AND u.deleted_at IS NULL
+        ");
+        $this->db->bind(':email', $email);
+        return $this->db->single();
+    }
+
     public function isUsernameTaken($username) {
         $this->db->query("SELECT id FROM users WHERE username = :username LIMIT 1");
         $this->db->bind(':username', $username);

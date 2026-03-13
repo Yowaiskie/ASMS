@@ -18,10 +18,7 @@ function sendEmailNotification($to, $subject, $title, $message, $actionText = 'G
 
     try {
         // Server settings
-        $mail->SMTPDebug = 2; // Enable verbose debug output
-        $mail->Debugoutput = function($str, $level) {
-            error_log("SMTP Debug: $str");
-        };
+        $mail->SMTPDebug = 0; // Disable debug for production
         $mail->isSMTP();
         $mail->Host       = SMTP_HOST;
         $mail->SMTPAuth   = true;
@@ -34,7 +31,8 @@ function sendEmailNotification($to, $subject, $title, $message, $actionText = 'G
         $mail->CharSet = 'UTF-8';
 
         // Recipients
-        $mail->setFrom(SMTP_FROM, SMTP_FROM_NAME);
+        $fromEmail = !empty(SMTP_FROM) ? SMTP_FROM : SMTP_USER;
+        $mail->setFrom($fromEmail, SMTP_FROM_NAME);
         $mail->addAddress($to);
 
         // Attachments (Embed Logo)

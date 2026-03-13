@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | ASMS</title>
+    <title>Reset Password | ASMS</title>
     <link rel="icon" type="image/png" href="<?= URLROOT ?>/images/logo.png">
     
     <!-- CSS -->
@@ -33,7 +33,7 @@
             background-image: 
                 radial-gradient(at 0% 0%, rgba(163, 59, 57, 0.4) 0px, transparent 50%),
                 radial-gradient(at 100% 100%, rgba(0, 89, 156, 0.3) 0px, transparent 50%),
-                url('<?= URLROOT ?>/images/MAS.png'); /* Local MAS.png background */
+                url('<?= URLROOT ?>/images/MAS.png');
             background-size: cover;
             background-position: center;
             padding: 20px;
@@ -86,20 +86,20 @@
                         <img src="<?= URLROOT ?>/images/logo.png" alt="SHJP Logo" class="h-20 w-auto drop-shadow-2xl">
                     </div>
                     <h1 class="text-6xl font-black text-white leading-tight tracking-tighter mb-4">
-                        SERVE WITH <br><span class="text-primary-400">LOVE & JOY.</span>
+                        FINAL <br><span class="text-primary-400">STEP.</span>
                     </h1>
                     <p class="text-white/70 text-lg font-medium leading-relaxed max-w-md">
-                        Join the Sacred Heart of Jesus Parish Altar Servers Ministry and be part of our spiritual community.
+                        Verification successful! Now set your new secure password to regain access to your account.
                     </p>
                 </div>
             </div>
 
-            <!-- Right Side: Login Form -->
+            <!-- Right Side: Form -->
             <div class="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-12">
                 <div class="form-glass w-full">
                     <div class="mb-8">
-                        <h2 class="text-2xl font-black text-white tracking-tight">Login</h2>
-                        <p class="text-white/60 text-sm mt-1">Please enter your server credentials.</p>
+                        <h2 class="text-2xl font-black text-white tracking-tight">New Password</h2>
+                        <p class="text-white/60 text-sm mt-1">Set a strong password for your account.</p>
                     </div>
 
                     <?php if(isset($error)): ?>
@@ -109,61 +109,62 @@
                         </div>
                     <?php endif; ?>
 
-                    <form action="<?= URLROOT ?>/auth/login" method="POST" class="space-y-5">
+                    <form action="<?= URLROOT ?>/auth/update-password" method="POST" class="space-y-5">
                         <?php csrf_field(); ?>
                         
                         <div class="space-y-2">
-                            <label class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em] ml-1">Username</label>
-                            <input type="text" name="username" required 
-                                class="custom-input w-full px-5 py-4 rounded-2xl focus:outline-none text-sm font-bold text-slate-800 placeholder:text-slate-400"
-                                placeholder="Enter your username">
+                            <label class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em] ml-1">New Password</label>
+                            <div class="relative">
+                                <input type="password" id="password" name="password" required autofocus
+                                    class="custom-input w-full px-5 py-4 rounded-2xl focus:outline-none text-sm font-bold text-slate-800 placeholder:text-slate-400"
+                                    placeholder="••••••••">
+                                <button type="button" onclick="togglePassword('password', 'eye-1')" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors">
+                                    <i id="eye-1" class="ph-bold ph-eye text-xl"></i>
+                                </button>
+                            </div>
                         </div>
 
                         <div class="space-y-2">
-                            <div class="flex justify-between items-center px-1">
-                                <label class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">Password</label>
-                                <a href="<?= URLROOT ?>/forgot-password" class="text-[10px] font-bold text-white/40 hover:text-white transition-colors">Forgot password?</a>
-                            </div>
+                            <label class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em] ml-1">Confirm Password</label>
                             <div class="relative">
-                                <input type="password" id="password" name="password" required 
+                                <input type="password" id="confirm_password" name="confirm_password" required 
                                     class="custom-input w-full px-5 py-4 rounded-2xl focus:outline-none text-sm font-bold text-slate-800 placeholder:text-slate-400"
-                                    placeholder="Enter your password">
-                                <button type="button" onclick="togglePassword()" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors">
-                                    <i id="eye-icon" class="ph-bold ph-eye text-xl"></i>
+                                    placeholder="••••••••">
+                                <button type="button" onclick="togglePassword('confirm_password', 'eye-2')" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors">
+                                    <i id="eye-2" class="ph-bold ph-eye text-xl"></i>
                                 </button>
                             </div>
                         </div>
 
                         <div class="pt-2">
                             <button type="submit" class="w-full bg-primary hover:bg-primary-700 text-white font-black py-4 rounded-2xl transition-all shadow-xl shadow-primary/20 transform active:scale-[0.98] uppercase tracking-widest text-xs">
-                                Sign In
+                                Update Password
                             </button>
                         </div>
-                    </form>
 
-                    <!-- Removed Create Account Link -->
+                        <div class="text-center pt-4">
+                            <a href="<?= URLROOT ?>/login" class="text-xs font-bold text-white/30 hover:text-white transition-colors flex items-center justify-center gap-2">
+                                <i class="ph-bold ph-arrow-left"></i>
+                                Back to Login
+                            </a>
+                        </div>
+                    </form>
                 </div>
             </div>
 
         </div>
-
-        <div class="fixed bottom-8 text-center w-full">
-            <p class="text-white/20 text-[10px] font-black uppercase tracking-[0.4em]">
-                SHJP MBS &bull; ASMS &bull; <?= date('Y') ?>
-            </p>
-        </div>
     </div>
 
     <script>
-        function togglePassword() {
-            const passwordInput = document.getElementById('password');
-            const eyeIcon = document.getElementById('eye-icon');
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                eyeIcon.classList.replace('ph-eye', 'ph-eye-closed');
+        function togglePassword(inputId, eyeId) {
+            const input = document.getElementById(inputId);
+            const eye = document.getElementById(eyeId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                eye.classList.replace('ph-eye', 'ph-eye-closed');
             } else {
-                passwordInput.type = 'password';
-                eyeIcon.classList.replace('ph-eye-closed', 'ph-eye');
+                input.type = 'password';
+                eye.classList.replace('ph-eye-closed', 'ph-eye');
             }
         }
     </script>

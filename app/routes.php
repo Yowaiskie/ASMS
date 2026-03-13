@@ -27,6 +27,7 @@ use App\Controllers\Api\ArchiveController as ApiArchiveController;
 use App\Controllers\Api\TrainingController as ApiTrainingController;
 
 use App\Controllers\NotificationController;
+use App\Controllers\PasswordResetController;
 
 // Auth Routes
 $router->get('/login', [AuthController::class, 'login']);
@@ -35,6 +36,15 @@ $router->post('/auth/login', [AuthController::class, 'authenticate']);
 $router->get('/register', [AuthController::class, 'register']);
 $router->post('/auth/register', [AuthController::class, 'store']);
 $router->get('/logout', [AuthController::class, 'logout']);
+
+// Forgot Password Routes
+$router->get('/forgot-password', [PasswordResetController::class, 'forgotPassword']);
+$router->post('/auth/send-otp', [PasswordResetController::class, 'sendOtp']);
+$router->get('/verify-otp', [PasswordResetController::class, 'verifyOtpForm']);
+$router->post('/auth/verify-otp', [PasswordResetController::class, 'verifyOtp']);
+$router->get('/reset-password', [PasswordResetController::class, 'resetPasswordForm']);
+$router->post('/auth/update-password', [PasswordResetController::class, 'updatePassword']);
+$router->get('/reset-success', [PasswordResetController::class, 'resetSuccess']);
 
 // Protected Routes
 $router->get('/', [DashboardController::class, 'index']);

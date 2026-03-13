@@ -28,6 +28,9 @@ define('URLROOT', $urlRoot);
 
 define('SITENAME', 'ASMS');
 
+// Set Timezone
+date_default_timezone_set('Asia/Manila');
+
 // SMTP Config
 define('SMTP_HOST', $_ENV['SMTP_HOST'] ?? 'smtp.gmail.com');
 define('SMTP_PORT', $_ENV['SMTP_PORT'] ?? 587);
