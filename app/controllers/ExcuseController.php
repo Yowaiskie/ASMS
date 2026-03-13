@@ -178,6 +178,11 @@ class ExcuseController extends Controller {
             $date = !empty($_POST['date']) ? $_POST['date'] : ($_POST['manual_date'] ?? null);
             $time = !empty($_POST['time']) ? $_POST['time'] : ($_POST['manual_time'] ?? null);
 
+            // Clean inputs
+            $type = $type ? trim($type) : null;
+            $date = $date ? trim($date) : null;
+            $time = $time ? trim($time) : null;
+
             if (empty($type) || empty($date)) {
                 setFlash('msg_error', 'Activity type and date are required.');
                 redirect('excuses');
@@ -206,6 +211,17 @@ class ExcuseController extends Controller {
                 'reason' => trim($_POST['reason']),
                 'image_path' => null
             ];
+
+            // Check if already filed for this activity
+            $this->db->query("SELECT id FROM excuses WHERE server_id = :sid AND type = :type AND absence_date = :date");
+            $this->db->bind(':sid', $data['server_id']);
+            $this->db->bind(':type', $data['type']);
+            $this->db->bind(':date', $data['absence_date']);
+            if ($this->db->single()) {
+                setFlash('msg_error', 'You have already filed an excuse for this activity.');
+                redirect('excuses');
+                return;
+            }
 
             // Handle Image Upload
             if (isset($_FILES['proof_image']) && $_FILES['proof_image']['error'] === UPLOAD_ERR_OK) {

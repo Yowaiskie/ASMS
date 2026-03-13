@@ -128,4 +128,25 @@ class Controller {
             verify_csrf();
         }
     }
+
+    /**
+     * Helper for returning JSON success responses (AJAX)
+     */
+    protected function ok($data = null) {
+        if (ob_get_length()) ob_clean();
+        header('Content-Type: application/json');
+        echo json_encode(['status' => 'success', 'data' => $data]);
+        exit;
+    }
+
+    /**
+     * Helper for returning JSON error responses (AJAX)
+     */
+    protected function error($message, $code = 400) {
+        if (ob_get_length()) ob_clean();
+        http_response_code($code);
+        header('Content-Type: application/json');
+        echo json_encode(['status' => 'error', 'message' => $message]);
+        exit;
+    }
 }

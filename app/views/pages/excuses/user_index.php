@@ -208,18 +208,22 @@
             hType.value = '';
             hDate.value = '';
             hTime.value = '';
-        } else if (val) {
+        } else {
             manualFields.classList.add('hidden');
             iType.required = false;
             iDate.required = false;
             iTime.required = false;
 
-            const parts = val.split('|');
-            hType.value = parts[0];
-            hDate.value = parts[1];
-            hTime.value = parts[2];
-        } else {
-            manualFields.classList.add('hidden');
+            if (val) {
+                const parts = val.split('|');
+                hType.value = parts[0];
+                hDate.value = parts[1];
+                hTime.value = parts[2];
+            } else {
+                hType.value = '';
+                hDate.value = '';
+                hTime.value = '';
+            }
         }
     }
 

@@ -16,7 +16,7 @@ class ExcuseRepository implements RepositoryInterface {
         // Admin use mainly
         $this->db->query("SELECT e.*, CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) as server_name 
                           FROM excuses e 
-                          LEFT JOIN servers s ON e.server_id = s.id 
+                          INNER JOIN servers s ON e.server_id = s.id 
                           WHERE s.deleted_at IS NULL
                           ORDER BY e.created_at DESC 
                           LIMIT :limit OFFSET :offset");
@@ -26,7 +26,7 @@ class ExcuseRepository implements RepositoryInterface {
     }
 
     public function countAll() {
-        $this->db->query("SELECT COUNT(*) as count FROM excuses e LEFT JOIN servers s ON e.server_id = s.id WHERE s.deleted_at IS NULL");
+        $this->db->query("SELECT COUNT(*) as count FROM excuses e INNER JOIN servers s ON e.server_id = s.id WHERE s.deleted_at IS NULL");
         $row = $this->db->single();
         return $row ? (int)$row->count : 0;
     }
@@ -86,9 +86,16 @@ class ExcuseRepository implements RepositoryInterface {
     }
 
     public function markAsSeen($userId) {
-        $this->db->query("UPDATE users SET last_viewed_excuses = NOW() WHERE id = :id");
+        $this->db->query("SELECT role FROM users WHERE id = :id");
         $this->db->bind(':id', $userId);
-        return $this->db->execute();
+        $user = $this->db->single();
+        
+        if ($user && ($user->role === 'Admin' || $user->role === 'Superadmin')) {
+            $this->db->query("UPDATE users SET last_viewed_excuses = NOW() WHERE id = :id");
+            $this->db->bind(':id', $userId);
+            return $this->db->execute();
+        }
+        return false;
     }
 
     public function deleteAll() {
