@@ -310,4 +310,13 @@ class UserRepository implements RepositoryInterface {
         ");
         return $this->db->resultSet();
     }
+
+    /**
+     * Update the timestamp when the user last checked notifications
+     */
+    public function updateLastCheckedNotifications($userId) {
+        $this->db->query("UPDATE users SET last_checked_notifications = NOW() WHERE id = :id");
+        $this->db->bind(':id', $userId);
+        return $this->db->execute();
+    }
 }

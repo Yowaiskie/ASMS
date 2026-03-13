@@ -15,12 +15,13 @@ try {
     // 1. Unread Activity Count (Announcements + Notifications)
     $totalUnread = 0;
     if (isset($_SESSION['user_id'])) {
-        // Announcements
-        $db->query("SELECT last_read_announcements FROM users WHERE id = :id");
+        // Fetch User Meta
+        $db->query("SELECT last_read_announcements, last_checked_notifications FROM users WHERE id = :id");
         $db->bind(':id', $_SESSION['user_id']);
-        $res = $db->single();
-        $lastRead = $res ? $res->last_read_announcements : null;
+        $userMeta = $db->single();
         
+        // Announcements
+        $lastRead = $userMeta ? $userMeta->last_read_announcements : null;
         if (!$lastRead) {
              $db->query("SELECT COUNT(*) as count FROM announcements");
         } else {
@@ -30,7 +31,13 @@ try {
         $totalUnread += $db->single()->count;
 
         // Notifications
-        $db->query("SELECT COUNT(*) as count FROM notifications WHERE user_id = :id AND is_read = 0");
+        $lastChecked = $userMeta ? $userMeta->last_checked_notifications : null;
+        if (!$lastChecked) {
+            $db->query("SELECT COUNT(*) as count FROM notifications WHERE user_id = :id AND is_read = 0");
+        } else {
+            $db->query("SELECT COUNT(*) as count FROM notifications WHERE user_id = :id AND is_read = 0 AND created_at > :last_checked");
+            $db->bind(':last_checked', $lastChecked);
+        }
         $db->bind(':id', $_SESSION['user_id']);
         $totalUnread += $db->single()->count;
     }

@@ -28,11 +28,18 @@ class NotificationRepository {
     /**
      * Get unread notifications for a user
      */
-    public function getUnread($userId, $limit = 5) {
-        $this->db->query("SELECT * FROM notifications 
-                          WHERE user_id = :user_id AND is_read = 0 
-                          ORDER BY created_at DESC LIMIT :limit");
+    public function getUnread($userId, $limit = 5, $lastChecked = null) {
+        $sql = "SELECT * FROM notifications WHERE user_id = :user_id AND is_read = 0";
+        if ($lastChecked) {
+            $sql .= " AND created_at > :last_checked";
+        }
+        $sql .= " ORDER BY created_at DESC LIMIT :limit";
+        
+        $this->db->query($sql);
         $this->db->bind(':user_id', $userId);
+        if ($lastChecked) {
+            $this->db->bind(':last_checked', $lastChecked);
+        }
         $this->db->bind(':limit', $limit);
         return $this->db->resultSet();
     }
@@ -53,11 +60,20 @@ class NotificationRepository {
     /**
      * Count unread notifications
      */
-    public function countUnread($userId) {
-        $this->db->query("SELECT COUNT(*) as count FROM notifications 
-                          WHERE user_id = :user_id AND is_read = 0");
+    public function countUnread($userId, $lastChecked = null) {
+        $sql = "SELECT COUNT(*) as count FROM notifications WHERE user_id = :user_id AND is_read = 0";
+        if ($lastChecked) {
+            $sql .= " AND created_at > :last_checked";
+        }
+        
+        $this->db->query($sql);
         $this->db->bind(':user_id', $userId);
-        return $this->db->single()->count;
+        if ($lastChecked) {
+            $this->db->bind(':last_checked', $lastChecked);
+        }
+        
+        $res = $this->db->single();
+        return $res ? $res->count : 0;
     }
 
     /**

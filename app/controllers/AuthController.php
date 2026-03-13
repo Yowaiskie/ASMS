@@ -107,9 +107,15 @@ class AuthController extends Controller {
 
     // Logout
     public function logout() {
-        if (isset($_SESSION['username'])) {
-            logAction('Logout', 'Auth', 'User ' . $_SESSION['username'] . ' logged out.');
+        if (isset($_SESSION['user_id'])) {
+            if (isset($_SESSION['username'])) {
+                logAction('Logout', 'Auth', 'User ' . $_SESSION['username'] . ' logged out.');
+            }
+            
+            // Mark notifications as checked upon logout so badge clears on next login
+            $this->userRepo->updateLastCheckedNotifications($_SESSION['user_id']);
         }
+
         unset($_SESSION['user_id']);
         unset($_SESSION['username']);
         unset($_SESSION['role']);

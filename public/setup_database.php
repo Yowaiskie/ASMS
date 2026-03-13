@@ -74,6 +74,7 @@ try {
     addColumn($pdo, 'users', 'has_edited_profile', "TINYINT(1) DEFAULT 0");
     addColumn($pdo, 'users', 'force_password_reset', "TINYINT(1) DEFAULT 1");
     addColumn($pdo, 'users', 'last_read_announcements', "TIMESTAMP NULL");
+    addColumn($pdo, 'users', 'last_checked_notifications', "TIMESTAMP NULL");
     addColumn($pdo, 'users', 'last_viewed_excuses', "TIMESTAMP NULL");
     addColumn($pdo, 'users', 'excuse_override_until', "TIMESTAMP NULL");
     addColumn($pdo, 'users', 'server_id', "INT");

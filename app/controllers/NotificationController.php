@@ -18,6 +18,9 @@ class NotificationController extends Controller {
      */
     public function index() {
         $userId = $_SESSION['user_id'];
+        $userRepo = new \App\Repositories\UserRepository();
+        $user = $userRepo->getById($userId);
+        $lastChecked = $user ? $user->last_checked_notifications : null;
         
         // 1. Fetch Personal Notifications
         $notifications = $this->notificationRepo->getAllByUser($userId, 50, 0);
@@ -44,7 +47,7 @@ class NotificationController extends Controller {
             'pageTitle' => 'Activity Center',
             'title' => 'Updates | ASMS',
             'updates' => $merged,
-            'personalCount' => $this->notificationRepo->countUnread($userId)
+            'personalCount' => $this->notificationRepo->countUnread($userId, $lastChecked)
         ]);
     }
 
@@ -83,8 +86,12 @@ class NotificationController extends Controller {
      */
     public function getLatest() {
         $userId = $_SESSION['user_id'];
-        $unreadCount = $this->notificationRepo->countUnread($userId);
-        $latest = $this->notificationRepo->getUnread($userId, 5);
+        $userRepo = new \App\Repositories\UserRepository();
+        $user = $userRepo->getById($userId);
+        $lastChecked = $user ? $user->last_checked_notifications : null;
+
+        $unreadCount = $this->notificationRepo->countUnread($userId, $lastChecked);
+        $latest = $this->notificationRepo->getUnread($userId, 5, $lastChecked);
 
         $this->ok([
             'count' => $unreadCount,
