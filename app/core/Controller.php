@@ -71,6 +71,13 @@ class Controller {
         }
     }
 
+    protected function requirePermission($module, $action = 'view') {
+        $this->requireLogin();
+        if (!hasPermission($module, $action)) {
+            $this->forbidden();
+        }
+    }
+
     protected function checkForceReset() {
         // No longer strictly redirecting. 
         // Notification will be handled via views/banners.

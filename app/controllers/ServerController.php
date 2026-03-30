@@ -9,12 +9,7 @@ class ServerController extends Controller {
     private $serverRepo;
 
     public function __construct() {
-        $this->requireLogin();
-        // Restrict to Admin and Superadmin
-        $role = $_SESSION['role'] ?? 'User';
-        if ($role !== 'Admin' && $role !== 'Superadmin') {
-            $this->forbidden();
-        }
+        $this->requirePermission('Server Profiles', 'view');
         $this->serverRepo = new ServerRepository();
     }
 

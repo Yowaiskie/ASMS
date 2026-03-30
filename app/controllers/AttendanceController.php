@@ -17,7 +17,7 @@ class AttendanceController extends Controller {
     private $db;
 
     public function __construct() {
-        $this->requireLogin();
+        $this->requirePermission('Attendance', 'view');
         $this->attendanceRepo = new AttendanceRepository();
         $this->serverRepo = new ServerRepository();
         $this->scheduleRepo = new ScheduleRepository();

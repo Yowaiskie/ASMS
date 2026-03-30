@@ -3,15 +3,19 @@
 // Load composer autoloader and .env
 require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 if (file_exists(dirname(__DIR__, 2) . '/.env')) {
     $dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__, 2));
     $dotenv->load();
 }
 
-define('DB_HOST', $_ENV['DB_HOST'] ?? 'localhost');
-define('DB_USER', $_ENV['DB_USER'] ?? 'root');
-define('DB_PASS', $_ENV['DB_PASS'] ?? '');
-define('DB_NAME', $_ENV['DB_NAME'] ?? 'asms_db');
+define('DB_HOST', $_ENV['DB_HOST'] ?? 'sql310.infinityfree.com');
+define('DB_USER', $_ENV['DB_USER'] ?? 'if0_41112521');
+define('DB_PASS', $_ENV['DB_PASS'] ?? 'AMFKISAsg8n');
+define('DB_NAME', $_ENV['DB_NAME'] ?? 'if0_41112521_asms_db');
 
 define('DEFAULT_USER_PASSWORD', $_ENV['DEFAULT_USER_PASSWORD'] ?? '12345');
 

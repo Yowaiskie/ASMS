@@ -5,16 +5,30 @@
 require_once __DIR__ . '/../app/config/config.php';
 
 try {
-    // Connect to MySQL server
-    $pdo = new PDO("mysql:host=" . DB_HOST, DB_USER, DB_PASS);
+    // Try to connect directly to the database first
+    $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME;
+    $pdo = new PDO($dsn, DB_USER, DB_PASS);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-    // Create Database if not exists
-    $pdo->exec("CREATE DATABASE IF NOT EXISTS " . DB_NAME);
-    echo "Database '" . DB_NAME . "' checked/created successfully.<br>";
-
-    // Connect to the specific database
-    $pdo->exec("USE " . DB_NAME);
+    echo "Connected to database '" . DB_NAME . "' successfully.<br>";
+} catch (PDOException $e) {
+    // If direct connection fails, try connecting to host only (maybe DB doesn't exist yet)
+    try {
+        $pdo = new PDO("mysql:host=" . DB_HOST, DB_USER, DB_PASS);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        
+        // Try creating the database (this might fail on InfinityFree, which is okay if it exists)
+        try {
+            $pdo->exec("CREATE DATABASE IF NOT EXISTS " . DB_NAME);
+            echo "Database '" . DB_NAME . "' checked/created.<br>";
+        } catch (PDOException $dbErr) {
+            echo "Note: Could not create database (likely due to permissions). Please ensure '" . DB_NAME . "' is created in your Hosting Control Panel.<br>";
+        }
+        
+        $pdo->exec("USE " . DB_NAME);
+    } catch (PDOException $finalErr) {
+        die("Fatal Error: Could not connect to MySQL. Check your DB_HOST, DB_USER, and DB_PASS. Error: " . $finalErr->getMessage());
+    }
+}
 
     // Function to safely add a column if it doesn't exist
     function addColumn($pdo, $table, $column, $definition) {

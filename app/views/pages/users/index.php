@@ -5,6 +5,13 @@
     </div>
     
     <div class="flex gap-2">
+        <button type="button" onclick="openRolesModal()" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-5 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 font-bold text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            Manage Roles
+        </button>
+
         <button type="button" onclick="toggleSelectionMode()" id="selectModeBtn" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 p-2.5 rounded-xl shadow-sm transition-all" title="Select Multiple">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -39,8 +46,9 @@
         <div class="w-32">
             <select name="role" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-primary-500 transition-all">
                 <option value="">All Roles</option>
-                <option value="User" <?= ($filters['role'] ?? '') === 'User' ? 'selected' : '' ?>>User</option>
-                <option value="Admin" <?= ($filters['role'] ?? '') === 'Admin' ? 'selected' : '' ?>>Admin</option>
+                <?php foreach($roles as $r): ?>
+                    <option value="<?= h($r->name) ?>" <?= ($filters['role'] ?? '') === $r->name ? 'selected' : '' ?>><?= h($r->name) ?></option>
+                <?php endforeach; ?>
             </select>
         </div>
         <div class="flex gap-2">
@@ -96,9 +104,11 @@
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Role</label>
-                <select name="role" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all">
-                    <option value="User">User</option>
-                    <option value="Admin">Admin</option>
+                <select name="role_id" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all">
+                    <?php foreach($roles as $r): ?>
+                        <?php if($r->name === 'Superadmin' && ($_SESSION['role'] ?? '') !== 'Superadmin') continue; ?>
+                        <option value="<?= $r->id ?>" <?= $r->name === 'User' ? 'selected' : '' ?>><?= h($r->name) ?></option>
+                    <?php endforeach; ?>
                 </select>
             </div>
         </div>
@@ -298,58 +308,99 @@
 
 <!-- Edit User Modal -->
 <div id="editUserModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 transform scale-95 transition-transform duration-300" id="editModalContent">
-        <div class="flex justify-between items-center mb-6">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col transform scale-95 transition-transform duration-300" id="editModalContent">
+        <!-- Sticky Header -->
+        <div class="p-8 border-b border-slate-50 flex justify-between items-center bg-white rounded-t-3xl shrink-0">
             <h3 class="text-xl font-bold text-slate-800">Edit User</h3>
             <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
         </div>
-        <form action="<?= URLROOT ?>/users/update" method="POST" class="space-y-6">
-            <?php csrf_field(); ?>
-            <input type="hidden" name="id" id="editUserId">
-            <input type="hidden" name="page" value="<?= $pagination['page'] ?? 1 ?>">
-            
-            <div class="grid grid-cols-3 gap-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">First Name</label>
-                    <input type="text" name="first_name" id="editFirstName" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Middle Name</label>
-                    <input type="text" name="middle_name" id="editMiddleName" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Last Name</label>
-                    <input type="text" name="last_name" id="editLastName" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl">
-                </div>
-            </div>
 
-            <div>
-                <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Username</label>
-                <input type="text" id="editUsername" disabled class="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-500">
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">New Password (Optional)</label>
-                <div class="relative">
-                    <input type="password" name="password" placeholder="Leave blank to keep current" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl pr-12">
-                    <button type="button" onclick="toggleFieldPassword(this)" class="absolute right-3 top-2.5 text-slate-400 hover:text-primary transition-colors">
-                        <i class="ph ph-eye text-base"></i>
-                    </button>
+        <!-- Scrollable Body -->
+        <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+            <form action="<?= URLROOT ?>/users/update" method="POST" class="space-y-6">
+                <?php csrf_field(); ?>
+                <input type="hidden" name="id" id="editUserId">
+                <input type="hidden" name="page" value="<?= $pagination['page'] ?? 1 ?>">
+                
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">First Name</label>
+                        <input type="text" name="first_name" id="editFirstName" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Middle Name</label>
+                        <input type="text" name="middle_name" id="editMiddleName" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Last Name</label>
+                        <input type="text" name="last_name" id="editLastName" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl">
+                    </div>
                 </div>
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Role</label>
-                <select name="role" id="editUserRole" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl">
-                    <option value="User">User</option>
-                    <option value="Admin">Admin</option>
-                </select>
-            </div>
-            <div class="flex gap-3 pt-2">
-                <button type="submit" class="flex-1 bg-primary hover:bg-primary-700 text-white font-bold py-3.5 rounded-xl shadow-lg">Update User</button>
-                <button type="button" onclick="closeEditModal()" class="px-8 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl">Cancel</button>
-            </div>
-        </form>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Username</label>
+                    <input type="text" id="editUsername" disabled class="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">New Password (Optional)</label>
+                    <div class="relative">
+                        <input type="password" name="password" placeholder="Leave blank to keep current" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl pr-12">
+                        <button type="button" onclick="toggleFieldPassword(this)" class="absolute right-3 top-2.5 text-slate-400 hover:text-primary transition-colors">
+                            <i class="ph ph-eye text-base"></i>
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Role</label>
+                    <select name="role_id" id="editUserRoleId" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl">
+                        <?php foreach($roles as $r): ?>
+                            <?php if($r->name === 'Superadmin' && ($_SESSION['role'] ?? '') !== 'Superadmin') continue; ?>
+                            <option value="<?= $r->id ?>"><?= h($r->name) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <!-- Custom Permissions Section -->
+                <div class="pt-4 border-t border-slate-50">
+                    <label class="flex items-center gap-3 cursor-pointer group mb-5">
+                        <input type="checkbox" name="manage_permissions" id="editManagePermissions" value="1" 
+                               onchange="toggleCustomPermissionsList()"
+                               class="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary/20 transition-all cursor-pointer">
+                        <div class="flex flex-col">
+                            <span class="text-sm font-bold text-slate-700">Manage Custom Permissions</span>
+                            <span class="text-[10px] text-slate-400">Override role-based access for this user</span>
+                        </div>
+                    </label>
+
+                    <!-- Modules Grid -->
+                    <div id="customPermissionsList" class="hidden grid grid-cols-2 gap-2 bg-slate-50/50 rounded-2xl p-3 border border-slate-100 mb-20">
+                        <?php foreach ($groupedPermissions as $module => $perms): 
+                            $permIds = array_map(fn($p) => $p->id, $perms);
+                        ?>
+                            <label class="flex items-center gap-2 cursor-pointer group p-2.5 bg-white rounded-xl border-2 border-slate-200 hover:border-primary transition-all shadow-sm">
+                                <input type="checkbox" 
+                                       data-module="<?= h($module) ?>"
+                                       data-ids="<?= implode(',', $permIds) ?>"
+                                       onchange="syncModulePermissions(this, 'user')"
+                                       class="module-checkbox-user w-5 h-5 rounded border-2 border-slate-400 text-primary focus:ring-primary/20 transition-all cursor-pointer">
+                                <span class="text-[11px] font-bold text-slate-700 group-hover:text-primary transition-colors truncate"><?= h($module) ?></span>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                    
+                    <!-- Hidden container for actual permission IDs (Moved outside grid) -->
+                    <div id="userPermissionsContainer" class="hidden"></div>
+                </div>
+
+                <!-- Sticky Footer with proper spacing -->
+                <div class="flex gap-3 pt-4 sticky bottom-0 bg-white -mx-8 px-8 py-4 border-t border-slate-50 mt-6 shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.05)] rounded-b-3xl">
+                    <button type="submit" class="flex-1 bg-primary hover:bg-primary-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition-all active:scale-[0.98]">Update User</button>
+                    <button type="button" onclick="closeEditModal()" class="px-8 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition-all">Cancel</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -428,13 +479,71 @@
         }
     }
 
+    function toggleCustomPermissionsList() {
+        const list = document.getElementById('customPermissionsList');
+        const checkbox = document.getElementById('editManagePermissions');
+        list.classList.toggle('hidden', !checkbox.checked);
+    }
+
+    /**
+     * Synchronizes module-based checkboxes with hidden permission ID inputs
+     * @param {HTMLElement} el The module checkbox element
+     * @param {string} type 'user' or 'role'
+     */
+    function syncModulePermissions(el, type) {
+        const containerId = type === 'user' ? 'userPermissionsContainer' : 'rolePermissionsContainer';
+        const container = document.getElementById(containerId);
+        const ids = el.getAttribute('data-ids').split(',');
+        const inputName = type === 'user' ? 'user_permissions[]' : 'permissions[]';
+
+        if (el.checked) {
+            // Add hidden inputs for each permission ID in this module
+            ids.forEach(id => {
+                if (!container.querySelector(`input[value="${id}"]`)) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = inputName;
+                    input.value = id;
+                    input.setAttribute('data-module-ref', el.getAttribute('data-module'));
+                    container.appendChild(input);
+                }
+            });
+        } else {
+            // Remove hidden inputs for this module
+            container.querySelectorAll(`input[data-module-ref="${el.getAttribute('data-module')}"]`).forEach(input => {
+                input.remove();
+            });
+        }
+    }
+
     function openEditModal(user) {
         document.getElementById("editUserId").value = user.id;
         document.getElementById("editUsername").value = user.username;
-        document.getElementById("editUserRole").value = user.role;
+        document.getElementById("editUserRoleId").value = user.role_id;
         document.getElementById("editFirstName").value = user.first_name || "";
         document.getElementById("editMiddleName").value = user.middle_name || "";
         document.getElementById("editLastName").value = user.last_name || "";
+        
+        // Handle Custom Permissions
+        // If they have overrides, we check the main toggle
+        const hasCustom = user.custom_permissions && user.custom_permissions.length > 0;
+        const manageCheckbox = document.getElementById('editManagePermissions');
+        manageCheckbox.checked = hasCustom;
+        
+        // Reset Container and Checkboxes
+        const container = document.getElementById('userPermissionsContainer');
+        container.innerHTML = '';
+        
+        document.querySelectorAll('.module-checkbox-user').forEach(cb => {
+            const ids = cb.getAttribute('data-ids').split(',').map(id => parseInt(id));
+            // Show current access (Role + Custom)
+            const isChecked = ids.some(id => user.total_permissions.includes(id));
+            cb.checked = isChecked;
+            if (isChecked) syncModulePermissions(cb, 'user');
+        });
+
+        toggleCustomPermissionsList();
+
         const modal = document.getElementById("editUserModal");
         modal.classList.remove("hidden");
         setTimeout(() => { modal.classList.remove("opacity-0"); document.getElementById("editModalContent").classList.remove("scale-95"); }, 10);
@@ -503,4 +612,204 @@
             icon.classList.add("ph-eye");
         }
     }
+
+    // Role Management Modal Logic
+    const rolesData = <?= json_encode($roles) ?>;
+
+    function openRolesModal() {
+        document.getElementById('rolesModal').classList.remove('hidden');
+        // Select first role by default
+        if (rolesData.length > 0) {
+            selectRoleInModal(rolesData[0].id);
+        }
+    }
+
+    function closeRolesModal() {
+        document.getElementById('rolesModal').classList.add('hidden');
+    }
+
+    function selectRoleInModal(roleId) {
+        const role = rolesData.find(r => r.id == roleId);
+        if (!role) return;
+
+        // Update UI
+        document.querySelectorAll('.role-item').forEach(el => {
+            el.classList.remove('bg-primary/10', 'border-primary/20');
+            el.querySelector('.role-name-text').classList.remove('text-primary');
+        });
+        const activeItem = document.getElementById(`role-item-${roleId}`);
+        activeItem.classList.add('bg-primary/10', 'border-primary/20');
+        activeItem.querySelector('.role-name-text').classList.add('text-primary');
+
+        // Fill Form
+        document.getElementById('modal-edit-role-id').value = role.id;
+        document.getElementById('modal-edit-role-name').value = role.name;
+        document.getElementById('modal-edit-role-description').value = role.description || '';
+
+        // Handle System Roles (Read-only name)
+        const isSystemRole = ['Superadmin', 'Admin', 'User'].includes(role.name);
+        document.getElementById('modal-edit-role-name').readOnly = isSystemRole;
+        
+        // Reset Hidden Container and Module Checkboxes
+        const container = document.getElementById('rolePermissionsContainer');
+        container.innerHTML = '';
+
+        document.querySelectorAll('.module-checkbox-role').forEach(cb => {
+            const ids = cb.getAttribute('data-ids').split(',').map(id => parseInt(id));
+            // Check if ANY of the module's permissions are assigned to this role
+            const isChecked = ids.some(id => role.permissions.includes(id));
+            cb.checked = isChecked;
+            cb.disabled = role.name === 'Superadmin'; // Superadmin is always full access
+            
+            if (isChecked) syncModulePermissions(cb, 'role');
+        });
+
+        // Show/Hide delete button
+        const deleteBtn = document.getElementById('modal-delete-role-btn');
+        if (isSystemRole) {
+            deleteBtn.classList.add('hidden');
+        } else {
+            deleteBtn.classList.remove('hidden');
+            deleteBtn.onclick = () => deleteRoleFromModal(role.id, role.name);
+        }
+    }
+
+    function deleteRoleFromModal(id, name) {
+        showConfirm(`Are you sure you want to delete the role "${name}"? This will affect users assigned to this role.`, 'Delete Role', function() {
+            window.location.href = `<?= URLROOT ?>/settings/roles/delete/${id}`;
+        });
+    }
+
+    function openAddRoleFromModal() {
+        document.getElementById('addRoleModal').classList.remove('hidden');
+    }
 </script>
+
+<!-- Integrated Roles & Permissions Modal -->
+<div id="rolesModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[60] hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-[2.5rem] w-full max-w-5xl h-[85vh] overflow-hidden shadow-2xl flex flex-col animate-in fade-in zoom-in duration-300">
+        <!-- Modal Header -->
+        <div class="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-white">
+            <div>
+                <h3 class="text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                        <i class="ph-bold ph-shield-check text-xl"></i>
+                    </div>
+                    Manage Roles & Permissions
+                </h3>
+                <p class="text-slate-500 text-sm mt-1 ml-13">Configure system access levels and module permissions.</p>
+            </div>
+            <button onclick="closeRolesModal()" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+        </div>
+
+        <div class="flex-1 flex overflow-hidden">
+            <!-- Left Sidebar: Roles List -->
+            <div class="w-72 border-r border-slate-50 bg-slate-50/30 flex flex-col">
+                <div class="p-4 border-b border-slate-50">
+                    <button onclick="openAddRoleFromModal()" class="w-full flex items-center justify-center gap-2 bg-white border border-slate-200 hover:border-primary hover:text-primary text-slate-600 px-4 py-2.5 rounded-xl transition-all font-bold text-xs shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" /></svg>
+                        Create New Role
+                    </button>
+                </div>
+                <div class="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+                    <?php foreach ($roles as $role): ?>
+                        <div onclick="selectRoleInModal(<?= $role->id ?>)" 
+                             id="role-item-<?= $role->id ?>"
+                             class="role-item group p-4 rounded-2xl border border-transparent hover:bg-white hover:border-slate-100 cursor-pointer transition-all">
+                            <div class="flex items-center justify-between">
+                                <span class="role-name-text font-bold text-slate-700 transition-colors"><?= h($role->name) ?></span>
+                                <i class="ph-bold ph-caret-right text-slate-300 group-hover:text-primary transition-colors text-xs"></i>
+                            </div>
+                            <p class="text-[10px] text-slate-400 mt-1 line-clamp-1"><?= count($role->permissions) ?> modules allowed</p>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <!-- Right Content: Permissions Grid -->
+            <div class="flex-1 overflow-y-auto p-8 custom-scrollbar bg-white">
+                <form action="<?= URLROOT ?>/settings/roles/update" method="POST" id="modal-role-form">
+                    <?php csrf_field(); ?>
+                    <input type="hidden" name="id" id="modal-edit-role-id">
+                    
+                    <div class="mb-8 flex items-start justify-between">
+                        <div class="flex-1 max-w-xl">
+                            <input type="text" name="name" id="modal-edit-role-name" 
+                                   class="text-2xl font-bold text-slate-800 border-none p-0 focus:ring-0 w-full bg-transparent" 
+                                   placeholder="Role Name">
+                            <textarea name="description" id="modal-edit-role-description" 
+                                      class="text-sm text-slate-500 border-none p-0 focus:ring-0 w-full mt-2 resize-none bg-transparent" 
+                                      rows="2" placeholder="Description of what this role can do..."></textarea>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" id="modal-delete-role-btn" class="p-2.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all hidden">
+                                <i class="ph-bold ph-trash text-lg"></i>
+                            </button>
+                            <button type="submit" class="bg-primary hover:bg-primary-600 text-white px-6 py-2.5 rounded-xl transition-all font-bold text-sm shadow-lg shadow-primary/20">
+                                Save Changes
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+                        <?php foreach ($groupedPermissions as $module => $perms): 
+                            $permIds = array_map(fn($p) => $p->id, $perms);
+                        ?>
+                            <div class="space-y-4">
+                                <label class="flex items-center gap-4 cursor-pointer group p-4 bg-slate-50/50 rounded-3xl border border-slate-100 hover:border-primary/20 hover:bg-white transition-all">
+                                    <div class="relative flex items-center">
+                                        <input type="checkbox" 
+                                               data-module="<?= h($module) ?>"
+                                               data-ids="<?= implode(',', $permIds) ?>"
+                                               onchange="syncModulePermissions(this, 'role')"
+                                               class="module-checkbox-role w-6 h-6 rounded-lg border-slate-300 text-primary focus:ring-primary/20 transition-all cursor-pointer">
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-bold text-slate-700 group-hover:text-primary transition-colors">
+                                            <?= h($module) ?>
+                                        </span>
+                                        <span class="text-[10px] text-slate-400">Full access to <?= strtolower($module) ?></span>
+                                    </div>
+                                </label>
+                            </div>
+                        <?php endforeach; ?>
+                        
+                        <!-- Hidden container for role permission IDs -->
+                        <div id="rolePermissionsContainer" class="hidden"></div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Simple Add Role Modal (Nested) -->
+<div id="addRoleModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[70] hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-[2rem] w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
+        <form action="<?= URLROOT ?>/settings/roles/store" method="POST">
+            <?php csrf_field(); ?>
+            <div class="p-8 border-b border-slate-50 flex items-center justify-between">
+                <h3 class="text-xl font-bold text-slate-800 tracking-tight">Create New Role</h3>
+                <button type="button" onclick="document.getElementById('addRoleModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l18 18" /></svg>
+                </button>
+            </div>
+            <div class="p-8 space-y-5">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2.5 ml-1">Role Name</label>
+                    <input type="text" name="name" required class="w-full px-5 py-3.5 rounded-2xl border border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all text-sm outline-none bg-slate-50/50" placeholder="e.g. Schedule Coordinator">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2.5 ml-1">Description</label>
+                    <textarea name="description" rows="3" class="w-full px-5 py-3.5 rounded-2xl border border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all text-sm outline-none resize-none bg-slate-50/50" placeholder="What responsibilities does this role have?"></textarea>
+                </div>
+            </div>
+            <div class="p-8 bg-slate-50/50 flex items-center gap-4">
+                <button type="button" onclick="document.getElementById('addRoleModal').classList.add('hidden')" class="flex-1 px-6 py-3.5 rounded-2xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-white transition-all">Cancel</button>
+                <button type="submit" class="flex-1 bg-primary hover:bg-primary-600 text-white px-6 py-3.5 rounded-2xl font-bold text-sm transition-all shadow-lg shadow-primary/20">Create Role</button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -19,7 +19,7 @@ class ScheduleController extends Controller {
     private $db;
 
     public function __construct() {
-        $this->requireLogin();
+        $this->requirePermission('Schedules', 'view');
         $this->scheduleRepo = new ScheduleRepository();
         $this->serverRepo = new ServerRepository();
         $this->announcementRepo = new AnnouncementRepository();

@@ -126,6 +126,10 @@ $router->get('/notifications/latest', [NotificationController::class, 'getLatest
 $router->get('/settings', [SettingsController::class, 'index']);
 $router->get('/settings/database', [SettingsController::class, 'database']);
 $router->get('/settings/system', [SettingsController::class, 'system']);
+$router->get('/settings/roles', [SettingsController::class, 'roles']);
+$router->post('/settings/roles/store', [SettingsController::class, 'storeRole']);
+$router->post('/settings/roles/update', [SettingsController::class, 'updateRole']);
+$router->get('/settings/roles/delete/:id', [SettingsController::class, 'deleteRole']);
 $router->post('/settings/system/update', [SettingsController::class, 'storeSystem']);
 $router->post('/settings/activity-type/store', [SettingsController::class, 'storeActivityType']);
 $router->get('/settings/activity-type/delete/:id', [SettingsController::class, 'deleteActivityType']);

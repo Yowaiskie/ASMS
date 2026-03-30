@@ -359,6 +359,113 @@ class SettingsController extends Controller {
         ]);
     }
 
+    public function roles() {
+        $this->requirePermission('Roles Management', 'view');
+        
+        $roleRepo = new \App\Repositories\RoleRepository();
+        $permRepo = new \App\Repositories\PermissionRepository();
+        
+        $roles = $roleRepo->all();
+        $allPermissions = $permRepo->all();
+        
+        // Group permissions by module
+        $groupedPermissions = [];
+        foreach ($allPermissions as $perm) {
+            $groupedPermissions[$perm->module][] = $perm;
+        }
+
+        // Get permissions for each role
+        foreach ($roles as $role) {
+            $role->permissions = array_map(function($p) {
+                return $p->id;
+            }, $roleRepo->getPermissionsByRole($role->id));
+        }
+
+        $this->view('settings/roles', [
+            'pageTitle' => 'Roles & Permissions',
+            'title' => 'Roles Management | ASMS',
+            'roles' => $roles,
+            'groupedPermissions' => $groupedPermissions
+        ]);
+    }
+
+    public function storeRole() {
+        $this->requirePermission('Roles Management', 'create');
+        $this->verifyCsrf();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $roleRepo = new \App\Repositories\RoleRepository();
+            $data = [
+                'name' => trim($_POST['name']),
+                'description' => trim($_POST['description'] ?? '')
+            ];
+
+            if (empty($data['name'])) {
+                setFlash('msg_error', 'Role name is required.');
+            } else {
+                $roleId = $roleRepo->create($data);
+                if ($roleId) {
+                    // Sync permissions if provided
+                    $permissions = $_POST['permissions'] ?? [];
+                    $roleRepo->syncPermissions($roleId, $permissions);
+                    
+                    logAction('Create', 'Roles', 'Created new role: ' . $data['name']);
+                    setFlash('msg_success', 'Role created successfully.');
+                } else {
+                    setFlash('msg_error', 'Failed to create role. Name might be taken.');
+                }
+            }
+        }
+        redirect('settings/roles');
+    }
+
+    public function updateRole() {
+        $this->requirePermission('Roles Management', 'edit');
+        $this->verifyCsrf();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $roleRepo = new \App\Repositories\RoleRepository();
+            $id = $_POST['id'];
+            $data = [
+                'name' => trim($_POST['name']),
+                'description' => trim($_POST['description'] ?? '')
+            ];
+
+            if ($roleRepo->update($id, $data)) {
+                // Sync permissions
+                $permissions = $_POST['permissions'] ?? [];
+                $roleRepo->syncPermissions($id, $permissions);
+
+                logAction('Update', 'Roles', 'Updated role: ' . $data['name']);
+                setFlash('msg_success', 'Role updated successfully.');
+            } else {
+                setFlash('msg_error', 'Failed to update role.');
+            }
+        }
+        redirect('settings/roles');
+    }
+
+    public function deleteRole($id) {
+        $this->requirePermission('Roles Management', 'delete');
+        
+        $roleRepo = new \App\Repositories\RoleRepository();
+        $role = $roleRepo->find($id);
+
+        if (!$role) {
+            setFlash('msg_error', 'Role not found.');
+        } elseif (in_array($role->name, ['Superadmin', 'Admin', 'User'])) {
+            setFlash('msg_error', 'System roles cannot be deleted.');
+        } else {
+            if ($roleRepo->delete($id)) {
+                logAction('Delete', 'Roles', 'Deleted role: ' . $role->name);
+                setFlash('msg_success', 'Role deleted successfully.');
+            } else {
+                setFlash('msg_error', 'Failed to delete role.');
+            }
+        }
+        redirect('settings/roles');
+    }
+
     public function backup() {
         if (($_SESSION['role'] ?? '') !== 'Superadmin') {
             setFlash('msg_error', 'Unauthorized.');

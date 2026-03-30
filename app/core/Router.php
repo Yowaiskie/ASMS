@@ -28,13 +28,15 @@ class Router {
         }
 
         // Remove scriptDir from the start of path if it matches
-        if (strpos($path, $scriptDir) === 0) {
+        if ($scriptDir !== '/' && strpos($path, $scriptDir) === 0) {
             $path = substr($path, strlen($scriptDir));
         }
         
-        // Default to / if empty
+        // Ensure path starts with /
         if ($path === '' || $path === '/') {
             $path = '/';
+        } elseif (substr($path, 0, 1) !== '/') {
+            $path = '/' . $path;
         }
 
         $method = $_SERVER['REQUEST_METHOD'];

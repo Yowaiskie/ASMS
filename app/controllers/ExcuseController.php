@@ -14,7 +14,7 @@ class ExcuseController extends Controller {
     private $db;
 
     public function __construct() {
-        $this->requireLogin();
+        $this->requirePermission('Excuse Letters', 'view');
         $this->excuseRepo = new ExcuseRepository();
         $this->userRepo = new UserRepository();
         $this->systemRepo = new SystemSettingRepository();
