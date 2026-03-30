@@ -85,7 +85,7 @@
                         <td class="p-6">
                             <?php 
                                 $color = 'bg-green-50 text-green-700';
-                                if($row->status == 'Assigned') $color = 'bg-blue-50 text-blue-700';
+                                if($row->status == 'Assigned') $color = 'bg-primary-50 text-primary-700';
                                 if($row->status == 'Late') $color = 'bg-yellow-50 text-yellow-700';
                                 if($row->status == 'Absent') $color = 'bg-red-50 text-red-700';
                                 if($row->status == 'Excused') $color = 'bg-slate-50 text-slate-700';
@@ -125,7 +125,7 @@
                         <td class="p-6">
                             <?php 
                                 $color = 'bg-green-50 text-green-700';
-                                if($row->status == 'Assigned') $color = 'bg-blue-50 text-blue-700';
+                                if($row->status == 'Assigned') $color = 'bg-primary-50 text-primary-700';
                                 if($row->status == 'Late') $color = 'bg-yellow-50 text-yellow-700';
                                 if($row->status == 'Absent') $color = 'bg-red-50 text-red-700';
                                 if($row->status == 'Excused') $color = 'bg-slate-50 text-slate-700';

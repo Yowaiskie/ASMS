@@ -3,6 +3,14 @@
         <h2 class="text-2xl font-bold text-slate-800">Archive Center</h2>
         <p class="text-slate-500 text-sm mt-1">Restore or permanently delete removed accounts</p>
     </div>
+    <div id="bulkActions" class="hidden animate-fade-in">
+        <button type="button" 
+                onclick="confirmBulkDelete()"
+                class="bg-rose-50 text-rose-600 border border-rose-100 px-5 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 font-bold text-sm hover:bg-rose-100">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+            Delete Permanently (<span id="selectedCount">0</span>)
+        </button>
+    </div>
 </div>
 
 <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden animate-fade-in-up delay-100">
@@ -10,6 +18,9 @@
         <table class="w-full text-left">
             <thead class="bg-slate-50 text-xs font-bold text-slate-500 uppercase border-b border-slate-100">
                 <tr>
+                    <th class="px-6 py-4 w-10">
+                        <input type="checkbox" id="selectAll" class="rounded border-slate-300 text-primary focus:ring-primary cursor-pointer">
+                    </th>
                     <th class="px-6 py-4">Account</th>
                     <th class="px-6 py-4">Role</th>
                     <th class="px-6 py-4">Deleted At</th>
@@ -20,6 +31,9 @@
                 <?php if(!empty($archived)): ?>
                     <?php foreach($archived as $row): ?>
                     <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-6 py-4">
+                            <input type="checkbox" name="ids[]" value="<?= $row->id ?>" class="row-checkbox rounded border-slate-300 text-primary focus:ring-primary cursor-pointer">
+                        </td>
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center font-bold text-xs uppercase">
@@ -32,7 +46,7 @@
                             </div>
                         </td>
                         <td class="px-6 py-4">
-                            <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase bg-blue-50 text-blue-600">
+                            <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase bg-primary-50 text-primary">
                                 <?= h($row->role) ?>
                             </span>
                         </td>
@@ -61,7 +75,7 @@
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="4" class="p-16 text-center">
+                        <td colspan="5" class="p-16 text-center">
                             <div class="flex flex-col items-center justify-center text-slate-400 opacity-40">
                                 <svg class="h-16 w-16 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                 <p class="font-bold italic">The archive is empty.</p>
@@ -73,3 +87,72 @@
         </table>
     </div>
 </div>
+
+<!-- Bulk Delete Hidden Form -->
+<form action="<?= URLROOT ?>/archives/bulk-delete" method="POST" id="hiddenBulkDeleteForm" class="hidden">
+    <?php csrf_field(); ?>
+    <div id="bulkIdInputs"></div>
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAll = document.getElementById('selectAll');
+    const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+    const bulkActions = document.getElementById('bulkActions');
+    const selectedCount = document.getElementById('selectedCount');
+    const bulkIdInputs = document.getElementById('bulkIdInputs');
+
+    function updateBulkActions() {
+        const checkedCount = document.querySelectorAll('.row-checkbox:checked').length;
+        if (checkedCount > 0) {
+            bulkActions.classList.remove('hidden');
+            selectedCount.textContent = checkedCount;
+        } else {
+            bulkActions.classList.add('hidden');
+        }
+    }
+
+    if (selectAll) {
+        selectAll.addEventListener('change', function() {
+            rowCheckboxes.forEach(cb => {
+                cb.checked = selectAll.checked;
+            });
+            updateBulkActions();
+        });
+    }
+
+    rowCheckboxes.forEach(cb => {
+        cb.addEventListener('change', function() {
+            if (!this.checked) {
+                selectAll.checked = false;
+            } else {
+                const allChecked = Array.from(rowCheckboxes).every(c => c.checked);
+                selectAll.checked = allChecked;
+            }
+            updateBulkActions();
+        });
+    });
+});
+
+function confirmBulkDelete() {
+    const checkedCheckboxes = document.querySelectorAll('.row-checkbox:checked');
+    const ids = Array.from(checkedCheckboxes).map(cb => cb.value);
+    
+    showConfirm(
+        `WARNING: This will permanently delete ${ids.length} selected accounts and all their associated records. This action CANNOT be undone. Proceed?`,
+        'Bulk Delete Permanently?',
+        function() {
+            const container = document.getElementById('bulkIdInputs');
+            container.innerHTML = '';
+            ids.forEach(id => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'ids[]';
+                input.value = id;
+                container.appendChild(input);
+            });
+            document.getElementById('hiddenBulkDeleteForm').submit();
+        }
+    );
+}
+</script>

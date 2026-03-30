@@ -4,21 +4,31 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Repositories\UserRepository;
+use App\Repositories\SystemSettingRepository;
 use App\Models\SystemSetting;
 
 class SettingsController extends Controller {
     private $userRepo;
+    private $systemRepo;
     private $settingModel;
+    private $db;
 
     public function __construct() {
         $this->requireLogin();
         $this->userRepo = new UserRepository();
+        $this->systemRepo = new SystemSettingRepository();
         $this->settingModel = new SystemSetting();
+        $this->db = \App\Core\Database::getInstance();
     }
 
     public function index() {
         $userProfile = $this->userRepo->getUserProfile($_SESSION['user_id']);
-        $systemSettings = $this->settingModel->getAll();
+        
+        $systemSettings = [
+            'system_name' => $this->systemRepo->get('system_name', 'Altar Servers Management System'),
+            'admin_email' => $this->systemRepo->get('admin_email', ''),
+            'parish_name' => $this->systemRepo->get('parish_name', 'Our Parish')
+        ];
 
         // Fallback if no profile found
         if (!$userProfile) {
@@ -48,6 +58,116 @@ class SettingsController extends Controller {
                 'system' => $systemSettings
             ]);
         }
+    }
+
+    public function system() {
+        $this->requireRole(['Admin', 'Superadmin']);
+        
+        $data = [
+            'pageTitle' => 'System Configuration',
+            'title' => 'System Settings | ASMS',
+            'activityTypes' => $this->systemRepo->getActivityTypes(false),
+            'ranks' => $this->systemRepo->getRanks(false),
+            'categories' => $this->systemRepo->getCategories(false),
+            'system_name' => $this->systemRepo->get('system_name', 'Altar Servers Management System'),
+            'admin_email' => $this->systemRepo->get('admin_email', ''),
+            'parish_name' => $this->systemRepo->get('parish_name', 'Our Parish'),
+            // Policy Settings
+            'policy_suspension_threshold' => $this->systemRepo->get('policy_suspension_threshold', 3),
+            'policy_suspension_warning' => $this->systemRepo->get('policy_suspension_warning', 2),
+            'policy_suspension_duration' => $this->systemRepo->get('policy_suspension_duration', 30),
+            'policy_late_to_absent_ratio' => $this->systemRepo->get('policy_late_to_absent_ratio', 2),
+            'policy_excuse_lead_time' => $this->systemRepo->get('policy_excuse_lead_time', 24),
+            'policy_schedule_start_date' => $this->systemRepo->get('policy_schedule_start_date', date('Y-m-01')),
+            'policy_schedule_end_date' => $this->systemRepo->get('policy_schedule_end_date', date('Y-m-t', strtotime('+2 months'))),
+            'policy_auto_remove_on_suspension' => $this->systemRepo->get('policy_auto_remove_on_suspension', 1),
+            'policy_suspension_activity_types' => json_decode($this->systemRepo->get('policy_suspension_activity_types', '[]'), true)
+        ];
+        
+        $this->view('settings/system', $data);
+    }
+
+    public function storeSystem() {
+        $this->requireRole('Superadmin');
+        $this->verifyCsrf();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->systemRepo->set('system_name', $_POST['system_name']);
+            $this->systemRepo->set('parish_name', $_POST['parish_name']);
+            $this->systemRepo->set('admin_email', $_POST['admin_email']);
+            
+            // Policy Settings
+            if (isset($_POST['policy_suspension_threshold'])) {
+                $this->systemRepo->set('policy_suspension_threshold', (int)$_POST['policy_suspension_threshold']);
+                $this->systemRepo->set('policy_suspension_warning', (int)$_POST['policy_suspension_warning']);
+                $this->systemRepo->set('policy_suspension_duration', (int)$_POST['policy_suspension_duration']);
+                $this->systemRepo->set('policy_late_to_absent_ratio', (int)$_POST['policy_late_to_absent_ratio']);
+                $this->systemRepo->set('policy_excuse_lead_time', (int)$_POST['policy_excuse_lead_time']);
+                $this->systemRepo->set('policy_schedule_start_date', $_POST['policy_schedule_start_date'] ?? date('Y-m-01'));
+                $this->systemRepo->set('policy_schedule_end_date', $_POST['policy_schedule_end_date'] ?? date('Y-m-t'));
+                $this->systemRepo->set('policy_auto_remove_on_suspension', isset($_POST['policy_auto_remove_on_suspension']) ? 1 : 0);
+                
+                $activityTypes = $_POST['policy_activity_types'] ?? [];
+                $this->systemRepo->set('policy_suspension_activity_types', json_encode($activityTypes));
+            }
+            
+            setFlash('msg_success', 'System settings updated.');
+        }
+        redirect('settings/system');
+    }
+
+    public function storeActivityType() {
+        $this->requireRole('Superadmin');
+        $this->verifyCsrf();
+        if ($this->systemRepo->addActivityType($_POST['name'], $_POST['color'] ?? 'blue')) {
+            setFlash('msg_success', 'Activity type added.');
+        } else {
+            setFlash('msg_error', 'Failed to add. Maybe it already exists?');
+        }
+        redirect('settings/system');
+    }
+
+    public function deleteActivityType($id) {
+        $this->requireRole('Superadmin');
+        $this->systemRepo->deleteActivityType($id);
+        setFlash('msg_success', 'Activity type removed.');
+        redirect('settings/system');
+    }
+
+    public function storeRank() {
+        $this->requireRole('Superadmin');
+        $this->verifyCsrf();
+        if ($this->systemRepo->addRank($_POST['name'])) {
+            setFlash('msg_success', 'Rank added.');
+        } else {
+            setFlash('msg_error', 'Failed to add.');
+        }
+        redirect('settings/system');
+    }
+
+    public function deleteRank($id) {
+        $this->requireRole('Superadmin');
+        $this->systemRepo->deleteRank($id);
+        setFlash('msg_success', 'Rank removed.');
+        redirect('settings/system');
+    }
+
+    public function storeCategory() {
+        $this->requireRole('Superadmin');
+        $this->verifyCsrf();
+        if ($this->systemRepo->addCategory($_POST['name'])) {
+            setFlash('msg_success', 'Category added.');
+        } else {
+            setFlash('msg_error', 'Failed to add.');
+        }
+        redirect('settings/system');
+    }
+
+    public function deleteCategory($id) {
+        $this->requireRole('Superadmin');
+        $this->systemRepo->deleteCategory($id);
+        setFlash('msg_success', 'Category removed.');
+        redirect('settings/system');
     }
 
     public function store() {
@@ -157,7 +277,9 @@ class SettingsController extends Controller {
                 $new = $_POST['new_password'];
                 $confirm = $_POST['confirm_password'];
 
-                if ($new !== $confirm) {
+                if (empty($current)) {
+                    setFlash('msg_error', 'Please enter your current password.');
+                } elseif ($new !== $confirm) {
                     setFlash('msg_error', 'New passwords do not match.');
                 } else {
                     $user = $this->userRepo->getById($_SESSION['user_id']);
@@ -165,12 +287,13 @@ class SettingsController extends Controller {
                         $hashed = password_hash($new, PASSWORD_DEFAULT);
                         if ($this->userRepo->update($_SESSION['user_id'], [
                             'password' => $hashed, 
-                            'role' => $role,
                             'force_password_reset' => 0
                         ])) {
                             $_SESSION['force_reset'] = 0;
                             logAction('Update', 'Settings', 'Changed account password.');
                             setFlash('msg_success', 'Password updated successfully.');
+                        } else {
+                            setFlash('msg_error', 'Something went wrong while updating the password.');
                         }
                     } else {
                         setFlash('msg_error', 'Incorrect current password.');
@@ -224,40 +347,268 @@ class SettingsController extends Controller {
         redirect('users');
     }
 
+    public function database() {
+        $this->requireRole('Superadmin');
+        
+        $userProfile = $this->userRepo->getUserProfile($_SESSION['user_id']);
+        
+        $this->view('settings/database', [
+            'pageTitle' => 'Database Management',
+            'title' => 'Database Management | ASMS',
+            'profile' => $userProfile
+        ]);
+    }
+
+    public function roles() {
+        $this->requirePermission('Roles Management', 'view');
+        
+        $roleRepo = new \App\Repositories\RoleRepository();
+        $permRepo = new \App\Repositories\PermissionRepository();
+        
+        $roles = $roleRepo->all();
+        $allPermissions = $permRepo->all();
+        
+        // Group permissions by module
+        $groupedPermissions = [];
+        foreach ($allPermissions as $perm) {
+            $groupedPermissions[$perm->module][] = $perm;
+        }
+
+        // Get permissions for each role
+        foreach ($roles as $role) {
+            $role->permissions = array_map(function($p) {
+                return $p->id;
+            }, $roleRepo->getPermissionsByRole($role->id));
+        }
+
+        $this->view('settings/roles', [
+            'pageTitle' => 'Roles & Permissions',
+            'title' => 'Roles Management | ASMS',
+            'roles' => $roles,
+            'groupedPermissions' => $groupedPermissions
+        ]);
+    }
+
+    public function storeRole() {
+        $this->requirePermission('Roles Management', 'create');
+        $this->verifyCsrf();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $roleRepo = new \App\Repositories\RoleRepository();
+            $data = [
+                'name' => trim($_POST['name']),
+                'description' => trim($_POST['description'] ?? '')
+            ];
+
+            if (empty($data['name'])) {
+                setFlash('msg_error', 'Role name is required.');
+            } else {
+                $roleId = $roleRepo->create($data);
+                if ($roleId) {
+                    // Sync permissions if provided
+                    $permissions = $_POST['permissions'] ?? [];
+                    $roleRepo->syncPermissions($roleId, $permissions);
+                    
+                    logAction('Create', 'Roles', 'Created new role: ' . $data['name']);
+                    setFlash('msg_success', 'Role created successfully.');
+                } else {
+                    setFlash('msg_error', 'Failed to create role. Name might be taken.');
+                }
+            }
+        }
+        redirect('settings/roles');
+    }
+
+    public function updateRole() {
+        $this->requirePermission('Roles Management', 'edit');
+        $this->verifyCsrf();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $roleRepo = new \App\Repositories\RoleRepository();
+            $id = $_POST['id'];
+            $data = [
+                'name' => trim($_POST['name']),
+                'description' => trim($_POST['description'] ?? '')
+            ];
+
+            if ($roleRepo->update($id, $data)) {
+                // Sync permissions
+                $permissions = $_POST['permissions'] ?? [];
+                $roleRepo->syncPermissions($id, $permissions);
+
+                logAction('Update', 'Roles', 'Updated role: ' . $data['name']);
+                setFlash('msg_success', 'Role updated successfully.');
+            } else {
+                setFlash('msg_error', 'Failed to update role.');
+            }
+        }
+        redirect('settings/roles');
+    }
+
+    public function deleteRole($id) {
+        $this->requirePermission('Roles Management', 'delete');
+        
+        $roleRepo = new \App\Repositories\RoleRepository();
+        $role = $roleRepo->find($id);
+
+        if (!$role) {
+            setFlash('msg_error', 'Role not found.');
+        } elseif (in_array($role->name, ['Superadmin', 'Admin', 'User'])) {
+            setFlash('msg_error', 'System roles cannot be deleted.');
+        } else {
+            if ($roleRepo->delete($id)) {
+                logAction('Delete', 'Roles', 'Deleted role: ' . $role->name);
+                setFlash('msg_success', 'Role deleted successfully.');
+            } else {
+                setFlash('msg_error', 'Failed to delete role.');
+            }
+        }
+        redirect('settings/roles');
+    }
+
     public function backup() {
         if (($_SESSION['role'] ?? '') !== 'Superadmin') {
             setFlash('msg_error', 'Unauthorized.');
             redirect('settings');
         }
 
-        $filename = 'backup_' . DB_NAME . '_' . date('Y-m-d_H-i-s') . '.sql';
+        $startDate = $_GET['start_date'] ?? null;
+        $endDate = $_GET['end_date'] ?? null;
+
+        $filename = 'backup_' . DB_NAME . '_' . date('Y-m-d_H-i-s');
+        if ($startDate) $filename .= '_from_' . $startDate;
+        if ($endDate) $filename .= '_to_' . $endDate;
+        $filename .= '.sql';
         
+        // Set cookie to notify JS that download has started/finished
+        setcookie('download_started', 'true', time() + 3600, '/');
+
         header('Content-Type: application/octet-stream');
         header('Content-Disposition: attachment; filename="' . $filename . '"');
 
         // Simple backup using SHOW CREATE TABLE and SELECT *
-        $tables = ['announcements', 'attendance', 'logs', 'schedules', 'servers', 'system_settings', 'users'];
+        $tables = [
+            'servers' => 'created_at',
+            'users' => 'created_at',
+            'schedules' => 'mass_date',
+            'attendance' => 'created_at',
+            'logs' => 'created_at',
+            'announcements' => 'created_at',
+            'excuses' => 'absence_date',
+            'system_settings' => null,
+            'schedule_templates' => 'created_at',
+            'activity_types' => null,
+            'server_ranks' => null,
+            'announcement_categories' => null
+        ];
         
-        foreach ($tables as $table) {
+        echo "-- ASMS Database Backup\n";
+        echo "-- Date: " . date('Y-m-d H:i:s') . "\n";
+        if ($startDate) echo "-- Filter Start: $startDate\n";
+        if ($endDate) echo "-- Filter End: $endDate\n\n";
+        echo "SET FOREIGN_KEY_CHECKS=0;\n\n";
+
+        foreach ($tables as $table => $dateCol) {
+            // Get table creation
             $this->db->query("SHOW CREATE TABLE $table");
             $row = $this->db->single();
             $createTable = (array)$row;
-            echo "\n\n" . $createTable['Create Table'] . ";\n\n";
+            echo "DROP TABLE IF EXISTS `$table`;\n";
+            echo $createTable['Create Table'] . ";\n\n";
 
-            $this->db->query("SELECT * FROM $table");
+            // Get table data
+            $sql = "SELECT * FROM $table";
+            $where = [];
+            if ($dateCol && $startDate) {
+                $where[] = "$dateCol >= '$startDate'";
+            }
+            if ($dateCol && $endDate) {
+                $where[] = "$dateCol <= '$endDate 23:59:59'";
+            }
+
+            if (!empty($where)) {
+                $sql .= " WHERE " . implode(' AND ', $where);
+            }
+
+            $this->db->query($sql);
             $rows = $this->db->resultSet();
-            foreach ($rows as $r) {
-                $rArray = (array)$r;
-                $keys = array_keys($rArray);
-                $values = array_values($rArray);
-                $values = array_map(function($v) {
-                    if (is_null($v)) return 'NULL';
-                    return "'" . addslashes($v) . "'";
-                }, $values);
-                
-                echo "INSERT INTO $table (" . implode(', ', $keys) . ") VALUES (" . implode(', ', $values) . ");\n";
+            
+            if (!empty($rows)) {
+                echo "-- Data for table `$table`\n";
+                foreach ($rows as $r) {
+                    $rArray = (array)$r;
+                    $keys = array_keys($rArray);
+                    $values = array_values($rArray);
+                    $values = array_map(function($v) {
+                        if (is_null($v)) return 'NULL';
+                        return "'" . addslashes($v) . "'";
+                    }, $values);
+                    
+                    echo "INSERT INTO `$table` (`" . implode('`, `', $keys) . "`) VALUES (" . implode(', ', $values) . ");\n";
+                }
+                echo "\n";
             }
         }
+        echo "SET FOREIGN_KEY_CHECKS=1;\n";
         exit;
+    }
+
+    public function restore() {
+        if (($_SESSION['role'] ?? '') !== 'Superadmin') {
+            setFlash('msg_error', 'Unauthorized.');
+            redirect('settings/database');
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['backup_file'])) {
+            $file = $_FILES['backup_file'];
+            
+            if ($file['error'] !== UPLOAD_ERR_OK) {
+                setFlash('msg_error', 'Error uploading file.');
+                redirect('settings/database');
+            }
+
+            $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+            if (strtolower($ext) !== 'sql') {
+                setFlash('msg_error', 'Invalid file type. Please upload a .sql file.');
+                redirect('settings/database');
+            }
+
+            $sql = file_get_contents($file['tmp_name']);
+            if (empty($sql)) {
+                setFlash('msg_error', 'The uploaded file is empty.');
+                redirect('settings/database');
+            }
+
+            try {
+                // Split SQL into individual queries more robustly
+                // This handles both \n and \r\n
+                $sql = preg_replace('/--.*?\n/', '', $sql); // Remove comments
+                $queries = explode(";\n", str_replace(";\r\n", ";\n", $sql));
+                
+                $successCount = 0;
+
+                // Note: MySQL DDL (DROP/CREATE) implicitly commits transactions.
+                // We cannot wrap the entire restore in one transaction if it contains DDL.
+                foreach ($queries as $query) {
+                    $query = trim($query);
+                    if (!empty($query)) {
+                        $this->db->query($query);
+                        if ($this->db->execute()) {
+                            $successCount++;
+                        }
+                    }
+                }
+                
+                logAction('Restore', 'Database', "Successfully restored database from backup file: " . $file['name']);
+                setFlash('msg_success', 'Database restored successfully! ' . $successCount . ' queries executed.');
+            } catch (\Exception $e) {
+                if ($this->db->inTransaction()) {
+                    $this->db->rollBack();
+                }
+                setFlash('msg_error', 'Restore failed: ' . $e->getMessage());
+            }
+        }
+        
+        redirect('settings/database');
     }
 }

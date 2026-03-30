@@ -14,7 +14,10 @@ class ServerRepository implements RepositoryInterface {
     }
 
     public function search($filters = [], $limit = 10, $offset = 0) {
-        $sql = "SELECT *, CONCAT_WS(' ', first_name, middle_name, last_name) as name FROM servers WHERE deleted_at IS NULL";
+        $sql = "SELECT s.*, CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) as name 
+                FROM servers s 
+                LEFT JOIN users u ON s.id = u.server_id
+                WHERE s.deleted_at IS NULL AND (u.role IS NULL OR u.role != 'Superadmin')";
         $params = [];
 
         if (!empty($filters['search'])) {
@@ -45,7 +48,10 @@ class ServerRepository implements RepositoryInterface {
     }
 
     public function countSearch($filters = []) {
-        $sql = "SELECT COUNT(*) as count FROM servers WHERE deleted_at IS NULL";
+        $sql = "SELECT COUNT(*) as count 
+                FROM servers s 
+                LEFT JOIN users u ON s.id = u.server_id
+                WHERE s.deleted_at IS NULL AND (u.role IS NULL OR u.role != 'Superadmin')";
         $params = [];
 
         if (!empty($filters['search'])) {
@@ -73,14 +79,21 @@ class ServerRepository implements RepositoryInterface {
     }
 
     public function getAll($limit = 1000, $offset = 0) {
-        $this->db->query("SELECT *, CONCAT_WS(' ', first_name, middle_name, last_name) as name FROM servers WHERE deleted_at IS NULL ORDER BY last_name ASC, first_name ASC LIMIT :limit OFFSET :offset");
+        $this->db->query("SELECT s.*, CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) as name 
+                          FROM servers s 
+                          LEFT JOIN users u ON s.id = u.server_id
+                          WHERE s.deleted_at IS NULL AND (u.role IS NULL OR u.role != 'Superadmin')
+                          ORDER BY s.last_name ASC, s.first_name ASC LIMIT :limit OFFSET :offset");
         $this->db->bind(':limit', $limit);
         $this->db->bind(':offset', $offset);
         return $this->db->resultSet();
     }
 
     public function countAll() {
-        $this->db->query("SELECT COUNT(*) as count FROM servers WHERE deleted_at IS NULL");
+        $this->db->query("SELECT COUNT(*) as count 
+                          FROM servers s 
+                          LEFT JOIN users u ON s.id = u.server_id
+                          WHERE s.deleted_at IS NULL AND (u.role IS NULL OR u.role != 'Superadmin')");
         $row = $this->db->single();
         return $row ? $row->count : 0;
     }
@@ -180,8 +193,14 @@ class ServerRepository implements RepositoryInterface {
     }
 
     public function suspendServer($id, $untilDate) {
-        $this->db->query("UPDATE servers SET status = 'Suspended', suspension_until = :until WHERE id = :id");
+        $this->db->query("UPDATE servers SET status = 'Suspended', suspension_until = :until, suspended_at = CURRENT_DATE() WHERE id = :id");
         $this->db->bind(':until', $untilDate);
+        $this->db->bind(':id', $id);
+        return $this->db->execute();
+    }
+
+    public function unsuspendServer($id) {
+        $this->db->query("UPDATE servers SET status = 'Active', suspension_until = NULL, suspended_at = NULL WHERE id = :id");
         $this->db->bind(':id', $id);
         return $this->db->execute();
     }

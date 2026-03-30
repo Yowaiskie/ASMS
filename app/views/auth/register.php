@@ -56,7 +56,7 @@
                 <img src="<?= URLROOT ?>/images/logo.png" alt="Logo" class="h-16 w-auto drop-shadow-2xl">
             </div>
             <h1 class="text-3xl font-black text-white tracking-tighter mb-4 leading-tight">
-                Begin Your <br><span class="text-blue-500 text-2xl">Service Today.</span>
+                Begin Your <br><span class="text-primary-500 text-2xl">Service Today.</span>
             </h1>
             <p class="text-slate-400 text-sm font-medium leading-relaxed italic">
                 Join the Ministry of Altar Servers and be part of our community.
@@ -93,7 +93,7 @@
                             <i class="ph-bold ph-user-circle text-xl"></i>
                         </span>
                         <input type="text" name="username" required 
-                            class="custom-input w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 text-sm font-bold text-slate-800 placeholder:text-slate-300 placeholder:font-medium"
+                            class="custom-input w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/5 text-sm font-bold text-slate-800 placeholder:text-slate-300 placeholder:font-medium"
                             placeholder="Pick a unique username">
                     </div>
                 </div>
@@ -105,7 +105,7 @@
                             <i class="ph-bold ph-lock-key text-xl"></i>
                         </span>
                         <input type="password" name="password" required 
-                            class="custom-input w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 text-sm font-bold text-slate-800 placeholder:text-slate-300"
+                            class="custom-input w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/5 text-sm font-bold text-slate-800 placeholder:text-slate-300"
                             placeholder="Create a password">
                     </div>
                 </div>
@@ -117,13 +117,13 @@
                             <i class="ph-bold ph-lock-key text-xl"></i>
                         </span>
                         <input type="password" name="confirm_password" required 
-                            class="custom-input w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 text-sm font-bold text-slate-800 placeholder:text-slate-300"
+                            class="custom-input w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/5 text-sm font-bold text-slate-800 placeholder:text-slate-300"
                             placeholder="Repeat password">
                     </div>
                 </div>
 
                 <div class="pt-4">
-                    <button type="submit" class="group w-full bg-slate-900 hover:bg-blue-600 text-white font-black py-4 rounded-2xl transition-all shadow-xl shadow-slate-200 hover:shadow-blue-200 transform active:scale-[0.98] flex items-center justify-center gap-3 uppercase tracking-widest text-xs">
+                    <button type="submit" class="group w-full bg-slate-900 hover:bg-primary text-white font-black py-4 rounded-2xl transition-all shadow-xl shadow-slate-200 hover:shadow-primary-200 transform active:scale-[0.98] flex items-center justify-center gap-3 uppercase tracking-widest text-xs">
                         <span>Register Now</span>
                         <i class="ph-bold ph-user-plus text-base group-hover:translate-x-1 transition-transform"></i>
                     </button>

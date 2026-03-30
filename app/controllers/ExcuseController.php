@@ -5,16 +5,19 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Repositories\ExcuseRepository;
 use App\Repositories\UserRepository;
+use App\Repositories\SystemSettingRepository;
 
 class ExcuseController extends Controller {
     private $excuseRepo;
     private $userRepo;
+    private $systemRepo;
     private $db;
 
     public function __construct() {
-        $this->requireLogin();
+        $this->requirePermission('Excuse Letters', 'view');
         $this->excuseRepo = new ExcuseRepository();
         $this->userRepo = new UserRepository();
+        $this->systemRepo = new SystemSettingRepository();
         $this->db = \App\Core\Database::getInstance();
     }
 
@@ -77,6 +80,27 @@ class ExcuseController extends Controller {
             $status = $_POST['status'];
 
             if ($this->excuseRepo->updateStatus($id, $status)) {
+                // In-App Notification
+                $this->db->query("
+                    SELECT u.id as user_id, e.absence_date
+                    FROM excuses e
+                    JOIN users u ON e.server_id = u.server_id
+                    WHERE e.id = :id
+                ");
+                $this->db->bind(':id', $id);
+                $userData = $this->db->single();
+
+                if ($userData) {
+                    $notifRepo = new \App\Repositories\NotificationRepository();
+                    $notifRepo->create([
+                        'user_id' => $userData->user_id,
+                        'title' => 'Excuse Letter ' . $status,
+                        'message' => "Your excuse letter for " . date('M d, Y', strtotime($userData->absence_date)) . " has been " . strtolower($status) . ".",
+                        'link' => '/excuses',
+                        'type' => $status === 'Approved' ? 'success' : 'danger'
+                    ]);
+                }
+
                 // Email Notification
                 $this->db->query("
                     SELECT s.email, CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) as name, e.reason 
@@ -154,11 +178,30 @@ class ExcuseController extends Controller {
             $date = !empty($_POST['date']) ? $_POST['date'] : ($_POST['manual_date'] ?? null);
             $time = !empty($_POST['time']) ? $_POST['time'] : ($_POST['manual_time'] ?? null);
 
+            // Clean inputs
+            $type = $type ? trim($type) : null;
+            $date = $date ? trim($date) : null;
+            $time = $time ? trim($time) : null;
+
             if (empty($type) || empty($date)) {
                 setFlash('msg_error', 'Activity type and date are required.');
                 redirect('excuses');
                 return;
             }
+
+            // --- START DEADLINE CHECK ---
+            $leadTime = (int)$this->systemRepo->get('policy_excuse_lead_time', 24);
+            $scheduleDateTime = $date . ($time ? ' ' . $time : ' 00:00:00');
+            $deadlineTimestamp = strtotime($scheduleDateTime) - ($leadTime * 3600);
+            
+            $hasOverride = ($user->excuse_override_until && strtotime($user->excuse_override_until) > time());
+
+            if (time() > $deadlineTimestamp && !$hasOverride) {
+                setFlash('msg_error', "Excuses must be filed at least $leadTime hours before the schedule.");
+                redirect('excuses');
+                return;
+            }
+            // --- END DEADLINE CHECK ---
 
             $data = [
                 'server_id' => $user->server_id,
@@ -168,6 +211,17 @@ class ExcuseController extends Controller {
                 'reason' => trim($_POST['reason']),
                 'image_path' => null
             ];
+
+            // Check if already filed for this activity
+            $this->db->query("SELECT id FROM excuses WHERE server_id = :sid AND type = :type AND absence_date = :date");
+            $this->db->bind(':sid', $data['server_id']);
+            $this->db->bind(':type', $data['type']);
+            $this->db->bind(':date', $data['absence_date']);
+            if ($this->db->single()) {
+                setFlash('msg_error', 'You have already filed an excuse for this activity.');
+                redirect('excuses');
+                return;
+            }
 
             // Handle Image Upload
             if (isset($_FILES['proof_image']) && $_FILES['proof_image']['error'] === UPLOAD_ERR_OK) {
@@ -194,7 +248,19 @@ class ExcuseController extends Controller {
             if ($this->excuseRepo->create($data)) {
                 // Notify Admins
                 $admins = $this->userRepo->getAdmins();
+                $notifRepo = new \App\Repositories\NotificationRepository();
+                
                 foreach ($admins as $admin) {
+                    // In-App Notification
+                    $notifRepo->create([
+                        'user_id' => $admin->id,
+                        'title' => 'New Excuse Letter',
+                        'message' => "{$_SESSION['full_name']} submitted an excuse for " . date('M d', strtotime($data['absence_date'])) . ".",
+                        'link' => '/excuses',
+                        'type' => 'warning'
+                    ]);
+
+                    // Email Notification
                     sendEmailNotification(
                         $admin->email,
                         'New Excuse Letter Filed',

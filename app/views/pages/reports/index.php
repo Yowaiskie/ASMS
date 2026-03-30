@@ -40,7 +40,7 @@
     <form class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
             <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Time Period</label>
-            <select class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer text-sm">
+            <select class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer text-sm">
                 <option>This Month</option>
                 <option>Last Month</option>
                 <option>Last 3 Months</option>
@@ -49,7 +49,7 @@
         </div>
         <div>
             <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Activity Type</label>
-            <select class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer text-sm">
+            <select class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer text-sm">
                 <option>All Activities</option>
                 <option>Sunday Mass</option>
                 <option>Training</option>
@@ -57,7 +57,7 @@
         </div>
         <div>
             <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Date Range</label>
-            <input type="date" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+            <input type="date" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm">
         </div>
     </form>
 </div>
@@ -78,7 +78,7 @@
         <h3 class="text-4xl font-bold mb-2"><?= $stats->total_absent ?? 0 ?></h3>
         <p class="text-xs bg-white/20 inline-block px-2 py-1 rounded-lg"><?= $rates['absent'] ?>% rate</p>
     </div>
-    <div class="bg-blue-500 rounded-2xl p-6 text-white shadow-lg shadow-blue-200 animate-fade-in-up delay-200">
+    <div class="bg-primary-500 rounded-2xl p-6 text-white shadow-lg shadow-primary-200 animate-fade-in-up delay-200">
         <p class="text-white/80 text-sm font-medium mb-1">Total Activities</p>
         <h3 class="text-4xl font-bold mb-2"><?= $totalActivities ?? 0 ?></h3>
         <p class="text-xs bg-white/20 inline-block px-2 py-1 rounded-lg">This month</p>
@@ -134,7 +134,7 @@
                         <?php 
                             $rate = $srv->total_assigned > 0 ? round(($srv->present_count / $srv->total_assigned) * 100) : 0;
                             $status = 'Good';
-                            $statusClass = 'bg-blue-100 text-blue-700';
+                            $statusClass = 'bg-primary-100 text-primary-700';
                             if ($rate >= 90) { $status = 'Excellent'; $statusClass = 'bg-green-100 text-green-700'; }
                             elseif ($rate < 70) { $status = 'Needs Improvement'; $statusClass = 'bg-amber-100 text-amber-700'; }
                         ?>

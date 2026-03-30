@@ -5,21 +5,23 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Repositories\AttendanceRepository;
 use App\Repositories\ServerRepository;
+use App\Repositories\ScheduleRepository;
+use App\Repositories\SystemSettingRepository;
 use App\Core\Database;
-
-use App\Repositories\ScheduleRepository; // Add this import
 
 class AttendanceController extends Controller {
     private $attendanceRepo;
     private $serverRepo;
     private $scheduleRepo;
+    private $systemRepo;
     private $db;
 
     public function __construct() {
-        $this->requireLogin();
+        $this->requirePermission('Attendance', 'view');
         $this->attendanceRepo = new AttendanceRepository();
         $this->serverRepo = new ServerRepository();
         $this->scheduleRepo = new ScheduleRepository();
+        $this->systemRepo = new SystemSettingRepository();
         $this->db = Database::getInstance();
     }
 
@@ -88,7 +90,7 @@ class AttendanceController extends Controller {
                     $attendanceList[$sid] = [
                         'id' => $sid,
                         'name' => $row->name,
-                        'mass' => null,
+                        'masses' => [], // Changed to array to support multiple
                         'meeting' => null,
                         'others' => []
                     ];
@@ -99,9 +101,12 @@ class AttendanceController extends Controller {
                     if (stripos($type, 'Meeting') !== false) {
                         $attendanceList[$sid]['meeting'] = $row;
                     } else {
-                        if ($attendanceList[$sid]['mass'] === null) {
-                            $attendanceList[$sid]['mass'] = $row;
+                        // Avoid duplicates in the list if the same record appears twice
+                        $exists = false;
+                        foreach($attendanceList[$sid]['masses'] as $m) {
+                            if ($m->attendance_id == $row->attendance_id) { $exists = true; break; }
                         }
+                        if (!$exists) $attendanceList[$sid]['masses'][] = $row;
                     }
                 }
             }
@@ -126,6 +131,7 @@ class AttendanceController extends Controller {
                 'pageTitle' => 'Attendance Management',
                 'title' => 'Attendance | ASMS',
                 'attendanceList' => $attendanceList,
+                'dailySchedules' => $dailySchedules,
                 'date' => $date,
                 'search' => $search,
                 'pagination' => [
@@ -165,6 +171,43 @@ class AttendanceController extends Controller {
             }
 
             if ($this->attendanceRepo->updateStatus($id, $status)) {
+                // Check for Auto-Unsuspension (4 Meetings while Suspended)
+                $this->db->query("
+                    SELECT a.server_id, sch.mass_type, s.status, s.suspended_at, s.email, CONCAT_WS(' ', s.first_name, s.last_name) as name
+                    FROM attendance a
+                    JOIN schedules sch ON a.schedule_id = sch.id
+                    JOIN servers s ON a.server_id = s.id
+                    WHERE a.id = :id
+                ");
+                $this->db->bind(':id', $id);
+                $attInfo = $this->db->single();
+
+                if ($attInfo && $attInfo->status === 'Suspended' && $status === 'Present' && stripos($attInfo->mass_type, 'Meeting') !== false) {
+                    // Count how many meetings attended since suspended
+                    $this->db->query("
+                        SELECT COUNT(*) as count 
+                        FROM attendance a
+                        JOIN schedules sch ON a.schedule_id = sch.id
+                        WHERE a.server_id = :sid 
+                        AND a.status = 'Present'
+                        AND sch.mass_type LIKE '%Meeting%'
+                        AND sch.mass_date >= :suspended_at
+                    ");
+                    $this->db->bind(':sid', $attInfo->server_id);
+                    $this->db->bind(':suspended_at', $attInfo->suspended_at ?? '2000-01-01');
+                    $meetingCount = (int)$this->db->single()->count;
+
+                    if ($meetingCount >= 4) {
+                        $this->serverRepo->unsuspendServer($attInfo->server_id);
+                        sendEmailNotification(
+                            $attInfo->email,
+                            'Account Reactivated',
+                            'Suspension Lifted',
+                            "Congratulations {$attInfo->name}! You have successfully completed your penalty by attending 4 meetings. Your account is now <b>Active</b> again. See you in the next schedule!"
+                        );
+                    }
+                }
+
                 // Email Notification and Suspension Logic
                 $this->db->query("
                     SELECT s.id as server_id, s.email, CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) as name, sch.mass_type, sch.mass_date 
@@ -177,7 +220,6 @@ class AttendanceController extends Controller {
                 $info = $this->db->single();
 
                 if ($info && $info->email) {
-                    // ... (keep email logic) ...
                     $color = match($status) {
                         'Present' => '#10b981',
                         'Late' => '#f59e0b',
@@ -193,10 +235,53 @@ class AttendanceController extends Controller {
                         "Hi {$info->name}, your attendance for <b>{$info->mass_type}</b> on <b>" . date('M d, Y', strtotime($info->mass_date)) . "</b> has been marked as <b style='color:{$color}'>{$status}</b>."
                     );
 
-                    // --- START SUSPENSION LOGIC ---
-                    if ($status === 'Absent' && stripos($info->mass_type, 'Meeting') === false) {
-                        // Count absences for this month (excluding meetings)
-                        $this->db->query("
+                    // In-App Notification
+                    $this->db->query("SELECT id FROM users WHERE server_id = :sid");
+                    $this->db->bind(':sid', $info->server_id);
+                    $targetUser = $this->db->single();
+
+                    if ($targetUser) {
+                        $notifRepo = new \App\Repositories\NotificationRepository();
+                        $notifRepo->create([
+                            'user_id' => $targetUser->id,
+                            'title' => 'Attendance Marked: ' . $status,
+                            'message' => "Your attendance for {$info->mass_type} on " . date('M d') . " has been marked as {$status}.",
+                            'link' => '/attendance?view=personal',
+                            'type' => ($status === 'Present' || $status === 'Excused') ? 'success' : ($status === 'Late' ? 'warning' : 'danger')
+                        ]);
+                    }
+
+                    // --- START DYNAMIC SUSPENSION LOGIC ---
+                    $monitoredTypes = json_decode($this->systemRepo->get('policy_suspension_activity_types', '[]'), true);
+                    
+                    // Check if current activity is monitored
+                    $isMonitored = false;
+                    foreach ($monitoredTypes as $mt) {
+                        if (stripos($info->mass_type, $mt) !== false) {
+                            $isMonitored = true;
+                            break;
+                        }
+                    }
+
+                    if ($isMonitored && ($status === 'Absent' || $status === 'Late')) {
+                        $threshold = (int)$this->systemRepo->get('policy_suspension_threshold', 3);
+                        $warning = (int)$this->systemRepo->get('policy_suspension_warning', 2);
+                        $duration = (int)$this->systemRepo->get('policy_suspension_duration', 30);
+                        $lateRatio = (int)$this->systemRepo->get('policy_late_to_absent_ratio', 2);
+
+                        // Build query for monitored types
+                        $typePlaceholders = [];
+                        $params = [':sid' => $info->server_id];
+                        foreach ($monitoredTypes as $i => $mt) {
+                            $typePlaceholders[] = "sch.mass_type LIKE :type$i";
+                            $params[":type$i"] = "%$mt%";
+                        }
+                        $typeSql = count($typePlaceholders) > 0 
+                            ? "AND (" . implode(" OR ", $typePlaceholders) . ")" 
+                            : "AND 1=0";
+
+                        // Count Absences
+                        $sqlAbsent = "
                             SELECT COUNT(*) as count 
                             FROM attendance a
                             JOIN schedules sch ON a.schedule_id = sch.id
@@ -204,33 +289,57 @@ class AttendanceController extends Controller {
                             AND a.status = 'Absent'
                             AND MONTH(sch.mass_date) = MONTH(CURRENT_DATE())
                             AND YEAR(sch.mass_date) = YEAR(CURRENT_DATE())
-                            AND sch.mass_type NOT LIKE '%Meeting%'
-                        ");
-                        $this->db->bind(':sid', $info->server_id);
-                        $absenceCount = $this->db->single()->count;
+                            $typeSql
+                        ";
+                        $this->db->query($sqlAbsent);
+                        foreach ($params as $p => $v) $this->db->bind($p, $v);
+                        $absentCount = (int)$this->db->single()->count;
 
-                        if ($absenceCount == 2) {
+                        // Count Lates
+                        $sqlLate = "
+                            SELECT COUNT(*) as count 
+                            FROM attendance a
+                            JOIN schedules sch ON a.schedule_id = sch.id
+                            WHERE a.server_id = :sid 
+                            AND a.status = 'Late'
+                            AND MONTH(sch.mass_date) = MONTH(CURRENT_DATE())
+                            AND YEAR(sch.mass_date) = YEAR(CURRENT_DATE())
+                            $typeSql
+                        ";
+                        $this->db->query($sqlLate);
+                        foreach ($params as $p => $v) $this->db->bind($p, $v);
+                        $lateCount = (int)$this->db->single()->count;
+
+                        // Calculate effective absences
+                        $effectiveAbsences = $absentCount + ($lateRatio > 0 ? floor($lateCount / $lateRatio) : 0);
+
+                        if ($effectiveAbsences == $warning) {
                             // WARNING
                             sendEmailNotification(
                                 $info->email,
                                 'URGENT: Attendance Warning',
-                                'Second Absence Recorded',
-                                "Hi {$info->name}, you have recorded your <b>2nd absence</b> this month. Please be reminded that a 3rd absence will result in an automatic 30-day suspension from joining schedules. Keep serving!"
+                                'Attendance Policy Threshold Reached',
+                                "Hi {$info->name}, you have reached the warning threshold for absences/lates this month. Please be reminded that reaching {$threshold} effective absences will result in an automatic {$duration}-day suspension. Keep serving!"
                             );
-                        } elseif ($absenceCount >= 3) {
+                        } elseif ($effectiveAbsences >= $threshold) {
                             // SUSPENSION
-                            $until = date('Y-m-d', strtotime('+30 days'));
+                            $until = date('Y-m-d', strtotime("+$duration days"));
                             $this->serverRepo->suspendServer($info->server_id, $until);
                             
+                            // Auto-removal logic
+                            if ((int)$this->systemRepo->get('policy_auto_remove_on_suspension', 1) === 1) {
+                                $this->scheduleRepo->removeFutureSchedules($info->server_id);
+                            }
+
                             sendEmailNotification(
                                 $info->email,
                                 'Account Suspended',
                                 'Automatic Suspension Triggered',
-                                "Hi {$info->name}, you have recorded your <b>3rd absence</b> this month. As per system rules, your account has been <b>Suspended until " . date('M d, Y', strtotime($until)) . "</b>. You will not be able to join new schedules during this period."
+                                "Hi {$info->name}, you have reached the threshold of {$threshold} effective absences this month. As per system rules, your account has been <b>Suspended until " . date('M d, Y', strtotime($until)) . "</b>. You have been removed from future schedules during this period."
                             );
                         }
                     }
-                    // --- END SUSPENSION LOGIC ---
+                    // --- END DYNAMIC SUSPENSION LOGIC ---
                 }
 
                 $logName = $info ? $info->name : "ID: $id";

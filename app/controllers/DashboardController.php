@@ -150,8 +150,13 @@ class DashboardController extends Controller {
 
         } else {
             // --- ADMIN DASHBOARD LOGIC (Existing) ---
-            // Fetch Real Stats
-            $this->db->query("SELECT COUNT(*) as total FROM servers WHERE status = 'Active'");
+            // Fetch Real Stats (Excluding Superadmins from member count)
+            $this->db->query("
+                SELECT COUNT(*) as total 
+                FROM servers s
+                LEFT JOIN users u ON s.id = u.server_id
+                WHERE s.deleted_at IS NULL AND (u.role IS NULL OR u.role != 'Superadmin')
+            ");
             $totalServers = $this->db->single()->total;
 
             $this->db->query("SELECT COUNT(*) as total FROM schedules WHERE mass_date >= CURDATE()");

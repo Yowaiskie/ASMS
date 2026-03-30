@@ -15,6 +15,11 @@ class Controller {
 
     // Load View
     public function view($view, $data = []) {
+        // Fetch global system settings
+        $systemRepo = new \App\Repositories\SystemSettingRepository();
+        $data['system_name'] = $systemRepo->get('system_name', 'Altar Servers Management System');
+        $data['parish_name'] = $systemRepo->get('parish_name', 'Sacred Heart of Jesus Parish');
+
         // Extract data array to variables
         extract($data);
         
@@ -49,6 +54,28 @@ class Controller {
         $this->checkMaintenanceMode();
         $this->checkForceReset();
         $this->checkVerification();
+    }
+
+    protected function requireRole($role) {
+        $this->requireLogin();
+        $userRole = $_SESSION['role'] ?? '';
+        
+        if (is_array($role)) {
+            if (!in_array($userRole, $role)) {
+                $this->forbidden();
+            }
+        } else {
+            if ($userRole !== $role) {
+                $this->forbidden();
+            }
+        }
+    }
+
+    protected function requirePermission($module, $action = 'view') {
+        $this->requireLogin();
+        if (!hasPermission($module, $action)) {
+            $this->forbidden();
+        }
     }
 
     protected function checkForceReset() {
@@ -107,5 +134,26 @@ class Controller {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             verify_csrf();
         }
+    }
+
+    /**
+     * Helper for returning JSON success responses (AJAX)
+     */
+    protected function ok($data = null) {
+        if (ob_get_length()) ob_clean();
+        header('Content-Type: application/json');
+        echo json_encode(['status' => 'success', 'data' => $data]);
+        exit;
+    }
+
+    /**
+     * Helper for returning JSON error responses (AJAX)
+     */
+    protected function error($message, $code = 400) {
+        if (ob_get_length()) ob_clean();
+        http_response_code($code);
+        header('Content-Type: application/json');
+        echo json_encode(['status' => 'error', 'message' => $message]);
+        exit;
     }
 }

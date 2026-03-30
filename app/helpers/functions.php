@@ -89,3 +89,36 @@ function build_url($base, $new_params = []) {
     $merged_params = array_merge($current_params, $new_params);
     return URLROOT . '/' . $base . '?' . http_build_query($merged_params);
 }
+
+/**
+ * Check if current user has permission for a specific module and action
+ * @param string $module The module name (e.g., 'Dashboard', 'Schedules')
+ * @param string $action The action name (e.g., 'view', 'edit', 'delete')
+ * @return bool
+ */
+function hasPermission($module, $action = 'view') {
+    if (!isset($_SESSION['user_id'])) return false;
+    
+    // Superadmin always has permission
+    if (isset($_SESSION['role']) && $_SESSION['role'] === 'Superadmin') return true;
+    
+    // 1. Check User-specific Overrides first
+    if (isset($_SESSION['user_permissions'])) {
+        foreach ($_SESSION['user_permissions'] as $permission) {
+            if ($permission->module === $module && $permission->action === $action) {
+                return true;
+            }
+        }
+    }
+
+    // 2. Fallback to Role Permissions
+    if (!isset($_SESSION['permissions'])) return false;
+    
+    foreach ($_SESSION['permissions'] as $permission) {
+        if ($permission->module === $module && $permission->action === $action) {
+            return true;
+        }
+    }
+    
+    return false;
+}

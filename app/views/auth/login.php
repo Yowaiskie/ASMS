@@ -16,118 +16,140 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .bg-mesh {
-            background-color: #0f172a;
+        :root {
+            --primary: #a33b39;
+        }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            margin: 0;
+            padding: 0;
+        }
+        .login-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0f172a;
             background-image: 
-                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(37, 99, 235, 0.15) 0px, transparent 50%);
+                radial-gradient(at 0% 0%, rgba(163, 59, 57, 0.4) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(0, 89, 156, 0.3) 0px, transparent 50%),
+                url('<?= URLROOT ?>/images/MAS.png'); /* Local MAS.png background */
+            background-size: cover;
+            background-position: center;
+            padding: 20px;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 32px;
+            width: 100%;
+            max-width: 1000px;
+            display: flex;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
-        .animate-fade { animation: fadeIn 0.8s ease-out forwards; }
-        
-        /* Form Field Enhancement */
-        .input-group:focus-within label { color: #2563eb; }
-        .input-group:focus-within .input-icon { color: #2563eb; transform: scale(1.1); }
+        .form-glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
         .custom-input {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.95);
+            transition: all 0.3s ease;
         }
         .custom-input:focus {
-            background-color: #fff;
-            box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.1), 0 8px 10px -6px rgba(37, 99, 235, 0.1);
+            box-shadow: 0 0 0 4px rgba(163, 59, 57, 0.2);
+            border-color: var(--primary);
         }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-up { animation: fadeInUp 0.8s ease-out forwards; }
     </style>
 </head>
-<body class="bg-white min-h-screen flex overflow-hidden">
+<body class="bg-slate-900">
 
-    <!-- Left Side: Visual/Branding -->
-    <div class="hidden lg:flex lg:w-5/12 bg-mesh relative items-center justify-center p-8 overflow-hidden">
-        <div class="absolute inset-0 opacity-10">
-            <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                <defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" stroke-width="0.5"/></pattern></defs>
-                <rect width="100" height="100" fill="url(#grid)" />
-            </svg>
-        </div>
-        
-        <div class="relative z-10 text-center max-w-sm animate-fade">
-            <div class="inline-flex p-4 bg-white/10 rounded-3xl backdrop-blur-2xl mb-6 shadow-2xl ring-1 ring-white/20">
-                <img src="<?= URLROOT ?>/images/logo.png" alt="Logo" class="h-16 w-auto drop-shadow-2xl">
-            </div>
-            <h1 class="text-3xl font-black text-white tracking-tighter mb-4 leading-tight">
-                Serve the Lord <br><span class="text-blue-500 text-2xl">with Gladness.</span>
-            </h1>
-            <p class="text-slate-400 text-sm font-medium leading-relaxed italic">
-                "As for me and my household, we will serve the Lord." &mdash; Joshua 24:15
-            </p>
-        </div>
-    </div>
-
-    <!-- Right Side: Enhanced Login Form -->
-    <div class="w-full lg:w-7/12 flex items-center justify-center p-6 md:p-12 bg-slate-50/30 relative">
-        <div class="w-full max-w-sm animate-fade" style="animation-delay: 0.1s">
+    <div class="login-wrapper">
+        <div class="glass-card animate-up">
             
-            <div class="mb-10 text-center lg:text-left">
-                <div class="lg:hidden flex justify-center mb-6">
-                    <img src="<?= URLROOT ?>/images/logo.png" alt="Logo" class="h-12 w-auto">
+            <!-- Left Side: Visual Content -->
+            <div class="hidden lg:flex flex-col justify-end p-16 w-1/2 relative">
+                <div class="relative z-10">
+                    <div class="mb-8">
+                        <img src="<?= URLROOT ?>/images/logo.png" alt="SHJP Logo" class="h-20 w-auto drop-shadow-2xl">
+                    </div>
+                    <h1 class="text-6xl font-black text-white leading-tight tracking-tighter mb-4">
+                        SERVE WITH <br><span class="text-primary-400">LOVE & JOY.</span>
+                    </h1>
+                    <p class="text-white/70 text-lg font-medium leading-relaxed max-w-md">
+                        Join the Sacred Heart of Jesus Parish Altar Servers Ministry and be part of our spiritual community.
+                    </p>
                 </div>
-                <h2 class="text-3xl font-black text-slate-900 tracking-tight mb-2">Welcome Back</h2>
-                <p class="text-slate-500 text-sm font-medium">Please enter your server credentials.</p>
             </div>
 
-            <?php if(isset($error)): ?>
-                <div class="bg-rose-50 border border-rose-100 text-rose-600 px-4 py-3 rounded-2xl mb-8 text-xs font-bold flex items-center gap-3 animate-fade">
-                    <i class="ph-bold ph-warning-circle text-lg"></i>
-                    <p><?= $error ?></p>
-                </div>
-            <?php endif; ?>
-
-            <form action="<?= URLROOT ?>/auth/login" method="POST" class="space-y-6">
-                <?php csrf_field(); ?>
-                
-                <div class="space-y-2 input-group">
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1 transition-colors">Username</label>
-                    <div class="relative">
-                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 input-icon transition-all">
-                            <i class="ph-bold ph-user-circle text-xl"></i>
-                        </span>
-                        <input type="text" name="username" required 
-                            class="custom-input w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 text-sm font-bold text-slate-800 placeholder:text-slate-300 placeholder:font-medium"
-                            placeholder="Enter your username">
+            <!-- Right Side: Login Form -->
+            <div class="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-12">
+                <div class="form-glass w-full">
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-black text-white tracking-tight">Login</h2>
+                        <p class="text-white/60 text-sm mt-1">Please enter your server credentials.</p>
                     </div>
-                </div>
 
-                <div class="space-y-2 input-group">
-                    <div class="flex justify-between items-center px-1">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] transition-colors">Password</label>
-                    </div>
-                    <div class="relative">
-                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 input-icon transition-all">
-                            <i class="ph-bold ph-lock-key text-xl"></i>
-                        </span>
-                        <input type="password" id="password" name="password" required 
-                            class="custom-input w-full pl-12 pr-12 py-4 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 text-sm font-bold text-slate-800 placeholder:text-slate-300"
-                            placeholder="••••••••">
-                        <button type="button" onclick="togglePassword()" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors">
-                            <i id="eye-icon" class="ph-bold ph-eye text-xl"></i>
-                        </button>
-                    </div>
-                </div>
+                    <?php if(isset($error)): ?>
+                        <div class="bg-red-500/20 border border-red-500/50 text-red-200 px-4 py-3 rounded-2xl mb-6 text-xs font-bold flex items-center gap-3">
+                            <i class="ph-bold ph-warning-circle text-lg"></i>
+                            <p><?= $error ?></p>
+                        </div>
+                    <?php endif; ?>
 
-                <div class="pt-4">
-                    <button type="submit" class="group w-full bg-slate-900 hover:bg-blue-600 text-white font-black py-4 rounded-2xl transition-all shadow-xl shadow-slate-200 hover:shadow-blue-200 transform active:scale-[0.98] flex items-center justify-center gap-3 uppercase tracking-widest text-xs">
-                        <span>Sign In</span>
-                        <i class="ph-bold ph-arrow-right text-base group-hover:translate-x-1 transition-transform"></i>
-                    </button>
+                    <form action="<?= URLROOT ?>/auth/login" method="POST" class="space-y-5">
+                        <?php csrf_field(); ?>
+                        
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em] ml-1">Username</label>
+                            <input type="text" name="username" required 
+                                class="custom-input w-full px-5 py-4 rounded-2xl focus:outline-none text-sm font-bold text-slate-800 placeholder:text-slate-400"
+                                placeholder="Enter your username">
+                        </div>
+
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center px-1">
+                                <label class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">Password</label>
+                                <a href="<?= URLROOT ?>/forgot-password" class="text-[10px] font-bold text-white/40 hover:text-white transition-colors">Forgot password?</a>
+                            </div>
+                            <div class="relative">
+                                <input type="password" id="password" name="password" required 
+                                    class="custom-input w-full px-5 py-4 rounded-2xl focus:outline-none text-sm font-bold text-slate-800 placeholder:text-slate-400"
+                                    placeholder="Enter your password">
+                                <button type="button" onclick="togglePassword()" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors">
+                                    <i id="eye-icon" class="ph-bold ph-eye text-xl"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="pt-2">
+                            <button type="submit" class="w-full bg-primary hover:bg-primary-700 text-white font-black py-4 rounded-2xl transition-all shadow-xl shadow-primary/20 transform active:scale-[0.98] uppercase tracking-widest text-xs">
+                                Sign In
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Removed Create Account Link -->
                 </div>
-            </form>
+            </div>
+
         </div>
 
-        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 lg:left-12 lg:translate-x-0">
-            <p class="text-slate-300 text-[9px] font-black uppercase tracking-[0.3em]">
-                ASMS &bull; SHJP MBS &bull; <?= date('Y') ?>
+        <div class="fixed bottom-8 text-center w-full">
+            <p class="text-white/20 text-[10px] font-black uppercase tracking-[0.4em]">
+                SHJP MBS &bull; ASMS &bull; <?= date('Y') ?>
             </p>
         </div>
     </div>

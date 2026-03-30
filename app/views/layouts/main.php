@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $title ?? 'ASMS Dashboard' ?></title>
+    <title><?= $title ?? h($system_name) ?></title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="<?= URLROOT ?>/images/logo.png">
@@ -19,16 +19,41 @@
     
     <style>
         :root {
-            --primary: #2563eb;
-            --color-primary: #2563eb;
+            --primary: #a33b39;
+            --color-primary: #a33b39;
+            --secondary: #00599c;
+            --accent: #f9c402;
         }
-        .bg-primary { background-color: #2563eb !important; }
+        .bg-primary { background-color: #a33b39 !important; }
+        .text-primary { color: #a33b39 !important; }
+
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Fix for mobile height issues */
+        .h-screen-safe {
+            height: 100vh;
+            height: 100dvh;
+        }
 
         .bg-mesh-dark {
             background-color: #0f172a;
             background-image: 
-                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.1) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(37, 99, 235, 0.1) 0px, transparent 50%);
+                radial-gradient(at 0% 0%, rgba(163, 59, 57, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(163, 59, 57, 0.15) 0px, transparent 50%);
         }
 
         /* Global Loading Overlay */
@@ -96,9 +121,30 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 font-sans text-slate-800 flex h-screen overflow-hidden">
+<body class="bg-slate-50 font-sans text-slate-800 flex h-screen-safe overflow-hidden">
 
-    <!-- Sidebar -->
+    <!-- Mobile Sidebar Backdrop (Overlay) -->
+    <div id="mobile-sidebar-overlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden transition-opacity duration-300 opacity-0 md:hidden" onclick="closeMobileSidebar()"></div>
+
+    <!-- Mobile Sidebar Container -->
+    <div id="mobile-sidebar" class="fixed inset-y-0 left-0 w-64 bg-white z-[60] transform -translate-x-full transition-transform duration-300 ease-in-out md:hidden shadow-2xl">
+        <div class="h-full flex flex-col">
+            <div class="p-4 flex items-center justify-between border-b border-slate-50">
+                <div class="flex items-center gap-2">
+                    <img src="<?= URLROOT ?>/images/logo.png" class="h-8 w-auto">
+                    <span class="font-bold text-slate-800"><?= h($system_name) ?></span>
+                </div>
+                <button onclick="closeMobileSidebar()" class="p-2 text-slate-400 hover:text-slate-600">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto" id="mobile-sidebar-content">
+                <!-- Sidebar content will be cloned here via JS to avoid duplication -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar (Desktop) -->
     <?php include __DIR__ . '/../partials/sidebar.php'; ?>
 
     <!-- Loading Overlay -->
@@ -111,14 +157,38 @@
     <!-- Main Content Wrapper -->
     <main class="flex-1 flex flex-col transition-all duration-300 w-full overflow-hidden">
         
-        <!-- Mobile Header (Optional) -->
-        <header class="md:hidden h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 shadow-sm z-40 shrink-0">
-            <span class="font-bold text-lg text-primary">ASMS</span>
-            <button class="p-2 text-slate-500">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
-                </svg>
-            </button>
+        <!-- Mobile Header -->
+        <header class="md:hidden h-16 bg-white border-b border-slate-100 flex items-center justify-between px-4 shrink-0 z-40">
+            <div class="flex items-center gap-3">
+                <button onclick="openMobileSidebar()" class="p-2 -ml-2 text-slate-500 hover:text-primary transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                    </svg>
+                </button>
+                <div class="flex items-center gap-2">
+                    <img src="<?= URLROOT ?>/images/logo.png" class="h-8 w-auto">
+                    <span class="font-black text-slate-800 tracking-tight"><?= h($system_name) ?></span>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <!-- Mobile Menu Button Only -->
+            </div>
+        </header>
+
+        <!-- Desktop Header (Internal Pages) -->
+        <header class="hidden md:flex h-16 bg-white/80 backdrop-blur-md border-b border-slate-100 items-center justify-end px-8 shrink-0 z-40 sticky top-0">
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-3 px-3 py-1.5 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div class="w-8 h-8 bg-primary/10 text-primary rounded-xl flex items-center justify-center font-bold text-xs uppercase">
+                        <?= substr($_SESSION['username'] ?? 'U', 0, 1) ?>
+                    </div>
+                    <div class="hidden lg:block text-left">
+                        <p class="text-xs font-bold text-slate-800 truncate max-w-[100px]"><?= h($_SESSION['username'] ?? 'User') ?></p>
+                        <p class="text-[9px] font-medium text-slate-400 uppercase tracking-tighter"><?= h($_SESSION['role'] ?? 'Member') ?></p>
+                    </div>
+                </div>
+            </div>
         </header>
 
         <!-- Page Content -->
@@ -150,7 +220,7 @@
                     Are you sure you want to proceed?
                 </p>
                 <div class="flex gap-3">
-                    <button id="globalConfirmYesBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-200 transition-all active:scale-[0.98]">Yes, Proceed</button>
+                    <button id="globalConfirmYesBtn" class="flex-1 bg-primary hover:opacity-90 text-white font-bold py-3 rounded-xl shadow-lg shadow-primary-200 transition-all active:scale-[0.98]">Yes, Proceed</button>
                     <button onclick="closeGlobalConfirm()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3 rounded-xl transition-all">Cancel</button>
                 </div>
             </div>
@@ -161,7 +231,7 @@
     <div id="globalAlertModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[150] hidden items-center justify-center p-4 transition-opacity duration-200 opacity-0">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-200" id="globalAlertContent">
             <div class="p-6 text-center">
-                <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
                     <i class="ph-bold ph-info text-3xl"></i>
                 </div>
                 <h3 class="text-xl font-bold text-slate-800 mb-2" id="globalAlertTitle">Notice</h3>
@@ -260,6 +330,34 @@
                 }, 3500);
             }
         });
+
+        // Mobile Sidebar Controls
+        const mobileSidebar = document.getElementById('mobile-sidebar');
+        const mobileOverlay = document.getElementById('mobile-sidebar-overlay');
+        const desktopSidebarNav = document.querySelector('aside nav');
+        const mobileSidebarContent = document.getElementById('mobile-sidebar-content');
+
+        function openMobileSidebar() {
+            // Clone nav if not already cloned
+            if (mobileSidebarContent.children.length === 0) {
+                const navClone = desktopSidebarNav.cloneNode(true);
+                mobileSidebarContent.appendChild(navClone);
+            }
+            
+            mobileSidebar.classList.remove('-translate-x-full');
+            mobileOverlay.classList.remove('hidden');
+            setTimeout(() => {
+                mobileOverlay.classList.remove('opacity-0');
+            }, 10);
+        }
+
+        function closeMobileSidebar() {
+            mobileSidebar.classList.add('-translate-x-full');
+            mobileOverlay.classList.add('opacity-0');
+            setTimeout(() => {
+                mobileOverlay.classList.add('hidden');
+            }, 300);
+        }
     </script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-<div class="flex items-end justify-between mb-8 animate-fade-in-up">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 animate-fade-in-up">
     <div>
         <h2 class="text-2xl font-bold text-slate-800">Manage Excuse Letters</h2>
         <p class="text-slate-500 text-sm mt-1">Review and action pending excuse requests</p>
@@ -15,11 +15,11 @@
 
 <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden animate-fade-in-up relative">
     <!-- Selection Bar -->
-    <div id="selectionBar" class="hidden absolute top-0 left-0 right-0 z-20 bg-blue-600 text-white p-4 flex flex-col gap-2 shadow-md">
+    <div id="selectionBar" class="hidden absolute top-0 left-0 right-0 z-20 bg-primary text-white p-4 flex flex-col gap-2 shadow-md">
         <div class="flex justify-between items-center w-full">
             <div class="flex items-center gap-3">
                 <span class="font-bold text-sm" id="selectedCount">0 Selected</span>
-                <div class="h-4 w-px bg-blue-400"></div>
+                <div class="h-4 w-px bg-primary-400"></div>
                 <button type="button" id="mainSelectAllBtn" onclick="selectAll(true)" class="text-xs hover:underline">Select All on Page</button>
                 <button type="button" onclick="toggleSelectionMode()" class="text-xs hover:underline">Cancel</button>
             </div>
@@ -27,17 +27,18 @@
                 Delete Selected
             </button>
         </div>
-        <div id="allPagesPrompt" class="hidden bg-blue-700/50 -mx-4 -mb-4 p-2 text-center text-[10px] font-medium border-t border-blue-500">
+        <div id="allPagesPrompt" class="hidden bg-primary-700/50 -mx-4 -mb-4 p-2 text-center text-[10px] font-medium border-t border-primary-500">
             All items on this page are selected. 
             <button type="button" onclick="toggleAllPages(true)" class="underline font-bold ml-1">Select all <span id="totalCountText">0</span> items in the system</button>
         </div>
-        <div id="clearSelectionBtn" class="hidden bg-blue-700/50 -mx-4 -mb-4 p-2 text-center text-[10px] font-medium border-t border-blue-500">
+        <div id="clearSelectionBtn" class="hidden bg-primary-700/50 -mx-4 -mb-4 p-2 text-center text-[10px] font-medium border-t border-primary-500">
             All <span id="totalSelectedText">0</span> items are selected.
             <button type="button" onclick="selectAll(false)" class="underline font-bold ml-1">Clear selection</button>
         </div>
     </div>
 
-    <table class="w-full text-left border-collapse">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse min-w-[900px]">
         <thead>
             <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
                 <th class="p-4 w-12 selection-col hidden"></th>
@@ -54,14 +55,14 @@
                 <?php foreach($excuses as $exc): ?>
                 <tr class="hover:bg-slate-50 transition-colors group cursor-pointer" onclick="toggleRow(this, event)">
                     <td class="p-4 selection-col hidden">
-                        <input type="checkbox" name="ids[]" value="<?= $exc->id ?>" class="excuse-checkbox rounded text-blue-600 border-gray-300 w-5 h-5 pointer-events-none">
+                        <input type="checkbox" name="ids[]" value="<?= $exc->id ?>" class="excuse-checkbox rounded text-primary border-gray-300 w-5 h-5 pointer-events-none">
                     </td>
                     <td class="p-6 font-bold text-slate-700">
                         <?= h($exc->server_name) ?>
                     </td>
                     <td class="p-6">
                         <div class="flex flex-col">
-                            <span class="font-bold text-blue-600 text-[10px] uppercase"><?= h($exc->type) ?></span>
+                            <span class="font-bold text-primary text-[10px] uppercase"><?= h($exc->type) ?></span>
                             <span class="text-slate-700 font-medium"><?= date('M d, Y', strtotime($exc->absence_date)) ?></span>
                             <span class="text-[10px] text-slate-400"><?= h($exc->absence_time) ?></span>
                         </div>
@@ -71,7 +72,7 @@
                     </td>
                     <td class="p-6">
                         <?php if($exc->image_path): ?>
-                            <a href="<?= URLROOT ?>/uploads/excuses/<?= $exc->image_path ?>" target="_blank" class="text-blue-500 hover:underline flex items-center gap-1 font-bold text-xs">
+                            <a href="<?= URLROOT ?>/uploads/excuses/<?= $exc->image_path ?>" target="_blank" class="text-primary-500 hover:underline flex items-center gap-1 font-bold text-xs">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                                 View Image
                             </a>
@@ -91,7 +92,7 @@
                     </td>
                     <td class="p-6">
                         <div class="flex justify-center gap-2">
-                            <button onclick='viewExcuse(<?= json_encode($exc) ?>)' class="bg-blue-50 text-blue-600 hover:bg-blue-100 p-2 rounded-lg transition-all" title="View Details">
+                            <button onclick='viewExcuse(<?= json_encode($exc) ?>)' class="bg-primary-50 text-primary hover:bg-primary-100 p-2 rounded-lg transition-all" title="View Details">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                             </button>
                             <?php if($exc->status === 'Pending'): ?>
@@ -125,6 +126,7 @@
             <?php endif; ?>
         </tbody>
     </table>
+    </div>
 </div>
 
 <!-- Pagination -->
@@ -146,7 +148,7 @@
             if ($end - $start < 4) $start = max(1, $end - 4);
             
             for($i = $start; $i <= $end; $i++): 
-                $active = ($i == $pagination['page']) ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-100' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 shadow-sm';
+                $active = ($i == $pagination['page']) ? 'bg-primary text-white border-primary shadow-md shadow-primary-100' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 shadow-sm';
         ?>
             <a href="<?= URLROOT ?>/excuses?page=<?= $i ?>" class="w-8 h-8 flex items-center justify-center border rounded-lg text-xs font-bold transition-all <?= $active ?>"><?= $i ?></a>
         <?php endfor; ?>
@@ -222,11 +224,11 @@
         const cols = document.querySelectorAll('.selection-col');
         
         if (isSelectionMode) {
-            btn.classList.add('bg-blue-50', 'text-blue-600', 'border-blue-200', 'ring-2', 'ring-blue-200');
+            btn.classList.add('bg-primary-50', 'text-primary', 'border-primary-200', 'ring-2', 'ring-primary-200');
             bar.classList.remove('hidden');
             cols.forEach(col => col.classList.remove('hidden'));
         } else {
-            btn.classList.remove('bg-blue-50', 'text-blue-600', 'border-blue-200', 'ring-2', 'ring-blue-200');
+            btn.classList.remove('bg-primary-50', 'text-primary', 'border-primary-200', 'ring-2', 'ring-primary-200');
             bar.classList.add('hidden');
             cols.forEach(col => col.classList.add('hidden'));
             selectAll(false);
@@ -239,7 +241,7 @@
         
         const cb = tr.querySelector('.excuse-checkbox');
         cb.checked = !cb.checked;
-        tr.classList.toggle('bg-blue-50', cb.checked);
+        tr.classList.toggle('bg-primary-50', cb.checked);
         
         if (allPagesSelected) {
             allPagesSelected = false; // Deselect "All Pages" if a single row is toggled
@@ -251,7 +253,7 @@
         allPagesSelected = false; 
         document.querySelectorAll('.excuse-checkbox').forEach(cb => {
             cb.checked = check;
-            cb.closest('tr').classList.toggle('bg-blue-50', check);
+            cb.closest('tr').classList.toggle('bg-primary-50', check);
         });
         updateSelectedCount();
     }
@@ -358,7 +360,7 @@
                     <input type="hidden" name="id" value="${data.id}">
                     <input type="hidden" name="status" value="Approved">
                     <input type="hidden" name="page" value="<?= $pagination['page'] ?? 1 ?>">
-                    <button type="submit" class="w-full py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">Approve Request</button>
+                    <button type="submit" class="w-full py-3 rounded-xl bg-primary text-white font-bold hover:bg-primary-700 shadow-lg shadow-primary-200 transition-all">Approve Request</button>
                 </form>
             `;
         } else {

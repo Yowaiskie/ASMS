@@ -21,6 +21,7 @@ class AnnouncementController extends Controller {
         $announcements = $this->announcementRepo->getAll($limit, $offset);
         $totalRecords = $this->announcementRepo->countAll();
         $totalPages = ceil($totalRecords / $limit);
+        $categories = (new \App\Repositories\SystemSettingRepository())->getCategories();
         
         // Mark as read when ANY user views the list
         if (isset($_SESSION['user_id'])) {
@@ -31,6 +32,7 @@ class AnnouncementController extends Controller {
             'pageTitle' => 'Announcements',
             'title' => 'Announcements | ASMS',
             'announcements' => $announcements,
+            'categories' => $categories,
             'pagination' => [
                 'page' => $page,
                 'totalPages' => $totalPages
@@ -62,7 +64,23 @@ class AnnouncementController extends Controller {
             ];
 
             if ($this->announcementRepo->create($data)) {
-                logAction('Create', 'Announcements', "Created announcement: " . $data['title']);
+                // In-App Notification for all users EXCEPT the author
+                $this->db->query("SELECT id FROM users WHERE role = 'User' AND id != :current_id");
+                $this->db->bind(':current_id', $_SESSION['user_id']);
+                $users = $this->db->resultSet();
+
+                $notifRepo = new \App\Repositories\NotificationRepository();
+                foreach ($users as $user) {
+                    $notifRepo->create([
+                        'user_id' => $user->id,
+                        'title' => 'New Announcement: ' . $data['title'],
+                        'message' => substr(strip_tags($data['message']), 0, 100) . '...',
+                        'link' => '/announcements',
+                        'type' => 'info'
+                    ]);
+                }
+
+                logAction('Create', 'Announcements', 'Created new announcement: ' . $data['title']);
                 setFlash('msg_success', 'Announcement posted successfully!');
             } else {
                 setFlash('msg_error', 'Failed to post announcement.');
@@ -72,17 +90,15 @@ class AnnouncementController extends Controller {
     }
 
     public function delete() {
-        $page = $_GET['page'] ?? 1;
+        $this->verifyCsrf();
+        $page = $_POST['page'] ?? 1;
         if (($_SESSION['role'] ?? '') === 'User') {
             $this->forbidden();
         }
 
-        $id = $_GET['id'] ?? null;
-        $announcement = $this->announcementRepo->getById($id);
-        $title = $announcement ? $announcement->title : "ID: $id";
-
+        $id = $_POST['id'] ?? null;
         if ($id && $this->announcementRepo->delete($id)) {
-            logAction('Delete', 'Announcements', "Deleted announcement: $title");
+            logAction('Delete', 'Announcements', "Deleted announcement ID: $id");
             setFlash('msg_success', 'Announcement deleted.');
         } else {
             setFlash('msg_error', 'Failed to delete announcement.');

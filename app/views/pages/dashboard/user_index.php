@@ -31,18 +31,18 @@
 
 <?php if (isset($_SESSION['force_reset']) && $_SESSION['force_reset'] == 1): ?>
     <!-- TEMP PASSWORD ALERT -->
-    <div class="mb-8 bg-blue-50 border-2 border-blue-200 p-6 rounded-3xl animate-fade-in-up flex items-center gap-5 shadow-sm">
-        <div class="w-14 h-14 rounded-2xl bg-blue-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-blue-200">
+    <div class="mb-8 bg-primary-50 border-2 border-primary-200 p-6 rounded-3xl animate-fade-in-up flex items-center gap-5 shadow-sm">
+        <div class="w-14 h-14 rounded-2xl bg-primary-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-primary-200">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
         </div>
         <div>
-            <h3 class="text-lg font-bold text-blue-900">Security Recommendation</h3>
-            <p class="text-sm text-blue-700 leading-relaxed mb-4">
+            <h3 class="text-lg font-bold text-primary-900">Security Recommendation</h3>
+            <p class="text-sm text-primary-700 leading-relaxed mb-4">
                 You are currently using a temporary password. We highly recommend changing your password to a more secure one to keep your account safe.
             </p>
-            <a href="<?= URLROOT ?>/settings" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-all shadow-sm">
+            <a href="<?= URLROOT ?>/settings" class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary-700 transition-all shadow-sm">
                 Change My Password
             </a>
         </div>
@@ -92,7 +92,7 @@
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
     
     <!-- Next Schedule -->
-    <div class="bg-blue-600 rounded-3xl p-6 text-white shadow-lg shadow-blue-200 animate-fade-in-up relative overflow-hidden flex flex-col justify-between min-h-[200px]">
+    <div class="bg-primary rounded-3xl p-6 text-white shadow-lg shadow-primary-200 animate-fade-in-up relative overflow-hidden flex flex-col justify-between min-h-[200px]">
         
         <div>
             <div class="flex items-center gap-2 mb-4 opacity-90">
@@ -104,10 +104,10 @@
             
             <?php if($nextSchedule): ?>
                 <h3 class="text-2xl font-bold mb-1"><?= h($nextSchedule->mass_type) ?></h3>
-                <p class="text-blue-100 text-sm mb-4"><?= date('l, F d, Y', strtotime($nextSchedule->mass_date)) ?> • <?= date('h:i A', strtotime($nextSchedule->mass_time)) ?></p>
+                <p class="text-primary-100 text-sm mb-4"><?= date('l, F d, Y', strtotime($nextSchedule->mass_date)) ?> • <?= date('h:i A', strtotime($nextSchedule->mass_time)) ?></p>
             <?php else: ?>
                 <h3 class="text-xl font-bold mb-1 opacity-80">No upcoming schedules</h3>
-                <p class="text-blue-100 text-sm mb-4">Enjoy your break!</p>
+                <p class="text-primary-100 text-sm mb-4">Enjoy your break!</p>
             <?php endif; ?>
         </div>
 
@@ -189,7 +189,7 @@
         </div>
         
         <div class="mt-4 pt-4 border-t border-slate-50 text-center">
-            <a href="<?= URLROOT ?>/announcements" class="text-xs font-bold text-blue-600 hover:text-blue-700">View All Announcements</a>
+            <a href="<?= URLROOT ?>/announcements" class="text-xs font-bold text-primary hover:text-primary-700">View All Announcements</a>
         </div>
     </div>
 

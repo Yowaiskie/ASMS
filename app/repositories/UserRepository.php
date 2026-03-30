@@ -74,21 +74,38 @@ class UserRepository implements RepositoryInterface {
 
     public function findByUsername($username) {
         $this->db->query("
-            SELECT u.*, CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) as full_name 
-            FROM users u 
-            LEFT JOIN servers s ON u.server_id = s.id 
+            SELECT u.*, r.name as role, CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) as full_name
+            FROM users u
+            LEFT JOIN roles r ON u.role_id = r.id
+            LEFT JOIN servers s ON u.server_id = s.id
             WHERE u.username = :username AND u.deleted_at IS NULL
         ");
         $this->db->bind(':username', $username);
         return $this->db->single();
     }
 
+    public function findByEmail($email) {
+        $this->db->query("
+            SELECT u.*, s.email
+            FROM users u
+            JOIN servers s ON u.server_id = s.id
+            WHERE s.email = :email AND u.deleted_at IS NULL
+        ");
+        $this->db->bind(':email', $email);
+        return $this->db->single();
+    }
+
+    public function isUsernameTaken($username) {
+        $this->db->query("SELECT id FROM users WHERE username = :username LIMIT 1");
+        $this->db->bind(':username', $username);
+        return $this->db->single() ? true : false;
+    }
     public function getAll($limit = 1000, $offset = 0) {
         $this->db->query("
             SELECT u.*, s.first_name, s.middle_name, s.last_name 
             FROM users u 
             LEFT JOIN servers s ON u.server_id = s.id 
-            WHERE u.role != 'Superadmin' AND u.deleted_at IS NULL
+            WHERE u.deleted_at IS NULL
             ORDER BY s.last_name ASC, s.first_name ASC 
             LIMIT :limit OFFSET :offset
         ");
@@ -98,7 +115,7 @@ class UserRepository implements RepositoryInterface {
     }
 
     public function countAll() {
-        $this->db->query("SELECT COUNT(*) as count FROM users WHERE role != 'Superadmin' AND deleted_at IS NULL");
+        $this->db->query("SELECT COUNT(*) as count FROM users WHERE deleted_at IS NULL");
         $row = $this->db->single();
         return $row ? (int)$row->count : 0;
     }
@@ -199,10 +216,11 @@ class UserRepository implements RepositoryInterface {
     }
 
     public function create(array $data) {
-        $this->db->query("INSERT INTO users (username, password, role, server_id, force_password_reset) VALUES (:username, :password, :role, :server_id, :force_reset)");
+        $this->db->query("INSERT INTO users (username, password, role, role_id, server_id, force_password_reset) VALUES (:username, :password, :role, :role_id, :server_id, :force_reset)");
         $this->db->bind(':username', $data['username']);
         $this->db->bind(':password', $data['password']); // Already hashed
         $this->db->bind(':role', $data['role']);
+        $this->db->bind(':role_id', $data['role_id'] ?? null);
         $this->db->bind(':server_id', $data['server_id'] ?? null);
         $this->db->bind(':force_reset', $data['force_password_reset'] ?? 0);
         return $this->db->execute();
@@ -212,6 +230,7 @@ class UserRepository implements RepositoryInterface {
         $fields = [];
         if (isset($data['password'])) $fields[] = "password = :password";
         if (isset($data['role'])) $fields[] = "role = :role";
+        if (isset($data['role_id'])) $fields[] = "role_id = :role_id";
         if (isset($data['force_password_reset'])) $fields[] = "force_password_reset = :force_reset";
 
         if (empty($fields)) return false;
@@ -221,6 +240,7 @@ class UserRepository implements RepositoryInterface {
 
         if (isset($data['password'])) $this->db->bind(':password', $data['password']);
         if (isset($data['role'])) $this->db->bind(':role', $data['role']);
+        if (isset($data['role_id'])) $this->db->bind(':role_id', $data['role_id']);
         if (isset($data['force_password_reset'])) $this->db->bind(':force_reset', $data['force_password_reset']);
         $this->db->bind(':id', $id);
 
@@ -298,11 +318,49 @@ class UserRepository implements RepositoryInterface {
 
     public function getAdmins() {
         $this->db->query("
-            SELECT u.username, s.email 
+            SELECT u.id, u.username, s.email 
             FROM users u
             JOIN servers s ON u.server_id = s.id
             WHERE u.role IN ('Admin', 'Superadmin') AND s.email IS NOT NULL AND s.email != ''
         ");
         return $this->db->resultSet();
     }
-}
+
+    /**
+     * Update the timestamp when the user last checked notifications
+     */
+    public function updateLastCheckedNotifications($userId) {
+        $this->db->query("UPDATE users SET last_checked_notifications = NOW() WHERE id = :id");
+        $this->db->bind(':id', $userId);
+        return $this->db->execute();
+    }
+
+    // User-specific Permissions
+    public function getUserPermissions($userId) {
+        $this->db->query("
+            SELECT p.* FROM permissions p
+            JOIN user_permissions up ON p.id = up.permission_id
+            WHERE up.user_id = :id
+        ");
+        $this->db->bind(':id', $userId);
+        return $this->db->resultSet();
+    }
+
+    public function syncUserPermissions($userId, $permissionIds) {
+        // Clear existing
+        $this->db->query("DELETE FROM user_permissions WHERE user_id = :id");
+        $this->db->bind(':id', $userId);
+        $this->db->execute();
+
+        // Add new
+        if (!empty($permissionIds)) {
+            foreach ($permissionIds as $pId) {
+                $this->db->query("INSERT INTO user_permissions (user_id, permission_id) VALUES (:uid, :pid)");
+                $this->db->bind(':uid', $userId);
+                $this->db->bind(':pid', $pId);
+                $this->db->execute();
+            }
+        }
+        return true;
+    }
+    }

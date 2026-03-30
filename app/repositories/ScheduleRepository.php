@@ -14,13 +14,23 @@ class ScheduleRepository implements RepositoryInterface {
     }
 
     public function getAll() {
-        $this->db->query("SELECT * FROM schedules ORDER BY mass_date ASC, mass_time ASC");
+        $this->db->query("
+            SELECT s.*, 
+                   GROUP_CONCAT(srv.id) as assigned_ids,
+                   GROUP_CONCAT(CONCAT(srv.first_name, ' ', srv.last_name)) as assigned_names
+            FROM schedules s
+            LEFT JOIN attendance a ON s.id = a.schedule_id
+            LEFT JOIN servers srv ON a.server_id = srv.id
+            GROUP BY s.id
+            ORDER BY s.mass_date ASC, s.mass_time ASC
+        ");
+        
         $results = $this->db->resultSet();
         
-        // Populate assigned_ids for each schedule
+        // Convert comma-separated strings to arrays
         foreach ($results as $row) {
-            $assignments = $this->getAssignments($row->id);
-            $row->assigned_ids = array_map(function($a) { return (int)$a->id; }, $assignments);
+            $row->assigned_ids = $row->assigned_ids ? array_map('intval', explode(',', $row->assigned_ids)) : [];
+            // assigned_names remains a string for the frontend split(',')
         }
         
         return $results;
@@ -72,7 +82,43 @@ class ScheduleRepository implements RepositoryInterface {
         return $this->db->resultSet();
     }
 
+    public function hasConflict($date, $time, $excludeId = null) {
+        $sql = "SELECT id FROM schedules WHERE mass_date = :date AND mass_time = :time";
+        if ($excludeId) {
+            $sql .= " AND id != :id";
+        }
+        $this->db->query($sql);
+        $this->db->bind(':date', $date);
+        $this->db->bind(':time', $time);
+        if ($excludeId) {
+            $this->db->bind(':id', $excludeId);
+        }
+        return $this->db->single();
+    }
+
+    public function getFutureMatchingSchedules($startDate, $dayOfWeek, $massTime) {
+        // MySQL DAYOFWEEK: 1=Sun, 2=Mon... 7=Sat
+        // PHP DateTime 'w': 0=Sun, 1=Mon... 6=Sat
+        $mysqlDayOfWeek = (int)$dayOfWeek + 1;
+
+        $this->db->query("SELECT * FROM schedules 
+                         WHERE mass_date > :start_date 
+                         AND DAYOFWEEK(mass_date) = :day_of_week 
+                         AND mass_time = :mass_time 
+                         AND status != 'Cancelled'
+                         ORDER BY mass_date ASC");
+        
+        $this->db->bind(':start_date', $startDate);
+        $this->db->bind(':day_of_week', $mysqlDayOfWeek);
+        $this->db->bind(':mass_time', $massTime);
+        
+        return $this->db->resultSet();
+    }
+
     public function create(array $data) {
+        if ($this->hasConflict($data['mass_date'], $data['mass_time'])) {
+            return false;
+        }
         $this->db->query("INSERT INTO schedules (mass_type, event_name, color, mass_date, mass_time, status) VALUES (:mass_type, :event_name, :color, :mass_date, :mass_time, :status)");
         $this->db->bind(':mass_type', $data['mass_type']);
         $this->db->bind(':event_name', $data['event_name'] ?? null);
@@ -84,6 +130,9 @@ class ScheduleRepository implements RepositoryInterface {
     }
 
     public function update($id, array $data) {
+        if ($this->hasConflict($data['mass_date'], $data['mass_time'], $id)) {
+            return false;
+        }
         $this->db->query("UPDATE schedules SET mass_type = :type, event_name = :event_name, color = :color, mass_date = :date, mass_time = :time, status = :status WHERE id = :id");
         $this->db->bind(':id', $id);
         $this->db->bind(':type', $data['mass_type']);
@@ -99,6 +148,13 @@ class ScheduleRepository implements RepositoryInterface {
         $this->db->query("UPDATE schedules SET status = :status WHERE id = :id");
         $this->db->bind(':id', $id);
         $this->db->bind(':status', $status);
+        return $this->db->execute();
+    }
+
+    public function updateColor($id, $color) {
+        $this->db->query("UPDATE schedules SET color = :color WHERE id = :id");
+        $this->db->bind(':id', $id);
+        $this->db->bind(':color', $color);
         return $this->db->execute();
     }
 
@@ -177,5 +233,17 @@ class ScheduleRepository implements RepositoryInterface {
         }
         
         return true;
+    }
+
+    public function removeFutureSchedules($serverId) {
+        $this->db->query("
+            DELETE a FROM attendance a
+            JOIN schedules s ON a.schedule_id = s.id
+            WHERE a.server_id = :sid 
+            AND (s.mass_date > CURRENT_DATE() 
+                 OR (s.mass_date = CURRENT_DATE() AND s.mass_time > CURRENT_TIME()))
+        ");
+        $this->db->bind(':sid', $serverId);
+        return $this->db->execute();
     }
 }

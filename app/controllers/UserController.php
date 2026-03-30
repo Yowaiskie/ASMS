@@ -7,14 +7,12 @@ use App\Repositories\UserRepository;
 
 class UserController extends Controller {
     private $userRepo;
+    private $roleRepo;
 
     public function __construct() {
-        $this->requireLogin();
-        // Restrict to Superadmin
-        if (($_SESSION['role'] ?? '') !== 'Superadmin') {
-            $this->forbidden();
-        }
+        $this->requirePermission('Server Accounts', 'view');
         $this->userRepo = new UserRepository();
+        $this->roleRepo = new \App\Repositories\RoleRepository();
     }
 
     public function index() {
@@ -28,6 +26,39 @@ class UserController extends Controller {
         ];
 
         $users = $this->userRepo->search($filters, $limit, $offset);
+        
+        $roleRepo = new \App\Repositories\RoleRepository();
+        
+        // Add permissions to each user object
+        foreach ($users as $user) {
+            // 1. Get permissions from their Role
+            $rolePerms = array_map(fn($p) => $p->id, $roleRepo->getPermissionsByRole($user->role_id));
+            
+            // 2. Get custom overrides
+            $customPerms = array_map(fn($p) => $p->id, $this->userRepo->getUserPermissions($user->id));
+            
+            // 3. Combine them for the UI to show current state
+            $user->total_permissions = array_unique(array_merge($rolePerms, $customPerms));
+            $user->custom_permissions = $customPerms; // Keep this to know if they HAVE overrides
+        }
+
+        $roles = $this->roleRepo->all();
+        
+        // Fetch and group permissions for the modal
+        $permRepo = new \App\Repositories\PermissionRepository();
+        $allPermissions = $permRepo->all();
+        $groupedPermissions = [];
+        foreach ($allPermissions as $perm) {
+            $groupedPermissions[$perm->module][] = $perm;
+        }
+
+        // Get permissions for each role
+        foreach ($roles as $role) {
+            $role->permissions = array_map(function($p) {
+                return $p->id;
+            }, $this->roleRepo->getPermissionsByRole($role->id));
+        }
+
         $totalRecords = $this->userRepo->countSearch($filters);
         $totalPages = $totalRecords > 0 ? (int)ceil($totalRecords / $limit) : 0;
 
@@ -35,6 +66,8 @@ class UserController extends Controller {
             'pageTitle' => 'User Management',
             'title' => 'Users | ASMS',
             'users' => $users,
+            'roles' => $roles,
+            'groupedPermissions' => $groupedPermissions,
             'filters' => $filters,
             'pagination' => [
                 'page' => $page,
@@ -43,13 +76,8 @@ class UserController extends Controller {
         ]);
     }
 
-    private function normalizeRole($role) {
-        $role = trim($role ?? 'User');
-        $role = str_replace(' ', '', $role);
-        return ucfirst(strtolower($role));
-    }
-
     public function store() {
+        $this->requirePermission('Server Accounts', 'create');
         $this->verifyCsrf();
         $page = $_POST['page'] ?? $_GET['page'] ?? 1;
 
@@ -61,11 +89,14 @@ class UserController extends Controller {
             $password = trim($_POST['password'] ?? DEFAULT_USER_PASSWORD);
             $email = trim($_POST['email'] ?? '');
             $phone = trim($_POST['phone'] ?? '');
-            $role = $this->normalizeRole($_POST['role'] ?? 'User');
+            $role_id = $_POST['role_id'];
+            
+            $role = $this->roleRepo->find($role_id);
+            $roleName = $role ? $role->name : 'User';
 
-            // Block Superadmin creation via UI
-            if ($role === 'Superadmin') {
-                setFlash('msg_error', 'Cannot create Superadmin accounts.');
+            // Block Superadmin creation via UI unless current user is Superadmin
+            if ($roleName === 'Superadmin' && ($_SESSION['role'] ?? '') !== 'Superadmin') {
+                setFlash('msg_error', 'Only Superadmins can create other Superadmin accounts.');
                 redirect('users?page=' . $page);
                 return;
             }
@@ -107,13 +138,14 @@ class UserController extends Controller {
                 $userData = [
                     'username' => $username,
                     'password' => password_hash($password, PASSWORD_DEFAULT),
-                    'role' => $role,
+                    'role' => $roleName,
+                    'role_id' => $role_id,
                     'server_id' => $serverId,
                     'force_password_reset' => 1
                 ];
                 
                 if ($this->userRepo->create($userData)) {
-                    logAction('Create', 'Users', "Created user account: $username with role $role");
+                    logAction('Create', 'Users', "Created user account: $username with role $roleName");
                     setFlash('msg_success', 'User created successfully.');
                 } else {
                     setFlash('msg_error', 'Failed to create user account.');
@@ -126,6 +158,7 @@ class UserController extends Controller {
     }
 
     public function update() {
+        $this->requirePermission('Server Accounts', 'edit');
         $this->verifyCsrf();
         $page = $_POST['page'] ?? $_GET['page'] ?? 1;
 
@@ -134,12 +167,15 @@ class UserController extends Controller {
             $firstName = trim($_POST['first_name']);
             $middleName = trim($_POST['middle_name'] ?? '');
             $lastName = trim($_POST['last_name']);
-            $role = $this->normalizeRole($_POST['role']);
+            $role_id = $_POST['role_id'];
             $password = $_POST['password'] ?? '';
 
-            // Block Superadmin promotion via UI
-            if ($role === 'Superadmin') {
-                setFlash('msg_error', 'Cannot promote to Superadmin role.');
+            $role = $this->roleRepo->find($role_id);
+            $roleName = $role ? $role->name : 'User';
+
+            // Block Superadmin promotion via UI unless current user is Superadmin
+            if ($roleName === 'Superadmin' && ($_SESSION['role'] ?? '') !== 'Superadmin') {
+                setFlash('msg_error', 'Only Superadmins can promote users to Superadmin role.');
                 redirect('users?page=' . $page);
                 return;
             }
@@ -164,13 +200,23 @@ class UserController extends Controller {
             }
 
             // 2. Update User Account
-            $data = ['role' => $role];
+            $data = [
+                'role' => $roleName,
+                'role_id' => $role_id
+            ];
             if (!empty($password)) {
                 $data['password'] = password_hash($password, PASSWORD_DEFAULT);
             }
 
             if ($this->userRepo->update($id, $data)) {
-                logAction('Update', 'Users', "Updated user account: " . $user->username);
+                // Sync User Specific Permissions
+                $permissionIds = [];
+                if (isset($_POST['manage_permissions']) && $_POST['manage_permissions'] == '1') {
+                    $permissionIds = $_POST['user_permissions'] ?? [];
+                }
+                $this->userRepo->syncUserPermissions($id, $permissionIds);
+
+                logAction('Update', 'Users', "Updated user account and permissions: " . $user->username);
                 setFlash('msg_success', 'User updated successfully.');
             } else {
                 setFlash('msg_error', 'Failed to update user.');
@@ -219,92 +265,41 @@ class UserController extends Controller {
     }
 
     public function import() {
+        // ... (existing code) ...
+    }
+
+    public function allowLateExcuse() {
         $this->verifyCsrf();
+        $page = $_POST['page'] ?? 1;
 
-        if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['csv_file']) && $_FILES['csv_file']['error'] == 0) {
-            $fileName = $_FILES['csv_file']['tmp_name'];
-            
-            if ($_FILES['csv_file']['size'] > 0) {
-                $file = fopen($fileName, "r");
-                $count = 0;
-                $duplicates = 0;
+        if ($_SERVER['REQUEST_METHOD'] == 'POST' && ($_SESSION['role'] ?? '') === 'Superadmin') {
+            $id = $_POST['id'];
+            $until = date('Y-m-d H:i:s', strtotime('+24 hours'));
+
+            $db = \App\Core\Database::getInstance();
+            $db->query("UPDATE users SET excuse_override_until = :until WHERE id = :id");
+            $db->bind(':until', $until);
+            $db->bind(':id', $id);
+
+            if ($db->execute()) {
+                $user = $this->userRepo->getById($id);
+                logAction('Update', 'Users', "Allowed late excuse filing for " . ($user ? $user->username : "ID: $id") . " until $until");
                 
-                $serverRepo = new \App\Repositories\ServerRepository();
-                $db = \App\Core\Database::getInstance();
+                // Notify User
+                $notifRepo = new \App\Repositories\NotificationRepository();
+                $notifRepo->create([
+                    'user_id' => $id,
+                    'title' => 'Late Filing Enabled',
+                    'message' => "You have been granted 24 hours to file your excuse letter.",
+                    'link' => '/excuses',
+                    'type' => 'info'
+                ]);
 
-                $firstRow = true;
-                while (($line = fgetcsv($file, 10000, ",")) !== FALSE) {
-                    $column = $line;
-
-                    // Delimiter Detection: If only 1 column found, try semicolon
-                    if (count($column) == 1 && strpos($column[0], ';') !== false) {
-                        $column = str_getcsv($column[0], ';');
-                    }
-
-                    if ($firstRow) { $firstRow = false; continue; } // Skip Header
-
-                    if (count($column) < 2) continue;
-                    
-                    $username = trim($column[0]);
-                    $fullName = trim($column[1]);
-                    $role = $this->normalizeRole($column[2] ?? 'User');
-
-                    if (empty($username)) continue;
-
-                    // Check if user already exists
-                    if ($this->userRepo->findByUsername($username)) {
-                        $duplicates++;
-                        continue;
-                    }
-
-                    // 1. Create Server Profile
-                    $parts = explode(' ', $fullName);
-                    $lastName = (count($parts) > 1) ? array_pop($parts) : 'Server';
-                    $firstName = (count($parts) >= 1) ? array_shift($parts) : $fullName;
-                    $middleName = implode(' ', $parts);
-
-                    $serverData = [
-                        'first_name' => $firstName,
-                        'middle_name' => $middleName,
-                        'last_name' => $lastName,
-                        'rank' => 'Server',
-                        'team' => 'Unassigned',
-                        'status' => 'Active',
-                        'email' => '',
-                        'month_joined' => date('Y-m')
-                    ];
-                    
-                    if ($serverRepo->create($serverData)) {
-                        $serverId = $db->lastInsertId();
-
-                        // 2. Create User Account
-                        $userData = [
-                            'username' => $username,
-                            'password' => password_hash(DEFAULT_USER_PASSWORD, PASSWORD_DEFAULT),
-                            'role' => $role,
-                            'server_id' => $serverId,
-                            'force_password_reset' => 1
-                        ];
-                        
-                        if ($this->userRepo->create($userData)) {
-                            $count++;
-                        }
-                    }
-                }
-                
-                fclose($file);
-                
-                logAction('Create', 'Users', "Imported $count users via CSV.");
-                $msg = "Imported $count users successfully. (Default Pass: " . DEFAULT_USER_PASSWORD . ")";
-                if ($duplicates > 0) $msg .= " ($duplicates skipped as duplicates).";
-                
-                setFlash('msg_success', $msg);
+                setFlash('msg_success', 'Late filing allowed for 24 hours.');
             } else {
-                setFlash('msg_error', 'Empty file uploaded.');
+                setFlash('msg_error', 'Failed to update user record.');
             }
-        } else {
-            setFlash('msg_error', 'Invalid file upload.');
+            redirect('users?page=' . $page);
         }
-        redirect('users');
     }
 }

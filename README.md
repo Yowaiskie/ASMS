@@ -19,7 +19,7 @@ A comprehensive, robust, and secure management platform specifically designed fo
 
 - **Backend:** PHP 8.x (Custom OOP MVC Framework)
 - **Frontend:** Tailwind CSS v4 (Modern Utility-first CSS)
-- **Database:** MySQL / MariaDB (Singleton PDO Connection)
+- **Database:** MySQL (Singleton PDO Connection)
 - **Icons:** Phosphor Icons / HeroIcons
 - **Charts:** Chart.js
 - **Environment:** XAMPP / Apache
@@ -46,9 +46,10 @@ public/             # Web root (Index, CSS, JS, Assets)
    ```
 2. **Setup Database:**
    - Create a database named `asms_db` in PHPMyAdmin.
-   - Run the setup script: `http://localhost/ASMS/public/setup_database.php`
+   - Run the setup script: `http://localhost/[your-folder]/public/setup_database.php`
 3. **Configure:**
-   - Edit `app/config/config.php` if you use different DB credentials.
+   - Edit `.env` or `app/config/config.php` if you use different DB credentials.
+   - The system automatically detects its root folder, so you can host it in a subfolder or directly in the document root.
 4. **Build Styles:**
    ```bash
    npm install

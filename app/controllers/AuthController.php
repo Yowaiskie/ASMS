@@ -38,13 +38,23 @@ class AuthController extends Controller {
             $user = $this->userRepo->findByUsername($username);
 
             if ($user && password_verify($password, $user->password)) {
+                // Load role permissions
+                $roleRepo = new \App\Repositories\RoleRepository();
+                $permissions = $roleRepo->getPermissionsByRole($user->role_id);
+
+                // Load user-specific permissions
+                $userPermissions = $this->userRepo->getUserPermissions($user->id);
+                
                 // Create Session
                 $_SESSION['user_id'] = $user->id;
                 $_SESSION['username'] = $user->username;
                 $_SESSION['full_name'] = $user->full_name ?? $user->username;
-                $_SESSION['role'] = $user->role;
+                $_SESSION['role_id'] = $user->role_id;
+                $_SESSION['role'] = $user->role; // Keeping this for backward compatibility
                 $_SESSION['is_verified'] = $user->is_verified;
                 $_SESSION['force_reset'] = $user->force_password_reset;
+                $_SESSION['permissions'] = $permissions;
+                $_SESSION['user_permissions'] = $userPermissions;
 
                 logAction('Login', 'Auth', 'User ' . $_SESSION['full_name'] . ' logged in.');
 
@@ -81,10 +91,14 @@ class AuthController extends Controller {
     // Process Registration
     public function store() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $roleRepo = new \App\Repositories\RoleRepository();
+            $defaultRole = $roleRepo->getRoleByName('User');
+
             $data = [
                 'username' => trim($_POST['username']),
                 'password' => password_hash(trim($_POST['password']), PASSWORD_DEFAULT),
                 'role' => 'User',
+                'role_id' => $defaultRole ? $defaultRole->id : null,
                 'force_password_reset' => 0
             ];
 
@@ -107,9 +121,15 @@ class AuthController extends Controller {
 
     // Logout
     public function logout() {
-        if (isset($_SESSION['username'])) {
-            logAction('Logout', 'Auth', 'User ' . $_SESSION['username'] . ' logged out.');
+        if (isset($_SESSION['user_id'])) {
+            if (isset($_SESSION['username'])) {
+                logAction('Logout', 'Auth', 'User ' . $_SESSION['username'] . ' logged out.');
+            }
+            
+            // Mark notifications as checked upon logout so badge clears on next login
+            $this->userRepo->updateLastCheckedNotifications($_SESSION['user_id']);
         }
+
         unset($_SESSION['user_id']);
         unset($_SESSION['username']);
         unset($_SESSION['role']);

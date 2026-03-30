@@ -30,7 +30,7 @@
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
     
-    <div class="bg-blue-600 rounded-3xl p-6 text-white shadow-lg shadow-blue-200 animate-fade-in-up">
+    <div class="bg-primary rounded-3xl p-6 text-white shadow-lg shadow-primary-200 animate-fade-in-up">
         <div class="flex justify-between items-start mb-4">
             <h3 class="font-medium opacity-90">Total Servers</h3>
             <div class="p-2 bg-white/20 rounded-lg">
@@ -163,7 +163,7 @@
                 <div class="p-4 rounded-2xl border border-slate-100 hover:shadow-md transition-shadow bg-slate-50/50">
                     <div class="flex justify-between items-start mb-2">
                         <h4 class="font-bold text-slate-800"><?= h($sch->mass_type) ?></h4>
-                        <span class="bg-blue-100 text-blue-600 text-[10px] font-bold px-2 py-1 rounded-lg">Scheduled</span>
+                        <span class="bg-primary-100 text-primary text-[10px] font-bold px-2 py-1 rounded-lg">Scheduled</span>
                     </div>
                     <div class="flex items-center gap-3 text-xs text-slate-500">
                         <div class="flex items-center gap-1">
